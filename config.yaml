@@ -1,0 +1,24 @@
+server:
+  host: "0.0.0.0"
+  port: 6767
+  logging:
+    level: "debug"
+
+jwt:
+  ttl: 2678400
+  secret_key: "suppersecretkey"
+
+database:
+  sql:
+    host: "localhost"
+    port: 6868
+    user: "postgres"
+    name: "postgres"
+    password: "postgres"
+
+aws:
+  region: "eu-north-1"
+  access_key_id: "SECCRETACCESSKEYID"
+  secret_access_key: "SECCRETACCESSKEY"
+  bucket_name: "usof-s3"
+  public_base: "https://usof-s3.s3.eu-north-1.amazonaws.com"
