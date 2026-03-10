@@ -12,14 +12,14 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../components/schemas/auth/RegistrationAdmin.yaml'
+          $ref: '../schemas/RegistrationAdmin.yaml'
   responses:
     '201':
       description: Account successfully registered by admin, always return without include parameters
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/auth/Account.yaml'
+            $ref: '../schemas/Account.yaml'
 
     '400':
       description: >
@@ -28,7 +28,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '401':
       description: >
@@ -36,7 +36,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '403':
       description: >
@@ -44,7 +44,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '409':
       description: >
@@ -53,11 +53,11 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '500':
       description: Internal Server Error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'

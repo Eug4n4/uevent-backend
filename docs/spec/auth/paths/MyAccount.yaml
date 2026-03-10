@@ -28,7 +28,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/auth/Account.yaml'
+            $ref: '../schemas/Account.yaml'
 
     '401':
       description: >
@@ -36,14 +36,14 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '500':
       description: Internal Server Error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
 delete:
   tags:
@@ -64,7 +64,7 @@ delete:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '403':
       description: >
@@ -73,11 +73,11 @@ delete:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '500':
       description: Internal Server Error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'

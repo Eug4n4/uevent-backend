@@ -9,7 +9,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../components/schemas/auth/LoginByEmail.yaml'
+          $ref: '../schemas/LoginByEmail.yaml'
 
   responses:
     '200':
@@ -17,7 +17,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/auth/AccessToken.yaml'
+            $ref: '../schemas/AccessToken.yaml'
 
     '401':
       description: >
@@ -25,11 +25,11 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '500':
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'

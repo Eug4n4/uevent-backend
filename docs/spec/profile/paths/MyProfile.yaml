@@ -13,19 +13,19 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/profile/Profile.yaml"
+            $ref: "../schemas/Profile.yaml"
     "401":
       description: Unauthorized.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
 
 patch:
   tags:
@@ -41,35 +41,35 @@ patch:
     content:
       application/json:
         schema:
-          $ref: "../components/schemas/profile/UpdateProfile.yaml"
+          $ref: "../schemas/UpdateProfile.yaml"
   responses:
     "200":
       description: Profile updated.
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/profile/Profile.yaml"
+            $ref: "../schemas/Profile.yaml"
     "400":
       description: Bad request (validation error / invalid payload).
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "401":
       description: Unauthorized (missing/invalid token or profile does not exist).
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "403":
       description: Forbidden (user too young).
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"

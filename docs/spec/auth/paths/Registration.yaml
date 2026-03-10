@@ -8,7 +8,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../components/schemas/auth/Registration.yaml'
+          $ref: '../schemas/Registration.yaml'
   responses:
     '201':
       description: Account successfully registered, always return without include parameters
@@ -20,11 +20,11 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
 
     '500':
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'

@@ -903,7 +903,7 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/ProfileData'
+              - $ref: '#/components/schemas/Profile'
     UpdateProfile:
       type: object
       required:

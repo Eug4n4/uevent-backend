@@ -26,25 +26,25 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/profile/Profile.yaml"
+            $ref: "../schemas/Profile.yaml"
     "400":
       description: Bad request (invalid file format or size).
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "401":
       description: Unauthorized.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
 
 delete:
   tags:
@@ -63,16 +63,16 @@ delete:
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "404":
       description: Avatar not found.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"

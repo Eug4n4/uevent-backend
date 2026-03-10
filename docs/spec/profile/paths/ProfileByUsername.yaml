@@ -19,16 +19,16 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/profile/Profile.yaml"
+            $ref: "../schemas/Profile.yaml"
     "404":
       description: Profile for user does not exist.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"

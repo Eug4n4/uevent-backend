@@ -19,25 +19,25 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../components/schemas/profile/Profile.yaml"
+            $ref: "../schemas/Profile.yaml"
 
     "400":
       description: Bad request (invalid account_id).
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
 
     "404":
       description: Profile for account does not exist.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"
 
     "500":
       description: Internal server error.
       content:
         application/problem+json:
           schema:
-            $ref: "../components/schemas/shared/Errors.yaml"
+            $ref: "../../shared/Errors.yaml"

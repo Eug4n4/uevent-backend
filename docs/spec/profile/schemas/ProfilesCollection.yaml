@@ -8,4 +8,4 @@ properties:
     items:
       $ref: './ProfileData.yaml'
   links:
-    $ref: '../shared/PaginationData.yaml'
+    $ref: '../../shared/PaginationData.yaml'

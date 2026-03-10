@@ -13,7 +13,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Registration"
+              $ref: "#/schemas/Registration"
         required: true
       responses:
         "201":
@@ -22,14 +22,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Conflict: An account with this email or phone number already exists. Check the 'detail' field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal server error
       summary: Register a new account
       tags:
@@ -42,48 +42,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegistrationAdmin"
+              $ref: "#/schemas/RegistrationAdmin"
         required: true
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: "#/schemas/Account"
           description: Account successfully registered by admin
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Bad Request. Request body is invalid or some attributes do not meet requirements. Check the `errors` array for details.
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Account cannot be resolved from context or initiator account not found. Check the `detail` field in the response for more information.
         "403":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Forbidden. Initiator account is not active or does not have enough rights. Check the `detail` field in the response for more information.
         "409":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Conflict. Email is already taken. Check the `detail` field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -98,27 +98,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginByEmail"
+              $ref: "#/schemas/LoginByEmail"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokensPair"
+                $ref: "#/schemas/TokensPair"
           description: Successful login
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized: Invalid email or password.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal server error
       summary: Login by email
       tags:
@@ -130,27 +130,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginByUsername"
+              $ref: "#/schemas/LoginByUsername"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokensPair"
+                $ref: "#/schemas/TokensPair"
           description: Successful login
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized: Invalid username or password. Check the 'detail' field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal server error
       summary: Login by username
       tags:
@@ -174,7 +174,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       summary: Start Google OAuth login
       tags:
@@ -197,25 +197,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokensPair"
+                $ref: "#/schemas/TokensPair"
           description: Tokens pair issued
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Missing or invalid query parameter `code`
         "404":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Account not found for this email
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       summary: Google OAuth callback
       tags:
@@ -229,34 +229,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RefreshSession"
+              $ref: "#/schemas/RefreshSession"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokensPair"
+                $ref: "#/schemas/TokensPair"
           description: Tokens pair successfully refreshed
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Bad Request. Request body is invalid. Check the `errors` array for details.
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Account not found or session not found or invalid refresh token.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       summary: Refresh session
       tags:
@@ -272,21 +272,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials, initiator account not found, or session is invalid. Check the `detail` field in the response for more information.
         "403":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Account is have membership in an organization,  must leave all organizations before deleting the account.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -315,20 +315,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: "#/schemas/Account"
           description: Account successfully retrieved
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials or account cannot be resolved from context. Check the `detail` field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -346,14 +346,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Account cannot be resolved from context. Check the `detail` field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -369,7 +369,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdatePassword"
+              $ref: "#/schemas/UpdatePassword"
         required: true
       responses:
         "204":
@@ -378,28 +378,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Bad Request. Request body is invalid or the new password does not meet requirements. Check the `errors` array for details.
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials, invalid session, user not found, or invalid password.
         "403":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Forbidden. Cannot change password yet due, password change timeout.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -415,41 +415,41 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateUsername"
+              $ref: "#/schemas/UpdateUsername"
         required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: "#/schemas/Account"
           description: Username successfully updated
         "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Bad Request. Request body is invalid or the new username does not meet requirements. Check the `errors` array for details.
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials, invalid session, user not found, or invalid password.
         "409":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Conflict. The requested username is already taken. Check the `detail` field in the response for more information.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -467,14 +467,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials, initiator account not found, or session is invalid.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -509,20 +509,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccountSessionsCollection"
+                $ref: "#/schemas/AccountSessionsCollection"
           description: Sessions successfully retrieved
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: |
             Unauthorized. Invalid credentials, initiator account not found, or session is invalid.
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -550,14 +550,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: "Unauthorized, session not exist or session does not belong\
             \ to the authenticated account"
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -582,19 +582,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccountSessionsCollection"
+                $ref: "#/schemas/AccountSessionsCollection"
           description: Sessions successfully retrieved
         "401":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/schemas/Errors"
           description: Internal Server Error
       security:
       - BearerAuth: []
@@ -622,7 +622,7 @@ components:
           type: account_session
       properties:
         data:
-          $ref: "#/components/schemas/LoginByEmail_data"
+          $ref: "#/schemas/LoginByEmail_data"
       required:
       - data
     LoginByUsername:
@@ -634,7 +634,7 @@ components:
           type: account_session
       properties:
         data:
-          $ref: "#/components/schemas/LoginByUsername_data"
+          $ref: "#/schemas/LoginByUsername_data"
       required:
       - data
     Registration:
@@ -647,7 +647,7 @@ components:
           type: account
       properties:
         data:
-          $ref: "#/components/schemas/Registration_data"
+          $ref: "#/schemas/Registration_data"
       required:
       - data
     RegistrationAdmin:
@@ -661,7 +661,7 @@ components:
           type: account
       properties:
         data:
-          $ref: "#/components/schemas/RegistrationAdmin_data"
+          $ref: "#/schemas/RegistrationAdmin_data"
       required:
       - data
     RefreshSession:
@@ -672,7 +672,7 @@ components:
           type: account_session
       properties:
         data:
-          $ref: "#/components/schemas/RefreshSession_data"
+          $ref: "#/schemas/RefreshSession_data"
       required:
       - data
     UpdatePassword:
@@ -684,7 +684,7 @@ components:
           type: account_password
       properties:
         data:
-          $ref: "#/components/schemas/UpdatePassword_data"
+          $ref: "#/schemas/UpdatePassword_data"
       required:
       - data
     UpdateUsername:
@@ -695,7 +695,7 @@ components:
           type: account_username
       properties:
         data:
-          $ref: "#/components/schemas/UpdateUsername_data"
+          $ref: "#/schemas/UpdateUsername_data"
       required:
       - data
     TokensPair:
@@ -708,19 +708,19 @@ components:
           type: tokens_pair
       properties:
         data:
-          $ref: "#/components/schemas/TokensPair_data"
+          $ref: "#/schemas/TokensPair_data"
       required:
       - data
     AccessToken:
       properties:
         data:
-          $ref: "#/components/schemas/AccessToken_data"
+          $ref: "#/schemas/AccessToken_data"
       required:
       - data
     AccountSession:
       properties:
         data:
-          $ref: "#/components/schemas/AccountSessionData"
+          $ref: "#/schemas/AccountSessionData"
       required:
       - data
     AccountSessionData:
@@ -742,7 +742,7 @@ components:
           - account_session
           type: string
         attributes:
-          $ref: "#/components/schemas/AccountSessionAttributes"
+          $ref: "#/schemas/AccountSessionAttributes"
       required:
       - attributes
       - id
@@ -800,10 +800,10 @@ components:
       properties:
         data:
           items:
-            $ref: "#/components/schemas/AccountSessionData"
+            $ref: "#/schemas/AccountSessionData"
           type: array
         links:
-          $ref: "#/components/schemas/PaginationData"
+          $ref: "#/schemas/PaginationData"
       required:
       - data
       - links
@@ -837,10 +837,10 @@ components:
           type: account_email
       properties:
         data:
-          $ref: "#/components/schemas/Account_data"
+          $ref: "#/schemas/Account_data"
         included:
           items:
-            $ref: "#/components/schemas/AccountEmail"
+            $ref: "#/schemas/AccountEmail"
           type: array
       required:
       - data
@@ -864,7 +864,7 @@ components:
           - account_email
           type: string
         attributes:
-          $ref: "#/components/schemas/AccountEmail_attributes"
+          $ref: "#/schemas/AccountEmail_attributes"
       required:
       - attributes
       - id
@@ -883,7 +883,7 @@ components:
         errors:
           description: Non empty array of errors occurred during request processing
           items:
-            $ref: "#/components/schemas/Errors_errors_inner"
+            $ref: "#/schemas/Errors_errors_inner"
           type: array
       required:
       - errors
@@ -947,7 +947,7 @@ components:
           - account_session
           type: string
         attributes:
-          $ref: "#/components/schemas/LoginByEmail_data_attributes"
+          $ref: "#/schemas/LoginByEmail_data_attributes"
       required:
       - attributes
       - type
@@ -980,7 +980,7 @@ components:
           - account_session
           type: string
         attributes:
-          $ref: "#/components/schemas/LoginByUsername_data_attributes"
+          $ref: "#/schemas/LoginByUsername_data_attributes"
       required:
       - attributes
       - type
@@ -1021,7 +1021,7 @@ components:
           - account
           type: string
         attributes:
-          $ref: "#/components/schemas/Registration_data_attributes"
+          $ref: "#/schemas/Registration_data_attributes"
       required:
       - attributes
       - type
@@ -1072,7 +1072,7 @@ components:
           - account
           type: string
         attributes:
-          $ref: "#/components/schemas/RegistrationAdmin_data_attributes"
+          $ref: "#/schemas/RegistrationAdmin_data_attributes"
       required:
       - attributes
       - type
@@ -1097,7 +1097,7 @@ components:
           - account_session
           type: string
         attributes:
-          $ref: "#/components/schemas/RefreshSession_data_attributes"
+          $ref: "#/schemas/RefreshSession_data_attributes"
       required:
       - attributes
       - type
@@ -1131,7 +1131,7 @@ components:
           - account_password
           type: string
         attributes:
-          $ref: "#/components/schemas/UpdatePassword_data_attributes"
+          $ref: "#/schemas/UpdatePassword_data_attributes"
       required:
       - attributes
       - type
@@ -1155,7 +1155,7 @@ components:
           - account_username
           type: string
         attributes:
-          $ref: "#/components/schemas/UpdateUsername_data_attributes"
+          $ref: "#/schemas/UpdateUsername_data_attributes"
       required:
       - attributes
       - type
@@ -1190,7 +1190,7 @@ components:
           - tokens_pair
           type: string
         attributes:
-          $ref: "#/components/schemas/TokensPair_data_attributes"
+          $ref: "#/schemas/TokensPair_data_attributes"
       required:
       - attributes
       - id
@@ -1210,7 +1210,7 @@ components:
           - access_token
           type: string
         attributes:
-          $ref: "#/components/schemas/AccessToken_data_attributes"
+          $ref: "#/schemas/AccessToken_data_attributes"
       required:
       - attributes
       - type
@@ -1265,7 +1265,7 @@ components:
           - account
           type: string
         attributes:
-          $ref: "#/components/schemas/Account_data_attributes"
+          $ref: "#/schemas/Account_data_attributes"
       required:
       - attributes
       - id

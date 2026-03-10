@@ -20,4 +20,4 @@ post:
       content:
         application/json:
           schema:
-            $ref: '../components/schemas/shared/Errors.yaml'
+            $ref: '../../shared/Errors.yaml'
