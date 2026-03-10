@@ -1,0 +1,78 @@
+post:
+  tags:
+    - profiles
+  summary: Upload my avatar
+  description: >
+    Uploads or replaces the current authenticated user's avatar.
+    Requires a valid access token.
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - avatar
+          properties:
+            avatar:
+              type: string
+              format: binary
+              description: "Avatar image file"
+  responses:
+    "200":
+      description: Avatar uploaded.
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/profile/Profile.yaml"
+    "400":
+      description: Bad request (invalid file format or size).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"
+    "401":
+      description: Unauthorized.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"
+    "500":
+      description: Internal server error.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"
+
+delete:
+  tags:
+    - profiles
+  summary: Delete my avatar
+  description: >
+    Deletes the current authenticated user's avatar.
+    Requires a valid access token.
+  security:
+    - bearerAuth: []
+  responses:
+    "204":
+      description: Avatar deleted.
+    "401":
+      description: Unauthorized.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"
+    "404":
+      description: Avatar not found.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"
+    "500":
+      description: Internal server error.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "../components/schemas/shared/Errors.yaml"

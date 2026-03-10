@@ -1,0 +1,43 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ access_token ]
+      attributes:
+        type: object
+        required:
+          - access_token
+        properties:
+          refresh_token:
+            type: string
+            description: The access token to generate a new access token.
+            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      relationships:
+        type: object
+        properties:
+          profile:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "Account id"
+                  type:
+                    type: string
+                    enum: [ account ]

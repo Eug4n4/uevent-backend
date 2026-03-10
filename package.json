@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "bundle": "swagger-cli bundle ./docs/api.yaml --outfile ./docs/api-bundled.yaml --type yaml"
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-cli": "^4.0.4"
+  }
+}

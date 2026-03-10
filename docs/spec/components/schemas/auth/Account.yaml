@@ -1,0 +1,71 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+      - relationships
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "account ID"
+      type:
+        type: string
+        enum: [ account ]
+      attributes:
+        type: object
+        required:
+          - role
+          - email
+          - role
+          - created_at
+          - updated_at
+        properties:
+          role:
+            type: string
+            description: "The role assigned to the account"
+          username:
+            type: string
+            description: "The username of the account"
+          version:
+            type: integer
+            description: "The version number of the account record"
+          created_at:
+            type: string
+            format: date-time
+            description: "The date and time when the account was created"
+          updated_at:
+            type: string
+            format: date-time
+            description: "The date and time when the account was last updated"
+      relationships:
+        type: object
+        properties:
+          profile:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "Profile id"
+                  type:
+                    type: string
+                    enum: [ profile ]
+  included:
+    type: array
+    items:
+      oneOf:
+        - $ref: '../profile/ProfileData.yaml'

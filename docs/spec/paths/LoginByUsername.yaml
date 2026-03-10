@@ -1,0 +1,34 @@
+post:
+  tags:
+    - login
+  summary: Login by username
+  description: Endpoint to login a user using their username and password.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../components/schemas/auth/LoginByUsername.yaml'
+
+  responses:
+    '200':
+      description: Successful login
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth/AccessToken.yaml'
+
+    '401':
+      description: >
+        Unauthorized: Invalid username or password.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
+
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'

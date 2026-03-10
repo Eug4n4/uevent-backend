@@ -1,0 +1,83 @@
+get:
+  tags:
+    - accounts
+  summary: Get my account
+  description: >
+    Returns the authenticated account.
+
+  parameters:
+    - in: query
+      name: include
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - profile
+      style: form
+      explode: false
+      description: >
+        Optional related resources to include. Supported values: `profile`.
+
+  security:
+    - BearerAuth: [ ]
+  responses:
+    '200':
+      description: Account successfully retrieved
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/auth/Account.yaml'
+
+    '401':
+      description: >
+        Unauthorized. Invalid session.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
+
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
+
+delete:
+  tags:
+    - accounts
+  summary: Delete my account
+  description: >
+    Deletes the authenticated account.
+
+  security:
+    - BearerAuth: [ ]
+  responses:
+    '204':
+      description: Account successfully deleted
+
+    '401':
+      description: >
+        Unauthorized. Invalid session.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
+
+    '403':
+      description: >
+        Account is have membership in an company, 
+        must leave all company before deleting the account.
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
+
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/shared/Errors.yaml'
