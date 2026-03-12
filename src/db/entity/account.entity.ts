@@ -5,13 +5,14 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
     Generated,
-    PrimaryColumn
+    PrimaryColumn,
+    BaseEntity
 } from "typeorm";
 
 export type UserRole = "admin" | "user";
 
-@Entity({ name: "users" })
-export class User {
+@Entity({ name: "accounts" })
+export class Account extends BaseEntity {
     @PrimaryColumn()
     @Generated("uuid")
     id: string;
@@ -19,7 +20,7 @@ export class User {
     @Column({ unique: true, length: 256 })
     email: string;
 
-    @Column({ type: "char", length: 30 })
+    @Column({ length: 256 })
     password: string;
 
     @Column({ type: "enum", enum: ["admin", "user"], default: "user" })

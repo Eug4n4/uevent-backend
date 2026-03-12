@@ -6,20 +6,21 @@ import {
     OneToOne,
     JoinColumn,
     PrimaryColumn,
-    Generated
+    Generated,
+    BaseEntity
 } from "typeorm";
-import { User } from "./user.entity";
+import { Account } from "./account.entity";
 
 @Entity({ name: "profiles" })
-export class Profile {
-    @PrimaryColumn({ name: "user_id" })
+export class Profile extends BaseEntity {
+    @PrimaryColumn({ name: "account_id" })
     @Generated("uuid")
-    userId: string;
+    accountId: string;
 
     @Column({ length: 30 })
     username: string;
 
-    @Column({ length: 255 })
+    @Column({ length: 255, default: "default.png" })
     avatar: string;
 
     @CreateDateColumn({ name: "created_at" })
@@ -28,7 +29,7 @@ export class Profile {
     @UpdateDateColumn({ name: "updated_at" })
     updatedAt: Date;
 
-    @OneToOne(() => User)
-    @JoinColumn({ name: "user_id" })
-    user: User;
+    @OneToOne(() => Account, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "account_id" })
+    account: Account;
 }
