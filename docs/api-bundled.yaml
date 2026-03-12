@@ -1,6 +1,6 @@
 openapi: 3.1.1
 info:
-  title: uevent auth-svc API
+  title: uevent user-svc API
   description: API documentation for uevent
   version: 0.1.0
 servers:
@@ -41,8 +41,6 @@ paths:
       summary: Register a new admin account
       description: |
         Registers a new account by an authenticated admin.
-      security:
-        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -105,11 +103,11 @@ paths:
               $ref: '#/components/schemas/LoginByEmail'
       responses:
         '200':
-          description: Successful login
+          description: Successful login. Access token is set in HttpOnly cookie.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessToken'
+                $ref: '#/components/schemas/Profile'
         '401':
           description: |
             Unauthorized: Invalid email or password.
@@ -141,7 +139,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessToken'
+                $ref: '#/components/schemas/Profile'
         '401':
           description: |
             Unauthorized: Invalid username or password.
@@ -197,7 +195,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessToken'
+                $ref: '#/components/schemas/Profile'
         '400':
           description: Missing or invalid query parameter `code`
           content:
@@ -237,8 +235,6 @@ paths:
           explode: false
           description: |
             Optional related resources to include. Supported values: `profile`.
-      security:
-        - BearerAuth: []
       responses:
         '200':
           description: Account successfully retrieved
@@ -297,8 +293,6 @@ paths:
       summary: Delete my account
       description: |
         Deletes the authenticated account.
-      security:
-        - BearerAuth: []
       responses:
         '204':
           description: Account successfully deleted
@@ -329,8 +323,6 @@ paths:
       summary: Logout
       description: |
         Invalidates the current session of the authenticated account.
-      security:
-        - BearerAuth: []
       responses:
         '204':
           description: Successfully logged out
@@ -397,8 +389,6 @@ paths:
       summary: Get my profile
       description: |
         Returns the current authenticated user's profile. Requires a valid access token.
-      security:
-        - bearerAuth: []
       responses:
         '200':
           description: Profile found.
@@ -424,8 +414,6 @@ paths:
       summary: Update my profile
       description: |
         Updates the current authenticated user's profile. The request body must contain the same `data.id` as the authenticated account id.
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -470,8 +458,6 @@ paths:
       summary: Upload my avatar
       description: |
         Uploads or replaces the current authenticated user's avatar. Requires a valid access token.
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -516,8 +502,6 @@ paths:
       summary: Delete my avatar
       description: |
         Deletes the current authenticated user's avatar. Requires a valid access token.
-      security:
-        - bearerAuth: []
       responses:
         '204':
           description: Avatar deleted.
@@ -614,11 +598,6 @@ paths:
               schema:
                 $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     LoginByEmail:
       type: object

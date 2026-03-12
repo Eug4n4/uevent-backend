@@ -5,8 +5,7 @@ post:
   description: >
     Uploads or replaces the current authenticated user's avatar.
     Requires a valid access token.
-  security:
-    - bearerAuth: []
+
   requestBody:
     required: true
     content:
@@ -53,8 +52,7 @@ delete:
   description: >
     Deletes the current authenticated user's avatar.
     Requires a valid access token.
-  security:
-    - bearerAuth: []
+
   responses:
     "204":
       description: Avatar deleted.

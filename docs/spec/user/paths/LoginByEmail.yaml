@@ -1,26 +1,27 @@
 post:
   tags:
     - login
-  summary: Login by username
-  description: Endpoint to login a user using their username and password.
+  summary: Login by email
+  description: >
+    Endpoint to login a user using their email and password.
   requestBody:
     required: true
     content:
       application/json:
         schema:
-          $ref: '../schemas/LoginByUsername.yaml'
+          $ref: '../schemas/LoginByEmail.yaml'
 
   responses:
     '200':
-      description: Successful login
+      description: Successful login. Access token is set in HttpOnly cookie.
       content:
         application/json:
           schema:
-            $ref: '../schemas/AccessToken.yaml'
+            $ref: '../schemas/Profile.yaml'
 
     '401':
       description: >
-        Unauthorized: Invalid username or password.
+        Unauthorized: Invalid email or password.
       content:
         application/json:
           schema:

@@ -5,8 +5,6 @@ post:
   description: >
     Registers a new account by an authenticated admin.
 
-  security:
-    - BearerAuth: [ ]
   requestBody:
     required: true
     content:

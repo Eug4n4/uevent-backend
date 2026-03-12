@@ -5,8 +5,7 @@ get:
   description: >
     Returns the current authenticated user's profile.
     Requires a valid access token.
-  security:
-    - bearerAuth: []
+
   responses:
     "200":
       description: Profile found.
@@ -34,8 +33,7 @@ patch:
   description: >
     Updates the current authenticated user's profile.
     The request body must contain the same `data.id` as the authenticated account id.
-  security:
-    - bearerAuth: []
+
   requestBody:
     required: true
     content:

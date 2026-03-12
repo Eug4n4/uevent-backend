@@ -17,7 +17,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../schemas/AccessToken.yaml'
+            $ref: '../schemas/Profile.yaml'
 
     '400':
       description: Missing or invalid query parameter `code`

@@ -1,6 +1,6 @@
 openapi: 3.1.1
 info:
-  title: uevent auth-svc API
+  title: uevent user-svc API
   description: API documentation for uevent
   version: 0.1.0
 
@@ -9,68 +9,62 @@ servers:
 
 paths:
   /uevent/v1/account/registration/:
-    $ref: './spec/auth/paths/Registration.yaml'
+    $ref: './spec/user/paths/Registration.yaml'
   /uevent/v1/account/registration/admin:
-    $ref: './spec/auth/paths/RegistrationByAdmin.yaml'
+    $ref: './spec/user/paths/RegistrationByAdmin.yaml'
 
   /uevent/v1/account/login/email:
-    $ref: './spec/auth/paths/LoginByEmail.yaml'
+    $ref: './spec/user/paths/LoginByEmail.yaml'
   /uevent/v1/account/login/username:
-    $ref: './spec/auth/paths/LoginByUsername.yaml'
+    $ref: './spec/user/paths/LoginByUsername.yaml'
   /uevent/v1/account/login/google:
-    $ref: './spec/auth/paths/LoginByGoogle.yaml'
+    $ref: './spec/user/paths/LoginByGoogle.yaml'
   /uevent/v1/account/login/google/callback:
-    $ref: './spec/auth/paths/LoginByGoogleCallback.yaml'
+    $ref: './spec/user/paths/LoginByGoogleCallback.yaml'
 
   /uevent/v1/account/me:
-    $ref: './spec/auth/paths/MyAccount.yaml'
+    $ref: './spec/user/paths/MyAccount.yaml'
   /uevent/v1/account/me/logout:
-    $ref: './spec/auth/paths/Logout.yaml'
+    $ref: './spec/user/paths/Logout.yaml'
 
   /uevent/v1/profile/:
-    $ref: './spec/profile/paths/FilterProfiles.yaml'
+    $ref: './spec/user/paths/FilterProfiles.yaml'
   /uevent/v1/profile/me:
-    $ref: './spec/profile/paths/MyProfile.yaml'
+    $ref: './spec/user/paths/MyProfile.yaml'
   /uevent/v1/profile/me/avatar:
-    $ref: './spec/profile/paths/MyProfileAvatar.yaml'
+    $ref: './spec/user/paths/MyProfileAvatar.yaml'
   /uevent/v1/profile/{profile_id}:
-    $ref: './spec/profile/paths/ProfileById.yaml'
+    $ref: './spec/user/paths/ProfileById.yaml'
   /uevent/v1/profile/@{username}:
-    $ref: './spec/profile/paths/ProfileByUsername.yaml'
+    $ref: './spec/user/paths/ProfileByUsername.yaml'
 
 
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
   schemas:
-    #auth
+    #user
     LoginByEmail:
-      $ref: './spec/auth/schemas/LoginByEmail.yaml'
+      $ref: './spec/user/schemas/LoginByEmail.yaml'
     LoginByUsername:
-      $ref: './spec/auth/schemas/LoginByUsername.yaml'
+      $ref: './spec/user/schemas/LoginByUsername.yaml'
     Registration:
-      $ref: './spec/auth/schemas/Registration.yaml'
+      $ref: './spec/user/schemas/Registration.yaml'
     RegistrationAdmin:
-      $ref: './spec/auth/schemas/RegistrationAdmin.yaml'
+      $ref: './spec/user/schemas/RegistrationAdmin.yaml'
     UpdateUsername:
-      $ref: './spec/auth/schemas/UpdateUsername.yaml'
+      $ref: './spec/user/schemas/UpdateUsername.yaml'
 
     AccessToken:
-      $ref: './spec/auth/schemas/AccessToken.yaml'
+      $ref: './spec/user/schemas/AccessToken.yaml'
     Account:
-      $ref: './spec/auth/schemas/Account.yaml'
+      $ref: './spec/user/schemas/Account.yaml'
 
     #profile
     UpdateProfile:
-      $ref: './spec/profile/schemas/UpdateProfile.yaml'
+      $ref: './spec/user/schemas/UpdateProfile.yaml'
 
     Profile:
-      $ref: './spec/profile/schemas/Profile.yaml'
+      $ref: './spec/user/schemas/Profile.yaml'
     ProfileData:
-      $ref: './spec/profile/schemas/ProfileData.yaml'
+      $ref: './spec/user/schemas/ProfileData.yaml'
     ProfilesCollection:
-      $ref: './spec/profile/schemas/ProfilesCollection.yaml'
+      $ref: './spec/user/schemas/ProfilesCollection.yaml'

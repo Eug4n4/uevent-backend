@@ -20,8 +20,7 @@ get:
       description: >
         Optional related resources to include. Supported values: `profile`.
 
-  security:
-    - BearerAuth: [ ]
+
   responses:
     '200':
       description: Account successfully retrieved
@@ -52,8 +51,7 @@ delete:
   description: >
     Deletes the authenticated account.
 
-  security:
-    - BearerAuth: [ ]
+
   responses:
     '204':
       description: Account successfully deleted
