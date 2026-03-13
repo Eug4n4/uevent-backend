@@ -1,0 +1,30 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "account id"
+      type:
+        type: string
+        enum: [ profile ]
+      attributes:
+        type: object
+        properties:
+          pseudonym:
+            type: string
+            description: "pseudonym"
+          username:
+            type: string
+            description: "user username"
+          description:
+            type: string
+            description: "description"

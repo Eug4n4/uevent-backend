@@ -1,0 +1,30 @@
+post:
+  tags:
+    - registration
+  summary: Register a new account
+  description: Endpoint to register a new user account.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/Registration.yaml'
+  responses:
+    '201':
+      description: Account successfully registered, always return without include parameters
+
+    '409':
+      description: >
+        Conflict: An account with this email or username already exists.
+        Check the 'detail' field in the response for more information.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

@@ -1,0 +1,10 @@
+services:
+  docs-swagger:
+    image: swaggerapi/swagger-ui
+    container_name: docs-swagger
+    environment:
+      - SWAGGER_JSON=/docs/api-bundled.yaml
+    volumes:
+      - ./docs:/docs:ro
+    ports:
+      - "6767:8080"
