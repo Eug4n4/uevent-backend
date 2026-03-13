@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { RegisterDto } from "./dto/register.dto";
 import { Account } from "src/db/entity/account.entity";
@@ -6,6 +6,7 @@ import { DataSource } from "typeorm";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
 import { LoginDto } from "./dto/login.dto";
+import { RefreshTokenPayload, TokenPair } from "./types/token.types";
 
 @Injectable()
 export class AuthService {
@@ -60,6 +61,25 @@ export class AuthService {
         }
     }
 
+    async refresh(refreshToken: string): Promise<TokenPair> {
+        const payload =
+            this.jwtService.verify<RefreshTokenPayload>(refreshToken);
+        const account = await Account.findOneBy({ id: payload.sub });
+        if (!account) {
+            throw new UnauthorizedException("Invalid token payload");
+        }
+        return {
+            access: await this.generateJwt(
+                { sub: account.id, role: account.role },
+                Date.now() + 5 * 60 * 1000
+            ),
+            refresh: await this.generateJwt(
+                { sub: account.id },
+                Date.now() + 15 * 60 * 1000
+            )
+        };
+    }
+
     async validateUser(dto: LoginDto) {
         const account = await this.dataSource.manager.findOneBy(Account, {
             email: dto.data.attributes.email
@@ -76,7 +96,7 @@ export class AuthService {
         return account;
     }
 
-    async generateJwt(payload: any, expires: number) {
+    async generateJwt(payload, expires: number) {
         return {
             token: await this.jwtService.signAsync(payload, {
                 expiresIn: expires
