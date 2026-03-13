@@ -41,6 +41,26 @@ export class AuthService {
     }
 
     async login(dto: LoginDto) {
+        const account = await this.validateUser(dto);
+        if (account) {
+            const profile = await this.dataSource.manager.findOneBy(Profile, {
+                accountId: account.id
+            });
+            return {
+                profile: profile,
+                access: await this.generateJwt(
+                    { sub: account.id, role: account.role },
+                    Date.now() + 5 * 60 * 1000
+                ),
+                refresh: await this.generateJwt(
+                    { sub: account.id },
+                    Date.now() + 15 * 60 * 1000
+                )
+            };
+        }
+    }
+
+    async validateUser(dto: LoginDto) {
         const account = await this.dataSource.manager.findOneBy(Account, {
             email: dto.data.attributes.email
         });
@@ -49,41 +69,14 @@ export class AuthService {
                 dto.data.attributes.password,
                 account.password
             );
-            if (isCorrect) {
-                const profile = await this.dataSource.manager.findOneBy(
-                    Profile,
-                    { accountId: account.id }
-                );
-                return {
-                    profile: profile,
-                    access: await this.generateAccessToken(account),
-                    refresh: await this.generateRefreshToken(account)
-                };
+            if (!isCorrect) {
+                return null;
             }
         }
+        return account;
     }
 
-    async generateAccessToken(account: Account) {
-        const expires = Date.now() + 5 * 60 * 1000;
-        const payload = {
-            sub: account.id,
-            role: account.role
-        };
-
-        return {
-            token: await this.jwtService.signAsync(payload, {
-                expiresIn: expires
-            }),
-            expires: expires
-        };
-    }
-
-    async generateRefreshToken(account: Account) {
-        const expires = Date.now() + 15 * 60 * 1000;
-        const payload = {
-            sub: account.id
-        };
-
+    async generateJwt(payload: any, expires: number) {
         return {
             token: await this.jwtService.signAsync(payload, {
                 expiresIn: expires

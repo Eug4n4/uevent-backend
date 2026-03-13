@@ -5,12 +5,14 @@ import {
     Res,
     Req,
     HttpStatus,
-    HttpCode
+    HttpCode,
+    UseGuards
 } from "@nestjs/common";
 import { RegisterDto } from "./dto/register.dto";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "./dto/login.dto";
+import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 
 @Controller("account")
 export class AuthController {
@@ -20,8 +22,8 @@ export class AuthController {
     async register(@Body() dto: RegisterDto) {
         await this.authService.register(dto);
     }
-    @HttpCode(HttpStatus.OK)
     @Post("login")
+    @HttpCode(HttpStatus.OK)
     async login(
         @Body() dto: LoginDto,
         @Req() req: Request,
@@ -68,5 +70,13 @@ export class AuthController {
                 ]
             });
         }
+    }
+    @UseGuards(JwtAuthGuard)
+    @Post("logout")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    logout(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+        console.log(`${JSON.stringify(req.user)}`);
+        res.clearCookie("access");
+        res.clearCookie("refresh");
     }
 }

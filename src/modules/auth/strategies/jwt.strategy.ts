@@ -1,0 +1,49 @@
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { PassportStrategy } from "@nestjs/passport";
+import { Injectable } from "@nestjs/common";
+import { extractAccessToken, extractRefreshToken } from "../auth.utils";
+
+type AccessTokenPayload = {
+    sub: string;
+    role: string;
+};
+
+type RefreshTokenPayload = {
+    sub: string;
+};
+
+@Injectable()
+export class JwtAccessStrategy extends PassportStrategy(
+    Strategy,
+    "jwt-access"
+) {
+    constructor() {
+        super({
+            jwtFromRequest: ExtractJwt.fromExtractors([extractAccessToken]),
+            ignoreExpiration: false,
+            secretOrKey: String(process.env.JWT_SECRET)
+        });
+    }
+
+    validate(payload: AccessTokenPayload) {
+        return { id: payload.sub, role: payload.role }; // req.user
+    }
+}
+
+@Injectable()
+export class JwtRefreshStrategy extends PassportStrategy(
+    Strategy,
+    "jwt-refresh"
+) {
+    constructor() {
+        super({
+            jwtFromRequest: ExtractJwt.fromExtractors([extractRefreshToken]),
+            ignoreExpiration: false,
+            secretOrKey: String(process.env.JWT_SECRET)
+        });
+    }
+
+    validate(payload: RefreshTokenPayload) {
+        return { id: payload.sub }; // req.user
+    }
+}
