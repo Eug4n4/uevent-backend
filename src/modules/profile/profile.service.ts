@@ -98,10 +98,9 @@ export class ProfileService {
             .where("account.deleted_at IS NULL");
 
         if (dto.text) {
-            qb.andWhere(
-                "profile.username ILIKE :text OR profile.pseudonym ILIKE :text",
-                { text: `${dto.text}%` }
-            );
+            qb.andWhere("profile.username ILIKE :text", {
+                text: `${dto.text}%`
+            });
         }
         qb.limit(dto["page[limit]"] ?? 20);
         qb.offset(dto["page[offset]"] ?? 0);

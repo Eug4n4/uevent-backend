@@ -6,7 +6,6 @@ function profileData(profile: Profile) {
         type: "profile",
         attributes: {
             username: profile.username,
-            pseudonym: profile.pseudonym,
             avatar_url: profile.avatar,
             updated_at: profile.updatedAt,
             created_at: profile.createdAt

@@ -4,8 +4,10 @@ import {
     IsDefined,
     IsString,
     Length,
+    Matches,
     ValidateNested
 } from "class-validator";
+import { USERNAME_PATTERN } from "../shared/constants";
 
 class LoginAttributes {
     @IsString()
@@ -39,7 +41,8 @@ class RegisterAttributes {
     @Length(6, 256, { message: "Email length must be in range [6, 256]" })
     email: string;
     @IsString()
-    @Length(3, 30)
+    @Length(3, 32)
+    @Matches(USERNAME_PATTERN)
     username: string;
     @IsString()
     @Length(6)
@@ -57,7 +60,6 @@ class RegisterData {
     attributes: RegisterAttributes;
 }
 
-//TODO: mb schema validation?
 export class RegisterDto {
     @IsDefined()
     @ValidateNested()

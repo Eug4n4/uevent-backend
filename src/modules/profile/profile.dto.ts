@@ -7,24 +7,23 @@ import {
     Matches,
     IsInt,
     Min,
-    Max
+    Max,
+    ValidateNested,
+    IsDefined,
+    Equals
 } from "class-validator";
 import { Type } from "class-transformer";
+import { USERNAME_PATTERN } from "../shared/constants";
 
 export class UpdateProfileAttributesDto {
     @IsOptional()
     @IsString()
     @MinLength(3)
     @MaxLength(32)
-    @Matches(/^[a-zA-Z0-9\-._!]+$/, {
+    @Matches(USERNAME_PATTERN, {
         message: "Username can only contain letters, numbers, and -._!"
     })
     username?: string;
-
-    @IsOptional()
-    @IsString()
-    @MaxLength(512)
-    pseudonym?: string;
 }
 
 export class UpdateProfileDataDto {
@@ -32,6 +31,7 @@ export class UpdateProfileDataDto {
     id: string;
 
     @IsString()
+    @Equals("profile")
     type: string;
 
     @IsOptional()
@@ -39,6 +39,9 @@ export class UpdateProfileDataDto {
 }
 
 export class UpdateProfileDto {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => UpdateProfileDataDto)
     data: UpdateProfileDataDto;
 }
 

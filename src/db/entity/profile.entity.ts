@@ -20,10 +20,6 @@ export class Profile extends BaseEntity {
     @Column({ length: 30 })
     username: string;
 
-    //Add pseudo if u think it's useless text to telegram
-    @Column({ length: 30 })
-    pseudonym: string;
-
     @Column({ length: 255, default: "default.png" })
     avatar: string;
 
