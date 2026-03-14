@@ -1,12 +1,12 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { RegisterDto } from "./dto/register.dto";
-import { Account } from "src/db/entity/account.entity";
 import { DataSource } from "typeorm";
+import { RegisterDto, LoginDto } from "./auth.dto";
+import type { TokenPair } from "./auth.types";
+import { Account } from "src/db/entity/account.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
-import { LoginDto } from "./dto/login.dto";
-import { RefreshTokenPayload, TokenPair } from "./types/token.types";
+import { RefreshTokenPayload } from "../shared/jwt.strategy";
 
 @Injectable()
 export class AuthService {
@@ -15,7 +15,7 @@ export class AuthService {
         private dataSource: DataSource
     ) {}
 
-    async register(dto: RegisterDto) {
+    public async register(dto: RegisterDto) {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -41,14 +41,11 @@ export class AuthService {
         }
     }
 
-    async login(dto: LoginDto) {
+    public async login(dto: LoginDto) {
         const account = await this.validateUser(dto);
         if (account) {
-            const profile = await this.dataSource.manager.findOneBy(Profile, {
-                accountId: account.id
-            });
             return {
-                profile: profile,
+                account: account,
                 access: await this.generateJwt(
                     { sub: account.id, role: account.role },
                     Date.now() + 5 * 60 * 1000
@@ -61,7 +58,7 @@ export class AuthService {
         }
     }
 
-    async refresh(refreshToken: string): Promise<TokenPair> {
+    public async refresh(refreshToken: string): Promise<TokenPair> {
         const payload =
             this.jwtService.verify<RefreshTokenPayload>(refreshToken);
         const account = await Account.findOneBy({ id: payload.sub });
@@ -80,7 +77,25 @@ export class AuthService {
         };
     }
 
-    async validateUser(dto: LoginDto) {
+    //add this
+    public async getMe(accountId: string): Promise<Account> {
+        const account = await Account.findOneBy({ id: accountId });
+        if (!account) {
+            throw new UnauthorizedException("Account not found");
+        }
+        return account;
+    }
+
+    //TODO we need to talk about soft delete
+    public async deleteMe(accountId: string): Promise<void> {
+        const account = await Account.findOneBy({ id: accountId });
+        if (!account) {
+            throw new UnauthorizedException("Account not found");
+        }
+        await account.softRemove();
+    }
+
+    private async validateUser(dto: LoginDto) {
         const account = await this.dataSource.manager.findOneBy(Account, {
             email: dto.data.attributes.email
         });
@@ -96,7 +111,7 @@ export class AuthService {
         return account;
     }
 
-    async generateJwt(payload, expires: number) {
+    private async generateJwt(payload, expires: number) {
         return {
             token: await this.jwtService.signAsync(payload, {
                 expiresIn: expires

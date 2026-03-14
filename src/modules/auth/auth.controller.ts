@@ -8,13 +8,11 @@ import {
     HttpCode,
     UseGuards
 } from "@nestjs/common";
-import { RegisterDto } from "./dto/register.dto";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
-import { LoginDto } from "./dto/login.dto";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
-import { TokenPair } from "./types/token.types";
+import { RegisterDto, LoginDto } from "./auth.dto";
+import type { TokenPair } from "./auth.types";
+import { JwtGuard, JwtRefreshGuard } from "../shared/jwt.guard";
 
 @Controller("account")
 export class AuthController {
@@ -24,6 +22,7 @@ export class AuthController {
     async register(@Body() dto: RegisterDto) {
         await this.authService.register(dto);
     }
+
     @Post("login")
     @HttpCode(HttpStatus.OK)
     async login(
@@ -42,32 +41,46 @@ export class AuthController {
                 ]
             });
         }
+
         const result = await this.authService.login(dto);
-        if (result && result.profile) {
+        if (result && result.account) {
             this.setTokenPair(res, result);
             res.json({
                 data: {
-                    type: "profile",
+                    id: result.account.id, //This is the most important part, because it is used to identify the user in the frontend
+                    type: "account",
                     attributes: {
-                        username: result.profile.username,
-                        avatar: result.profile.avatar,
-                        createdAt: result.profile.createdAt
+                        role: result.account.role,
+                        email: result.account.email,
+                        updatedAt: result.account.updatedAt,
+                        createdAt: result.account.createdAt
+                    },
+                    relationships: {
+                        profile: {
+                            data: {
+                                id: result.account.id,
+                                type: "profile"
+                            }
+                        }
                     }
                 }
             });
-        } else {
-            res.status(HttpStatus.BAD_REQUEST).json({
-                errors: [
-                    {
-                        title: "Bad request",
-                        detail: "Invalid email or password",
-                        status: HttpStatus.BAD_REQUEST
-                    }
-                ]
-            });
+
+            return;
         }
+
+        res.status(HttpStatus.BAD_REQUEST).json({
+            errors: [
+                {
+                    title: "Bad request",
+                    detail: "Invalid email or password",
+                    status: HttpStatus.BAD_REQUEST
+                }
+            ]
+        });
     }
-    @UseGuards(JwtAuthGuard)
+
+    @UseGuards(JwtGuard)
     @Post("logout")
     @HttpCode(HttpStatus.NO_CONTENT)
     logout(@Res({ passthrough: true }) res: Response) {

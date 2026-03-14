@@ -1,8 +1,24 @@
-import { ExtractJwt, Strategy } from "passport-jwt";
+import { ExtractJwt, JwtFromRequestFunction, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from "@nestjs/common";
-import { extractAccessToken, extractRefreshToken } from "../auth.utils";
-import { AccessTokenPayload, RefreshTokenPayload } from "../types/token.types";
+import type { Request } from "express";
+
+export type AccessTokenPayload = {
+    sub: string;
+    role: string;
+};
+
+export type RefreshTokenPayload = {
+    sub: string;
+};
+
+export const extractAccessToken: JwtFromRequestFunction = (req: Request) => {
+    return req.cookies["access"];
+};
+
+export const extractRefreshToken: JwtFromRequestFunction = (req: Request) => {
+    return req.cookies["refresh"];
+};
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(

@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { JwtAccessStrategy, JwtRefreshStrategy } from "../shared/jwt.strategy";
 import { PassportModule } from "@nestjs/passport";
+import { ProfileController } from "./profile.controller";
+import { ProfileService } from "./profile.service";
+import { S3Service } from "../shared/s3.uploader";
+import { JwtAccessStrategy } from "../shared/jwt.strategy";
 
 @Module({
     imports: [
@@ -17,7 +18,7 @@ import { PassportModule } from "@nestjs/passport";
             inject: [ConfigService]
         })
     ],
-    controllers: [AuthController],
-    providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy]
+    controllers: [ProfileController],
+    providers: [ProfileService, JwtAccessStrategy, S3Service]
 })
-export class AuthModule {}
+export class ProfileModule {}

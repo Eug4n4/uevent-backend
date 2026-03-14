@@ -6,6 +6,7 @@ type HashResult = {
     keylen: number;
 };
 
+//TODO mb remove to another place?
 export class Hasher {
     static async hash(plain: string): Promise<HashResult> {
         return new Promise((resolve, reject) => {

@@ -1,0 +1,62 @@
+openapi: 3.1.1
+info:
+  title: uevent user-svc API
+  description: API documentation for uevent
+  version: 0.1.0
+
+servers:
+  - url: http://localhost:6767
+
+paths:
+  /uevent/v1/account/registration/:
+    $ref: './spec/user/paths/Registration.yaml'
+  /uevent/v1/account/registration/admin:
+    $ref: './spec/user/paths/RegistrationByAdmin.yaml'
+
+  /uevent/v1/account/login:
+    $ref: './spec/user/paths/LoginByEmail.yaml'
+  /uevent/v1/account/login/google:
+    $ref: './spec/user/paths/LoginByGoogle.yaml'
+  /uevent/v1/account/login/google/callback:
+    $ref: './spec/user/paths/LoginByGoogleCallback.yaml'
+
+  /uevent/v1/account/me:
+    $ref: './spec/user/paths/MyAccount.yaml'
+  /uevent/v1/account/me/logout:
+    $ref: './spec/user/paths/Logout.yaml'
+
+  /uevent/v1/profile/:
+    $ref: './spec/user/paths/FilterProfiles.yaml'
+  /uevent/v1/profile/me:
+    $ref: './spec/user/paths/MyProfile.yaml'
+  /uevent/v1/profile/me/avatar:
+    $ref: './spec/user/paths/MyProfileAvatar.yaml'
+  /uevent/v1/profile/{profile_id}:
+    $ref: './spec/user/paths/ProfileById.yaml'
+  /uevent/v1/profile/@{username}:
+    $ref: './spec/user/paths/ProfileByUsername.yaml'
+
+
+components:
+  schemas:
+    #user
+    LoginByEmail:
+      $ref: './spec/user/schemas/LoginByEmail.yaml'
+    Registration:
+      $ref: './spec/user/schemas/Registration.yaml'
+    RegistrationAdmin:
+      $ref: './spec/user/schemas/RegistrationAdmin.yaml'
+
+    Account:
+      $ref: './spec/user/schemas/Account.yaml'
+
+    #profile
+    UpdateProfile:
+      $ref: './spec/user/schemas/UpdateProfile.yaml'
+
+    Profile:
+      $ref: './spec/user/schemas/Profile.yaml'
+    ProfileData:
+      $ref: './spec/user/schemas/ProfileData.yaml'
+    ProfilesCollection:
+      $ref: './spec/user/schemas/ProfilesCollection.yaml'

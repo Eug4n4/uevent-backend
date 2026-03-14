@@ -1,0 +1,999 @@
+openapi: 3.1.1
+info:
+  title: uevent user-svc API
+  description: API documentation for uevent
+  version: 0.1.0
+servers:
+  - url: 'http://localhost:6767'
+paths:
+  /uevent/v1/account/registration/:
+    post:
+      tags:
+        - registration
+      summary: Register a new account
+      description: Endpoint to register a new user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+      responses:
+        '201':
+          description: 'Account successfully registered, always return without include parameters'
+        '409':
+          description: |
+            Conflict: An account with this email or username already exists. Check the 'detail' field in the response for more information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/registration/admin:
+    post:
+      tags:
+        - registration
+      summary: Register a new admin account
+      description: |
+        Registers a new account by an authenticated admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationAdmin'
+      responses:
+        '201':
+          description: 'Account successfully registered by admin, always return without include parameters'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: |
+            Bad Request. Request body is invalid or some attributes do not meet requirements. Check the `errors` array for details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '401':
+          description: |
+            Unauthorized. Invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '403':
+          description: |
+            Forbidden. Initiator does not have enough rights.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '409':
+          description: |
+            Conflict. Email or username is already taken. Check the `detail` field in the response for more information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/login/email:
+    post:
+      tags:
+        - login
+      summary: Login by email
+      description: |
+        Endpoint to login a user using their email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginByEmail'
+      responses:
+        '200':
+          description: Successful login. Access token is set in HttpOnly cookie.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: |
+            Unauthorized: Invalid email or password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/login/username:
+    post:
+      tags:
+        - login
+      summary: Login by username
+      description: Endpoint to login a user using their username and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginByUsername'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: |
+            Unauthorized: Invalid username or password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/login/google:
+    post:
+      tags:
+        - login
+      summary: Start Google OAuth login
+      description: |
+        Redirects the user-agent to Google OAuth consent screen. This endpoint returns a redirect and does not return a JSON:API document.
+      responses:
+        '307':
+          description: Temporary Redirect to Google OAuth consent screen
+          headers:
+            Location:
+              description: Google OAuth authorization URL
+              schema:
+                type: string
+                format: uri
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/login/google/callback:
+    get:
+      tags:
+        - login
+      summary: Google OAuth callback
+      description: |
+        Exchanges Google OAuth `code` for user info and returns an access/refresh tokens pair.
+      parameters:
+        - in: query
+          name: code
+          required: true
+          schema:
+            type: string
+          description: OAuth authorization code returned by Google
+      responses:
+        '200':
+          description: Tokens pair issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Missing or invalid query parameter `code`
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '404':
+          description: Account not found for this email
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/me:
+    get:
+      tags:
+        - accounts
+      summary: Get my account
+      description: |
+        Returns the authenticated account.
+      parameters:
+        - in: query
+          name: include
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - profile
+          style: form
+          explode: false
+          description: |
+            Optional related resources to include. Supported values: `profile`.
+      responses:
+        '200':
+          description: Account successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          description: |
+            Unauthorized. Invalid session.
+          content:
+            application/json:
+              schema:
+                description: 'Standard JSON:API error'
+                type: object
+                required:
+                  - errors
+                properties:
+                  errors:
+                    type: array
+                    description: Non empty array of errors occurred during request processing
+                    items:
+                      type: object
+                      required:
+                        - title
+                        - status
+                      properties:
+                        title:
+                          type: string
+                          description: 'Title is a short, human-readable summary of the problem'
+                          example: Bad Request
+                        detail:
+                          type: string
+                          description: Detail is a human-readable explanation specific to this occurrence of the problem
+                          example: Request body was expected
+                        status:
+                          type: integer
+                          description: Status is the HTTP status code applicable to this problem
+                          example: 400
+                          enum:
+                            - 400
+                            - 401
+                            - 403
+                            - 404
+                            - 409
+                            - 500
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+    delete:
+      tags:
+        - accounts
+      summary: Delete my account
+      description: |
+        Deletes the authenticated account.
+      responses:
+        '204':
+          description: Account successfully deleted
+        '401':
+          description: |
+            Unauthorized. Invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '403':
+          description: |
+            Account is have membership in an company,  must leave all company before deleting the account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/account/me/logout:
+    post:
+      tags:
+        - login
+      summary: Logout
+      description: |
+        Invalidates the current session of the authenticated account.
+      responses:
+        '204':
+          description: Successfully logged out
+        '401':
+          description: |
+            Unauthorized. Invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/profile/:
+    get:
+      tags:
+        - profiles
+      summary: Filter profiles
+      description: |
+        Returns a paginated list of public profiles filtered by optional query parameters. Supports prefix-based filtering for `username` and `pseudonym`.
+      parameters:
+        - in: query
+          name: text
+          required: false
+          schema:
+            type: string
+          description: |
+            Text to filter profiles by. Matches against `username` and `pseudonym` fields using prefix-based filtering.
+        - in: query
+          name: 'page[limit]'
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Max number of items to return (1-100).
+        - in: query
+          name: 'page[offset]'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Number of items to skip.
+      responses:
+        '200':
+          description: Profiles list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilesCollection'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/profile/me:
+    get:
+      tags:
+        - profiles
+      summary: Get my profile
+      description: |
+        Returns the current authenticated user's profile. Requires a valid access token.
+      responses:
+        '200':
+          description: Profile found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: Unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+    patch:
+      tags:
+        - profiles
+      summary: Update my profile
+      description: |
+        Updates the current authenticated user's profile. The request body must contain the same `data.id` as the authenticated account id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfile'
+      responses:
+        '200':
+          description: Profile updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Bad request (validation error / invalid payload).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '401':
+          description: Unauthorized (missing/invalid token or profile does not exist).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '403':
+          description: Forbidden (user too young).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  /uevent/v1/profile/me/avatar:
+    post:
+      tags:
+        - profiles
+      summary: Upload my avatar
+      description: |
+        Uploads or replaces the current authenticated user's avatar. Requires a valid access token.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Avatar image file
+      responses:
+        '200':
+          description: Avatar uploaded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Bad request (invalid file format or size).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '401':
+          description: Unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+    delete:
+      tags:
+        - profiles
+      summary: Delete my avatar
+      description: |
+        Deletes the current authenticated user's avatar. Requires a valid access token.
+      responses:
+        '204':
+          description: Avatar deleted.
+        '401':
+          description: Unauthorized.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '404':
+          description: Avatar not found.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  '/uevent/v1/profile/{profile_id}':
+    get:
+      tags:
+        - profiles
+      summary: Get profile by account id
+      description: |
+        Returns a public profile by `account_id` (UUID). If the profile does not exist, responds with 404.
+      parameters:
+        - name: account_id
+          in: path
+          required: true
+          description: Account id (UUID).
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Bad request (invalid account_id).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '404':
+          description: Profile for account does not exist.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+  '/uevent/v1/profile/@{username}':
+    get:
+      tags:
+        - profiles
+      summary: Get profile by username
+      description: |
+        Returns a public profile by `username`. If the profile does not exist, responds with 404.
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: Username of the profile owner.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Profile found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profile for user does not exist.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+        '500':
+          description: Internal server error.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+components:
+  schemas:
+    LoginByEmail:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - account
+            attributes:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The account's email address.
+                  example: example@gmail.com
+                password:
+                  type: string
+                  format: password
+                  description: The account's password.
+                  example: StrongP@ssw0rd!
+    LoginByUsername:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - account
+            attributes:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The account's username.
+                  example: example
+                password:
+                  type: string
+                  format: password
+                  description: The account's password.
+                  example: StrongP@ssw0rd!
+    Registration:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - account
+            attributes:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The account's email address.
+                  example: example@gmail.com
+                username:
+                  type: string
+                  description: The account's username.
+                  example: user123
+                password:
+                  type: string
+                  format: password
+                  description: The account's password.
+                  example: StrongP@ssw0rd!
+    RegistrationAdmin:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - account
+            attributes:
+              type: object
+              required:
+                - email
+                - username
+                - password
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The account's email address.
+                  example: example1312@gmail.com
+                username:
+                  type: string
+                  description: The account's username.
+                  example: adminUser
+                password:
+                  type: string
+                  format: password
+                  description: The account's password.
+                  example: StrongP@ssw0rd!
+                role:
+                  type: string
+                  description: The role assigned to the registering account.
+                  enum:
+                    - admin
+                    - moderator
+                  example: admin
+    UpdateUsername:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - account_username
+            attributes:
+              type: object
+              required:
+                - username
+              properties:
+                username:
+                  type: string
+                  description: The account's username.
+    AccessToken:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - access_token
+            attributes:
+              type: object
+              required:
+                - access_token
+              properties:
+                refresh_token:
+                  type: string
+                  description: The access token to generate a new access token.
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+            relationships:
+              type: object
+              properties:
+                profile:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Account id
+                        type:
+                          type: string
+                          enum:
+                            - account
+    Account:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+            - relationships
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: account ID
+            type:
+              type: string
+              enum:
+                - account
+            attributes:
+              type: object
+              required:
+                - role
+                - email
+                - role
+                - created_at
+                - updated_at
+              properties:
+                role:
+                  type: string
+                  description: The role assigned to the account
+                username:
+                  type: string
+                  description: The username of the account
+                version:
+                  type: integer
+                  description: The version number of the account record
+                created_at:
+                  type: string
+                  format: date-time
+                  description: The date and time when the account was created
+                updated_at:
+                  type: string
+                  format: date-time
+                  description: The date and time when the account was last updated
+            relationships:
+              type: object
+              properties:
+                profile:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Profile id
+                        type:
+                          type: string
+                          enum:
+                            - profile
+        included:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/Profile'
+    UpdateProfile:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: account id
+            type:
+              type: string
+              enum:
+                - profile
+            attributes:
+              type: object
+              properties:
+                pseudonym:
+                  type: string
+                  description: pseudonym
+                username:
+                  type: string
+                  description: user username
+                description:
+                  type: string
+                  description: description
+    Profile:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/ProfileData'
+    ProfileData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: account id
+        type:
+          type: string
+          enum:
+            - profile
+        attributes:
+          type: object
+          required:
+            - username
+            - pseudonym
+            - updated_at
+            - created_at
+          properties:
+            username:
+              type: string
+              description: username for this account and profile
+            pseudonym:
+              type: string
+              description: profile pseudonym
+            avatar_url:
+              type: string
+              description: avatar key
+            updated_at:
+              type: string
+              format: date-time
+              description: updated at
+            created_at:
+              type: string
+              format: date-time
+              description: created at
+    ProfilesCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileData'
+        links:
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              type: string
+              format: uri
+              description: link to the current page
+            first:
+              type: string
+              format: uri
+              description: link to the first page
+            last:
+              type: string
+              format: uri
+              description: link to the last page
+            prev:
+              type: string
+              format: uri
+              description: link to the previous page
+            next:
+              type: string
+              format: uri
+              description: link to the next page

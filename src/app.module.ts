@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./modules/auth/auth.module";
+import { ProfileModule } from "./modules/profile/profile.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 
@@ -18,7 +19,8 @@ import { ConfigModule } from "@nestjs/config";
             synchronize: true,
             entities: [`${__dirname}/db/entity/*{.js,.ts}`]
         }),
-        AuthModule
+        AuthModule,
+        ProfileModule
     ],
     controllers: [AppController],
     providers: [AppService]
