@@ -1,44 +1,30 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { DataSource } from "typeorm";
-import { RegisterDto, LoginDto } from "./auth.dto";
-import type { TokenPair } from "./auth.types";
+import {
+    LoginDto,
+    RegisterAttributes,
+    CreateAccountAttributes
+} from "./auth.dto";
+import { GoogleIdTokenPayload, type TokenPair } from "./auth.types";
 import { Account } from "src/db/entity/account.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
 import { RefreshTokenPayload } from "../shared/jwt.strategy";
+import { GoogleOAuth } from "./google.oauth";
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
+        private oauth: GoogleOAuth,
         private dataSource: DataSource
     ) {}
 
-    public async register(dto: RegisterDto) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-
-        try {
-            const hashResult = await Hasher.hash(dto.data.attributes.password);
-            const account = queryRunner.manager.create(Account, {
-                ...dto.data.attributes,
-                password: `${hashResult.salt}$${hashResult.hash}$${hashResult.keylen}`
-            });
-            await account.save();
-            const profile = queryRunner.manager.create(Profile, {
-                ...dto.data.attributes,
-                account: account
-            });
-            await profile.save();
-            await queryRunner.commitTransaction();
-        } catch (e) {
-            await queryRunner.rollbackTransaction();
-            throw e;
-        } finally {
-            await queryRunner.release();
-        }
+    public async register(dto: RegisterAttributes) {
+        const hashResult = await Hasher.hash(dto.password);
+        dto.password = `${hashResult.salt}$${hashResult.hash}$${hashResult.keylen}`;
+        await this.createAccount(dto);
     }
 
     public async login(dto: LoginDto) {
@@ -56,6 +42,41 @@ export class AuthService {
                 )
             };
         }
+    }
+
+    public async loginWithGoogle(code: string) {
+        const creds = await this.oauth.authenticate(code);
+        let account: Account | null;
+
+        const payload = this.jwtService.decode<GoogleIdTokenPayload>(
+            creds.id_token!
+        );
+        account = await this.dataSource.manager.findOneBy(Account, {
+            email: payload.email
+        });
+        if (account === null) {
+            account = await this.createAccount({
+                email: payload.email,
+                username: `${payload.given_name}${payload.family_name}`,
+                avatar: payload.picture
+            });
+        }
+
+        return {
+            account: account,
+            access: await this.generateJwt(
+                { sub: account.id, role: account.role },
+                Date.now() + 5 * 60 * 1000
+            ),
+            refresh: await this.generateJwt(
+                { sub: account.id },
+                Date.now() + 15 * 60 * 1000
+            )
+        };
+    }
+
+    public generateGoogleAuthUrl() {
+        return this.oauth.generateAuthUrl();
     }
 
     public async refresh(refreshToken: string): Promise<TokenPair> {
@@ -109,6 +130,30 @@ export class AuthService {
             }
         }
         return account;
+    }
+
+    private async createAccount(dto: CreateAccountAttributes) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+            const account = queryRunner.manager.create(Account, {
+                ...dto
+            });
+            await account.save();
+            const profile = queryRunner.manager.create(Profile, {
+                ...dto,
+                account: account
+            });
+            await profile.save();
+            await queryRunner.commitTransaction();
+            return account;
+        } catch (e) {
+            await queryRunner.rollbackTransaction();
+            throw e;
+        } finally {
+            await queryRunner.release();
+        }
     }
 
     private async generateJwt(payload, expires: number) {

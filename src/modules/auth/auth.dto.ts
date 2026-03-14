@@ -8,8 +8,9 @@ import {
     ValidateNested
 } from "class-validator";
 import { USERNAME_PATTERN } from "../shared/constants";
+import { UserRole } from "./auth.types";
 
-class LoginAttributes {
+export class LoginAttributes {
     @IsString()
     @Length(6, 256, { message: "Email length must be in range [6, 256]" })
     email: string;
@@ -36,7 +37,7 @@ export class LoginDto {
     data: LoginData;
 }
 
-class RegisterAttributes {
+export class RegisterAttributes {
     @IsString()
     @Length(6, 256, { message: "Email length must be in range [6, 256]" })
     email: string;
@@ -66,3 +67,11 @@ export class RegisterDto {
     @Type(() => RegisterData)
     data: RegisterData;
 }
+
+export type GoogleAuthDto = Omit<RegisterAttributes, "password"> & {
+    avatar: string;
+};
+
+export type CreateAccountAttributes =
+    | ({ role?: UserRole } & GoogleAuthDto)
+    | RegisterAttributes;

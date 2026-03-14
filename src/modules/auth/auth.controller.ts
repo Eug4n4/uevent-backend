@@ -6,13 +6,16 @@ import {
     Req,
     HttpStatus,
     HttpCode,
-    UseGuards
+    UseGuards,
+    Get,
+    Query
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto } from "./auth.dto";
 import type { TokenPair } from "./auth.types";
 import { JwtGuard, JwtRefreshGuard } from "../shared/jwt.guard";
+import { authResponse } from "./auth.response";
 
 @Controller("account")
 export class AuthController {
@@ -20,7 +23,7 @@ export class AuthController {
 
     @Post("registration")
     async register(@Body() dto: RegisterDto) {
-        await this.authService.register(dto);
+        await this.authService.register({ ...dto.data.attributes });
     }
 
     @Post("login")
@@ -43,28 +46,9 @@ export class AuthController {
         }
 
         const result = await this.authService.login(dto);
-        if (result && result.account) {
+        if (result) {
             this.setTokenPair(res, result);
-            res.json({
-                data: {
-                    id: result.account.id, //This is the most important part, because it is used to identify the user in the frontend
-                    type: "account",
-                    attributes: {
-                        role: result.account.role,
-                        email: result.account.email,
-                        updatedAt: result.account.updatedAt,
-                        createdAt: result.account.createdAt
-                    },
-                    relationships: {
-                        profile: {
-                            data: {
-                                id: result.account.id,
-                                type: "profile"
-                            }
-                        }
-                    }
-                }
-            });
+            res.json(authResponse(result.account));
 
             return;
         }
@@ -78,6 +62,20 @@ export class AuthController {
                 }
             ]
         });
+    }
+
+    @Post("login/google")
+    loginConsent(@Res() res: Response) {
+        res.status(HttpStatus.TEMPORARY_REDIRECT).redirect(
+            this.authService.generateGoogleAuthUrl()
+        );
+    }
+
+    @Get("login/google/callback")
+    async loginWithGoogle(@Query("code") code: string, @Res() res: Response) {
+        const result = await this.authService.loginWithGoogle(code);
+        this.setTokenPair(res, result);
+        res.json(authResponse(result.account));
     }
 
     @UseGuards(JwtGuard)

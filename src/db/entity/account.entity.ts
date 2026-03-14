@@ -1,3 +1,4 @@
+import type { UserRole } from "src/modules/auth/auth.types";
 import {
     Entity,
     Column,
@@ -9,8 +10,6 @@ import {
     BaseEntity
 } from "typeorm";
 
-export type UserRole = "admin" | "user";
-
 @Entity({ name: "accounts" })
 export class Account extends BaseEntity {
     @PrimaryColumn()
@@ -20,7 +19,7 @@ export class Account extends BaseEntity {
     @Column({ unique: true, length: 256 })
     email: string;
 
-    @Column({ length: 256 })
+    @Column({ length: 256, nullable: true })
     password: string;
 
     @Column({ type: "enum", enum: ["admin", "user"], default: "user" })
