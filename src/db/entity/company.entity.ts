@@ -1,4 +1,3 @@
-import type { UserRole } from "src/modules/auth/auth.types";
 import {
     Entity,
     Column,
@@ -12,20 +11,26 @@ import {
 } from "typeorm";
 import { CompanyMember } from "./company.member.entity";
 
-@Entity({ name: "accounts" })
-export class Account extends BaseEntity {
+@Entity({ name: "companies" })
+export class Company extends BaseEntity {
     @PrimaryColumn()
     @Generated("uuid")
     id: string;
 
-    @Column({ unique: true, length: 256 })
+    @Column({ length: 255 })
+    name: string;
+
+    @Column({ length: 255, unique: true })
     email: string;
 
-    @Column({ length: 256, nullable: true })
-    password: string;
+    @Column({ length: 255 })
+    address: string;
 
-    @Column({ type: "enum", enum: ["admin", "user"], default: "user" })
-    role: UserRole;
+    @Column({ length: 255, default: "default.png" })
+    avatar: string;
+
+    @Column({ length: 255, default: "default.png" })
+    banner: string;
 
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;
@@ -36,6 +41,6 @@ export class Account extends BaseEntity {
     @DeleteDateColumn({ name: "deleted_at", nullable: true })
     deletedAt: Date;
 
-    @OneToMany(() => CompanyMember, (cm) => cm.member)
+    @OneToMany(() => CompanyMember, (cm) => cm.company)
     companyMembers: CompanyMember[];
 }
