@@ -1,11 +1,5 @@
 import { Type } from "class-transformer";
-import {
-    Equals,
-    IsDefined,
-    IsOptional,
-    IsString,
-    ValidateNested
-} from "class-validator";
+import { Equals, IsDefined, IsString, ValidateNested } from "class-validator";
 
 export class CompanyAttributes {
     @IsString()
@@ -16,14 +10,6 @@ export class CompanyAttributes {
 
     @IsString()
     address: string;
-
-    @IsString()
-    @IsOptional()
-    avatar?: string;
-
-    @IsString()
-    @IsOptional()
-    banner?: string;
 }
 
 class CompanyData {

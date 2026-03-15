@@ -48,6 +48,23 @@ export class S3Service {
         return { key, url: `${this.publicBase}/${key}` };
     }
 
+    async putObject(
+        data: Buffer,
+        contentType: string,
+        destination: string
+    ): Promise<{ url: string }> {
+        await this.s3.send(
+            new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: destination,
+                Body: data,
+                ContentType: contentType,
+                CacheControl: "public, max-age=31536000, immutable"
+            })
+        );
+        return { url: `${this.publicBase}/${destination}` };
+    }
+
     async deleteObject(key: string): Promise<void> {
         try {
             await this.s3.send(

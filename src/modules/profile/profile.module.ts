@@ -19,6 +19,7 @@ import { JwtAccessStrategy } from "../shared/jwt.strategy";
         })
     ],
     controllers: [ProfileController],
-    providers: [ProfileService, JwtAccessStrategy, S3Service]
+    providers: [ProfileService, JwtAccessStrategy, S3Service],
+    exports: [S3Service]
 })
 export class ProfileModule {}
