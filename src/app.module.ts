@@ -6,6 +6,7 @@ import { ProfileModule } from "./modules/profile/profile.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 import { CompanyModule } from "./modules/company/company.module";
+import { EventModule } from "./modules/event/event.module";
 
 @Module({
     imports: [
@@ -22,7 +23,8 @@ import { CompanyModule } from "./modules/company/company.module";
         }),
         AuthModule,
         ProfileModule,
-        CompanyModule
+        CompanyModule,
+        EventModule
     ],
     controllers: [AppController],
     providers: [AppService]

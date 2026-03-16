@@ -3,8 +3,6 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    PrimaryColumn,
-    Generated,
     BaseEntity,
     PrimaryGeneratedColumn
 } from "typeorm";
@@ -14,11 +12,11 @@ export class Tag extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column({ length: 50 })
+    @Column({ length: 50, unique: true })
     name: string;
 
-    @Column({ length: 255 })
-    description: string;
+    @Column({ length: 255, nullable: true })
+    description?: string;
 
     @CreateDateColumn({ name: "created_at" })
     createdAt: Date;
