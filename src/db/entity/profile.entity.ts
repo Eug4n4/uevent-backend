@@ -5,16 +5,14 @@ import {
     UpdateDateColumn,
     OneToOne,
     JoinColumn,
-    PrimaryColumn,
-    Generated,
-    BaseEntity
+    BaseEntity,
+    PrimaryColumn
 } from "typeorm";
 import { Account } from "./account.entity";
 
 @Entity({ name: "profiles" })
 export class Profile extends BaseEntity {
-    @PrimaryColumn({ name: "account_id" })
-    @Generated("uuid")
+    @PrimaryColumn("uuid", { name: "account_id" })
     accountId: string;
 
     @Column({ length: 30 })

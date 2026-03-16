@@ -5,17 +5,15 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     DeleteDateColumn,
-    Generated,
-    PrimaryColumn,
     BaseEntity,
-    OneToMany
+    OneToMany,
+    PrimaryGeneratedColumn
 } from "typeorm";
 import { CompanyMember } from "./company.member.entity";
 
 @Entity({ name: "accounts" })
 export class Account extends BaseEntity {
-    @PrimaryColumn()
-    @Generated("uuid")
+    @PrimaryGeneratedColumn("uuid")
     id: string;
 
     @Column({ unique: true, length: 256 })

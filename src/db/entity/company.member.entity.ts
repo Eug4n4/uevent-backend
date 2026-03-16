@@ -7,7 +7,6 @@ import {
     PrimaryColumn,
     BaseEntity,
     ManyToOne,
-    Generated,
     JoinColumn
 } from "typeorm";
 import { Account } from "./account.entity";
@@ -15,12 +14,10 @@ import { Company } from "./company.entity";
 
 @Entity({ name: "company_members" })
 export class CompanyMember extends BaseEntity {
-    @PrimaryColumn({ name: "account_id" })
-    @Generated("uuid")
+    @PrimaryColumn("uuid", { name: "account_id" })
     accountId: string;
 
-    @PrimaryColumn({ name: "company_id" })
-    @Generated("uuid")
+    @PrimaryColumn("uuid", { name: "company_id" })
     companyId: string;
 
     @Column({ default: false })
