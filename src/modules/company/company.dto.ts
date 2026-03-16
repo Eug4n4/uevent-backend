@@ -29,5 +29,3 @@ export class CompanyCreateDto {
     @Type(() => CompanyData)
     data: CompanyData;
 }
-
-// export type EventDetails = EventAttributes & Pick<EventData, "included">;

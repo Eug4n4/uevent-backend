@@ -6,6 +6,7 @@ import { ProfileModule } from "../profile/profile.module";
 @Module({
     imports: [ProfileModule],
     controllers: [CompanyController],
-    providers: [CompanyService]
+    providers: [CompanyService],
+    exports: [CompanyService]
 })
 export class CompanyModule {}

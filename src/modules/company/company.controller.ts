@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Get,
     Param,
     Post,
     Res,
@@ -13,12 +14,19 @@ import { CompanyCreateDto } from "./company.dto";
 import { CompanyService } from "./company.service";
 import type { Request, Response } from "express";
 import { JwtGuard } from "../shared/jwt.guard";
-import { companyResponse } from "./company.response";
+import { companyResponse, manyCompaniesResponse } from "./company.response";
 import { CurrentUser } from "../shared/decorators";
 
 @Controller("company")
 export class CompanyController {
     constructor(private companyService: CompanyService) {}
+
+    @UseGuards(JwtGuard)
+    @Get("my")
+    async getMy(@CurrentUser() user: Express.User, @Res() res: Response) {
+        const companies = await this.companyService.findByOwnerId(user.id);
+        res.json(manyCompaniesResponse(companies));
+    }
 
     @UseGuards(JwtGuard)
     @Post()

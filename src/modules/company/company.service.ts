@@ -29,6 +29,13 @@ export class CompanyService {
         return company;
     }
 
+    async findByOwnerId(ownerId: string): Promise<Company[]> {
+        const companies = await Company.find({
+            where: { companyMembers: { accountId: ownerId } }
+        });
+        return companies;
+    }
+
     async create(dto: CompanyAttributes, ownerId: string) {
         const account = await Account.findOneBy({ id: ownerId });
         let company = await Company.findOneBy({ email: dto.email });
@@ -117,7 +124,7 @@ export class CompanyService {
         return company;
     }
 
-    private isCompanyOwner(company: Company, ownerId: string) {
+    isCompanyOwner(company: Company, ownerId: string) {
         return company.companyMembers.some(
             (member) => member.accountId === ownerId && member.isOwner
         );
