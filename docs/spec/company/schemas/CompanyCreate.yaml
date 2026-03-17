@@ -1,0 +1,33 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ company ]
+      attributes:
+        type: object
+        required:
+          - name
+          - email
+          - address
+        properties:
+          name:
+            type: string
+            description: "company name"
+            example: "Acme Corp"
+          email:
+            type: string
+            format: email
+            description: "company contact email"
+            example: "contact@acme.com"
+          address:
+            type: string
+            description: "company physical address"
+            example: "123 Main St, Kyiv"

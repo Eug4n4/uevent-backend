@@ -1,5 +1,5 @@
 import {
-    BadRequestException,
+    ForbiddenException,
     Body,
     Controller,
     Post,
@@ -8,7 +8,7 @@ import {
 } from "@nestjs/common";
 import { EventCreateDto } from "./event.dto";
 import { EventService } from "./event.service";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { eventResponse } from "./event.response";
 import { JwtGuard } from "../shared/jwt.guard";
 import { CurrentUser } from "../shared/decorators";
@@ -32,7 +32,7 @@ export class EventController {
             dto.data.attributes.companyId
         );
         if (!this.companyService.isCompanyOwner(company, user.id)) {
-            throw new BadRequestException(
+            throw new ForbiddenException(
                 "Only company owner can create events"
             );
         }

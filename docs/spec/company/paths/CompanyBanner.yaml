@@ -1,0 +1,67 @@
+post:
+  tags:
+    - companies
+  summary: Upload company banner
+  description: >
+    Uploads or replaces a company's banner image.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: "Company ID"
+
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - banner
+          properties:
+            banner:
+              type: string
+              format: binary
+              description: "Banner image file"
+
+  responses:
+    '200':
+      description: Banner uploaded. Returns the updated company.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Company.yaml'
+
+    '400':
+      description: Bad request (invalid file or not the owner).
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '404':
+      description: Company not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

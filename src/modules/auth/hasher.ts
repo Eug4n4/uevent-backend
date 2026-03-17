@@ -14,7 +14,7 @@ export class Hasher {
             const keylen = 32;
             scrypt(plain, salt, keylen, (err, derivedKey) => {
                 if (err) {
-                    reject(err);
+                    return reject(err);
                 }
                 resolve({
                     hash: derivedKey.toString("hex"),
@@ -31,7 +31,7 @@ export class Hasher {
 
             scrypt(plain, salt, Number(keylen), (err, derivedKey) => {
                 if (err) {
-                    reject(err);
+                    return reject(err);
                 }
                 resolve(key == derivedKey.toString("hex"));
             });

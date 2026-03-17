@@ -10,7 +10,6 @@ import { GoogleIdTokenPayload, type TokenPair } from "./auth.types";
 import { Account } from "src/db/entity/account.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
-import { RefreshTokenPayload } from "../shared/jwt.strategy";
 import { GoogleOAuth } from "./google.oauth";
 
 @Injectable()
@@ -48,18 +47,23 @@ export class AuthService {
         const creds = await this.oauth.authenticate(code);
         let account: Account | null;
 
-        const payload = this.jwtService.decode<GoogleIdTokenPayload>(
-            creds.id_token!
-        );
-        account = await this.dataSource.manager.findOneBy(Account, {
-            email: payload.email
-        });
-        if (account === null) {
-            account = await this.createAccount({
-                email: payload.email,
-                username: `${payload.given_name}${payload.family_name}`,
-                avatar: payload.picture
+        if (creds.id_token != null) {
+            const payload = this.jwtService.decode<GoogleIdTokenPayload>(
+                creds.id_token
+            );
+
+            account = await this.dataSource.manager.findOneBy(Account, {
+                email: payload.email
             });
+            if (account === null) {
+                account = await this.createAccount({
+                    email: payload.email,
+                    username: `${payload.given_name}${payload.family_name}`,
+                    avatar: payload.picture
+                });
+            }
+        } else {
+            throw new UnauthorizedException("Google authentication failed");
         }
 
         return {
@@ -79,12 +83,10 @@ export class AuthService {
         return this.oauth.generateAuthUrl();
     }
 
-    public async refresh(refreshToken: string): Promise<TokenPair> {
-        const payload =
-            this.jwtService.verify<RefreshTokenPayload>(refreshToken);
-        const account = await Account.findOneBy({ id: payload.sub });
+    public async refresh(accountId: string): Promise<TokenPair> {
+        const account = await Account.findOneBy({ id: accountId });
         if (!account) {
-            throw new UnauthorizedException("Invalid token payload");
+            throw new UnauthorizedException("Account not found");
         }
         return {
             access: await this.generateJwt(
@@ -107,7 +109,6 @@ export class AuthService {
         return account;
     }
 
-    //TODO we need to talk about soft delete
     public async deleteMe(accountId: string): Promise<void> {
         const account = await Account.findOneBy({ id: accountId });
         if (!account) {
@@ -120,16 +121,14 @@ export class AuthService {
         const account = await this.dataSource.manager.findOneBy(Account, {
             email: dto.data.attributes.email
         });
-        if (account) {
-            const isCorrect = await Hasher.compare(
-                dto.data.attributes.password,
-                account.password
-            );
-            if (!isCorrect) {
-                return null;
-            }
+        if (!account || !account.password) {
+            return null;
         }
-        return account;
+        const isCorrect = await Hasher.compare(
+            dto.data.attributes.password,
+            account.password
+        );
+        return isCorrect ? account : null;
     }
 
     private async createAccount(dto: CreateAccountAttributes) {
@@ -140,12 +139,12 @@ export class AuthService {
             const account = queryRunner.manager.create(Account, {
                 ...dto
             });
-            await account.save();
+            await queryRunner.manager.save(account);
             const profile = queryRunner.manager.create(Profile, {
                 ...dto,
                 account: account
             });
-            await profile.save();
+            await queryRunner.manager.save(profile);
             await queryRunner.commitTransaction();
             return account;
         } catch (e) {
@@ -159,7 +158,7 @@ export class AuthService {
     private async generateJwt(payload, expires: number) {
         return {
             token: await this.jwtService.signAsync(payload, {
-                expiresIn: expires
+                expiresIn: Math.floor((expires - Date.now()) / 1000)
             }),
             expires: expires
         };

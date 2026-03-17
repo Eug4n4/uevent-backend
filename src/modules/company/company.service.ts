@@ -31,7 +31,7 @@ export class CompanyService {
 
     async findByOwnerId(ownerId: string): Promise<Company[]> {
         const companies = await Company.find({
-            where: { companyMembers: { accountId: ownerId } }
+            where: { companyMembers: { accountId: ownerId, isOwner: true } }
         });
         return companies;
     }

@@ -13,11 +13,11 @@ post:
 
   responses:
     '200':
-      description: Successful login. Access token is set in HttpOnly cookie.
+      description: Successful login. `access` and `refresh` cookies are set.
       content:
         application/json:
           schema:
-            $ref: '../schemas/Profile.yaml'
+            $ref: '../schemas/Account.yaml'
 
     '401':
       description: >

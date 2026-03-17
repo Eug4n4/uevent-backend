@@ -1,0 +1,82 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ event ]
+      attributes:
+        type: object
+        required:
+          - title
+          - description
+          - notificationNewTicket
+          - publishAt
+          - startAt
+          - endAt
+          - format
+          - companyId
+        properties:
+          title:
+            type: string
+            description: "event title"
+            example: "NestJS Workshop"
+          description:
+            type: string
+            description: "event description"
+            example: "A hands-on workshop about NestJS"
+          notificationNewTicket:
+            type: boolean
+            description: "whether to notify attendees when a new ticket type is added"
+            example: false
+          publishAt:
+            type: string
+            format: date-time
+            description: "when the event becomes publicly visible"
+          startAt:
+            type: string
+            format: date-time
+            description: "when the event starts"
+          endAt:
+            type: string
+            format: date-time
+            description: "when the event ends"
+          format:
+            type: string
+            description: "event format/category"
+            enum: [ Lection, Travel, Sport, Party, Art, Gaming ]
+          companyId:
+            type: string
+            format: uuid
+            description: "ID of the company hosting the event"
+      included:
+        type: array
+        description: "tags to attach to the event"
+        items:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum: [ tag ]
+            attributes:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: "tag name (letters only, max 50 characters)"
+                  example: "Technology"
+                description:
+                  type: string
+                  description: "optional tag description"
+                  example: "Tech-related events"

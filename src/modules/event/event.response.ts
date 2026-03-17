@@ -9,12 +9,13 @@ const eventData = (event: EventEntity) => {
             description: event.description,
             avatar: event.avatar,
             banner: event.banner,
-            publishAt: event.publishAt,
-            startAt: event.startAt,
-            endAt: event.endAt
+            publish_at: event.publishAt,
+            start_at: event.startAt,
+            end_at: event.endAt
         }
     };
 };
+
 export const eventResponse = (event: EventEntity) => {
     return {
         data: eventData(event)

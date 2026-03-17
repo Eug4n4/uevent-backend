@@ -1,0 +1,46 @@
+post:
+  tags:
+    - companies
+  summary: Create a company
+  description: >
+    Creates a new company. The authenticated account becomes the owner.
+    Requires a valid access token.
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/CompanyCreate.yaml'
+
+  responses:
+    '201':
+      description: Company successfully created.
+
+    '400':
+      description: Bad request (validation error).
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '409':
+      description: A company with this email already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

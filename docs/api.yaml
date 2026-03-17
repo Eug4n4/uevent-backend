@@ -20,26 +20,40 @@ paths:
   /uevent/v1/account/login/google/callback:
     $ref: './spec/user/paths/LoginByGoogleCallback.yaml'
 
+  /uevent/v1/account/refresh:
+    $ref: './spec/user/paths/Refresh.yaml'
+  /uevent/v1/account/logout:
+    $ref: './spec/user/paths/Logout.yaml'
   /uevent/v1/account/me:
     $ref: './spec/user/paths/MyAccount.yaml'
-  /uevent/v1/account/me/logout:
-    $ref: './spec/user/paths/Logout.yaml'
 
-  /uevent/v1/profile/:
+  /uevent/v1/profiles/:
     $ref: './spec/user/paths/FilterProfiles.yaml'
-  /uevent/v1/profile/me:
+  /uevent/v1/profiles/me:
     $ref: './spec/user/paths/MyProfile.yaml'
-  /uevent/v1/profile/me/avatar:
+  /uevent/v1/profiles/me/avatar:
     $ref: './spec/user/paths/MyProfileAvatar.yaml'
-  /uevent/v1/profile/{profile_id}:
+  /uevent/v1/profiles/{account_id}:
     $ref: './spec/user/paths/ProfileById.yaml'
-  /uevent/v1/profile/@{username}:
+  /uevent/v1/profiles/@{username}:
     $ref: './spec/user/paths/ProfileByUsername.yaml'
+
+  /uevent/v1/company:
+    $ref: './spec/company/paths/CreateCompany.yaml'
+  /uevent/v1/company/my:
+    $ref: './spec/company/paths/MyCompanies.yaml'
+  /uevent/v1/company/{id}/avatar:
+    $ref: './spec/company/paths/CompanyAvatar.yaml'
+  /uevent/v1/company/{id}/banner:
+    $ref: './spec/company/paths/CompanyBanner.yaml'
+
+  /uevent/v1/event:
+    $ref: './spec/event/paths/CreateEvent.yaml'
 
 
 components:
   schemas:
-    #user
+    #auth
     LoginByEmail:
       $ref: './spec/user/schemas/LoginByEmail.yaml'
     Registration:
@@ -60,3 +74,21 @@ components:
       $ref: './spec/user/schemas/ProfileData.yaml'
     ProfilesCollection:
       $ref: './spec/user/schemas/ProfilesCollection.yaml'
+
+    #company
+    Company:
+      $ref: './spec/company/schemas/Company.yaml'
+    CompanyData:
+      $ref: './spec/company/schemas/CompanyData.yaml'
+    CompaniesCollection:
+      $ref: './spec/company/schemas/CompaniesCollection.yaml'
+    CompanyCreate:
+      $ref: './spec/company/schemas/CompanyCreate.yaml'
+
+    #event
+    Event:
+      $ref: './spec/event/schemas/Event.yaml'
+    EventData:
+      $ref: './spec/event/schemas/EventData.yaml'
+    EventCreate:
+      $ref: './spec/event/schemas/EventCreate.yaml'

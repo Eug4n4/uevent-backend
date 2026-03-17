@@ -32,9 +32,14 @@ export class CompanyController {
     @Post()
     async create(
         @Body() dto: CompanyCreateDto,
-        @CurrentUser() user: Express.User
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
     ) {
-        await this.companyService.create(dto.data.attributes, user.id);
+        const company = await this.companyService.create(
+            dto.data.attributes,
+            user.id
+        );
+        res.status(201).json(companyResponse(company));
     }
 
     @UseGuards(JwtGuard)

@@ -16,6 +16,7 @@ import { RegisterDto, LoginDto } from "./auth.dto";
 import type { TokenPair } from "./auth.types";
 import { JwtGuard, JwtRefreshGuard } from "../shared/jwt.guard";
 import { authResponse } from "./auth.response";
+import { CurrentUser } from "../shared/decorators";
 
 @Controller("account")
 export class AuthController {

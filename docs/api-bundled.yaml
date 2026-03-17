@@ -4,7 +4,7 @@ info:
   description: API documentation for uevent
   version: 0.1.0
 servers:
-  - url: 'http://localhost:6767'
+  - url: http://localhost:6767
 paths:
   /uevent/v1/account/registration/:
     post:
@@ -20,20 +20,20 @@ paths:
               $ref: '#/components/schemas/Registration'
       responses:
         '201':
-          description: 'Account successfully registered, always return without include parameters'
+          description: Account successfully registered, always return without include parameters
         '409':
           description: |
             Conflict: An account with this email or username already exists. Check the 'detail' field in the response for more information.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
   /uevent/v1/account/registration/admin:
     post:
       tags:
@@ -49,7 +49,7 @@ paths:
               $ref: '#/components/schemas/RegistrationAdmin'
       responses:
         '201':
-          description: 'Account successfully registered by admin, always return without include parameters'
+          description: Account successfully registered by admin, always return without include parameters
           content:
             application/json:
               schema:
@@ -60,35 +60,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '401':
           description: |
             Unauthorized. Invalid session.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '403':
           description: |
             Forbidden. Initiator does not have enough rights.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '409':
           description: |
             Conflict. Email or username is already taken. Check the `detail` field in the response for more information.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/account/login/email:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/account/login:
     post:
       tags:
         - login
@@ -103,56 +103,24 @@ paths:
               $ref: '#/components/schemas/LoginByEmail'
       responses:
         '200':
-          description: Successful login. Access token is set in HttpOnly cookie.
+          description: Successful login. `access` and `refresh` cookies are set.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
+                $ref: '#/components/schemas/Account'
         '401':
           description: |
             Unauthorized: Invalid email or password.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/account/login/username:
-    post:
-      tags:
-        - login
-      summary: Login by username
-      description: Endpoint to login a user using their username and password.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginByUsername'
-      responses:
-        '200':
-          description: Successful login
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-        '401':
-          description: |
-            Unauthorized: Invalid username or password.
-          content:
-            application/json:
-              schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
   /uevent/v1/account/login/google:
     post:
       tags:
@@ -174,7 +142,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
   /uevent/v1/account/login/google/callback:
     get:
       tags:
@@ -201,19 +169,64 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '404':
           description: Account not found for this email
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/account/refresh:
+    post:
+      tags:
+        - login
+      summary: Refresh tokens
+      description: |
+        Issues a new access/refresh token pair using the refresh token stored in the `refresh` httpOnly cookie. Both cookies are replaced on success. Requires a valid refresh token cookie.
+      responses:
+        '200':
+          description: Tokens refreshed. New `access` and `refresh` cookies are set.
+        '401':
+          description: Unauthorized. Refresh token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/account/logout:
+    post:
+      tags:
+        - login
+      summary: Logout
+      description: |
+        Invalidates the current session of the authenticated account.
+      responses:
+        '204':
+          description: Successfully logged out
+        '401':
+          description: |
+            Unauthorized. Invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
   /uevent/v1/account/me:
     get:
       tags:
@@ -248,45 +261,13 @@ paths:
           content:
             application/json:
               schema:
-                description: 'Standard JSON:API error'
-                type: object
-                required:
-                  - errors
-                properties:
-                  errors:
-                    type: array
-                    description: Non empty array of errors occurred during request processing
-                    items:
-                      type: object
-                      required:
-                        - title
-                        - status
-                      properties:
-                        title:
-                          type: string
-                          description: 'Title is a short, human-readable summary of the problem'
-                          example: Bad Request
-                        detail:
-                          type: string
-                          description: Detail is a human-readable explanation specific to this occurrence of the problem
-                          example: Request body was expected
-                        status:
-                          type: integer
-                          description: Status is the HTTP status code applicable to this problem
-                          example: 400
-                          enum:
-                            - 400
-                            - 401
-                            - 403
-                            - 404
-                            - 409
-                            - 500
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
     delete:
       tags:
         - accounts
@@ -302,44 +283,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '403':
           description: |
             Account is have membership in an company,  must leave all company before deleting the account.
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/account/me/logout:
-    post:
-      tags:
-        - login
-      summary: Logout
-      description: |
-        Invalidates the current session of the authenticated account.
-      responses:
-        '204':
-          description: Successfully logged out
-        '401':
-          description: |
-            Unauthorized. Invalid session
-          content:
-            application/json:
-              schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/profile/:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/profiles/:
     get:
       tags:
         - profiles
@@ -355,7 +313,7 @@ paths:
           description: |
             Text to filter profiles by. Matches against `username` and `pseudonym` fields using prefix-based filtering.
         - in: query
-          name: 'page[limit]'
+          name: page[limit]
           required: false
           schema:
             type: integer
@@ -363,7 +321,7 @@ paths:
             maximum: 100
           description: Max number of items to return (1-100).
         - in: query
-          name: 'page[offset]'
+          name: page[offset]
           required: false
           schema:
             type: integer
@@ -381,8 +339,8 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/profile/me:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/profiles/me:
     get:
       tags:
         - profiles
@@ -401,13 +359,13 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
     patch:
       tags:
         - profiles
@@ -432,26 +390,26 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized (missing/invalid token or profile does not exist).
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '403':
           description: Forbidden (user too young).
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  /uevent/v1/profile/me/avatar:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/profiles/me/avatar:
     post:
       tags:
         - profiles
@@ -483,19 +441,19 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
     delete:
       tags:
         - profiles
@@ -510,20 +468,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '404':
           description: Avatar not found.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  '/uevent/v1/profile/{profile_id}':
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/profiles/{account_id}:
     get:
       tags:
         - profiles
@@ -550,20 +508,20 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '404':
           description: Profile for account does not exist.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
-  '/uevent/v1/profile/@{username}':
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/profiles/@{username}:
     get:
       tags:
         - profiles
@@ -590,13 +548,236 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
             application/problem+json:
               schema:
-                $ref: '#/paths/~1uevent~1v1~1account~1me/get/responses/401/content/application~1json/schema'
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/company:
+    post:
+      tags:
+        - companies
+      summary: Create a company
+      description: |
+        Creates a new company. The authenticated account becomes the owner. Requires a valid access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
+      responses:
+        '201':
+          description: Company successfully created.
+        '400':
+          description: Bad request (validation error).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: A company with this email already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/company/my:
+    get:
+      tags:
+        - companies
+      summary: Get my companies
+      description: |
+        Returns all companies where the authenticated account is the owner. Requires a valid access token.
+      responses:
+        '200':
+          description: List of owned companies.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesCollection'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/company/{id}/avatar:
+    post:
+      tags:
+        - companies
+      summary: Upload company avatar
+      description: |
+        Uploads or replaces a company's avatar image. Only the company owner can perform this action. Requires a valid access token.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Company ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Avatar image file
+      responses:
+        '200':
+          description: Avatar uploaded. Returns the updated company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Bad request (invalid file or not the owner).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/company/{id}/banner:
+    post:
+      tags:
+        - companies
+      summary: Upload company banner
+      description: |
+        Uploads or replaces a company's banner image. Only the company owner can perform this action. Requires a valid access token.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Company ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - banner
+              properties:
+                banner:
+                  type: string
+                  format: binary
+                  description: Banner image file
+      responses:
+        '200':
+          description: Banner uploaded. Returns the updated company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Bad request (invalid file or not the owner).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/event:
+    post:
+      tags:
+        - events
+      summary: Create an event
+      description: |
+        Creates a new event for a company. Only the company owner can create events. Tags can be attached by passing them in `data.included`. Requires a valid access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreate'
+      responses:
+        '200':
+          description: Event successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: |
+            Bad request. Possible reasons: validation error, company not found, or the authenticated account is not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
 components:
   schemas:
     LoginByEmail:
@@ -625,36 +806,6 @@ components:
                   format: email
                   description: The account's email address.
                   example: example@gmail.com
-                password:
-                  type: string
-                  format: password
-                  description: The account's password.
-                  example: StrongP@ssw0rd!
-    LoginByUsername:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          required:
-            - type
-            - attributes
-          properties:
-            type:
-              type: string
-              enum:
-                - account
-            attributes:
-              type: object
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  type: string
-                  description: The account's username.
-                  example: example
                 password:
                   type: string
                   format: password
@@ -740,75 +891,6 @@ components:
                     - admin
                     - moderator
                   example: admin
-    UpdateUsername:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          required:
-            - type
-            - attributes
-          properties:
-            type:
-              type: string
-              enum:
-                - account_username
-            attributes:
-              type: object
-              required:
-                - username
-              properties:
-                username:
-                  type: string
-                  description: The account's username.
-    AccessToken:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          required:
-            - type
-            - attributes
-          properties:
-            type:
-              type: string
-              enum:
-                - access_token
-            attributes:
-              type: object
-              required:
-                - access_token
-              properties:
-                refresh_token:
-                  type: string
-                  description: The access token to generate a new access token.
-                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-            relationships:
-              type: object
-              properties:
-                profile:
-                  type: object
-                  required:
-                    - data
-                  properties:
-                    data:
-                      type: object
-                      required:
-                        - id
-                        - type
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                          description: Account id
-                        type:
-                          type: string
-                          enum:
-                            - account
     Account:
       type: object
       required:
@@ -835,19 +917,16 @@ components:
               required:
                 - role
                 - email
-                - role
                 - created_at
                 - updated_at
               properties:
                 role:
                   type: string
                   description: The role assigned to the account
-                username:
+                email:
                   type: string
-                  description: The username of the account
-                version:
-                  type: integer
-                  description: The version number of the account record
+                  format: email
+                  description: The email address associated with the account
                 created_at:
                   type: string
                   format: date-time
@@ -973,27 +1052,311 @@ components:
           items:
             $ref: '#/components/schemas/ProfileData'
         links:
+          $ref: '#/components/schemas/PaginationData'
+    Company:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/CompanyData'
+    CompanyData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: company ID
+        type:
+          type: string
+          enum:
+            - company
+        attributes:
           type: object
           required:
-            - self
+            - name
+            - email
+            - address
+            - avatar
+            - banner
           properties:
-            self:
+            name:
               type: string
-              format: uri
-              description: link to the current page
-            first:
+              description: company name
+              example: Acme Corp
+            email:
               type: string
-              format: uri
-              description: link to the first page
-            last:
+              format: email
+              description: company contact email
+              example: contact@acme.com
+            address:
               type: string
-              format: uri
-              description: link to the last page
-            prev:
+              description: company physical address
+              example: 123 Main St, Kyiv
+            avatar:
               type: string
-              format: uri
-              description: link to the previous page
-            next:
+              description: avatar file key or URL
+              example: default.png
+            banner:
               type: string
-              format: uri
-              description: link to the next page
+              description: banner file key or URL
+              example: default.png
+    CompaniesCollection:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyData'
+    CompanyCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - company
+            attributes:
+              type: object
+              required:
+                - name
+                - email
+                - address
+              properties:
+                name:
+                  type: string
+                  description: company name
+                  example: Acme Corp
+                email:
+                  type: string
+                  format: email
+                  description: company contact email
+                  example: contact@acme.com
+                address:
+                  type: string
+                  description: company physical address
+                  example: 123 Main St, Kyiv
+    Event:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/EventData'
+    EventData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: event ID
+        type:
+          type: string
+          enum:
+            - event
+        attributes:
+          type: object
+          required:
+            - title
+            - description
+            - avatar
+            - banner
+            - publishAt
+            - startAt
+            - endAt
+          properties:
+            title:
+              type: string
+              description: event title
+              example: NestJS Workshop
+            description:
+              type: string
+              description: event description
+              example: A hands-on workshop about NestJS
+            avatar:
+              type: string
+              description: avatar file key or URL
+              example: default.png
+            banner:
+              type: string
+              description: banner file key or URL
+              example: default.png
+            publishAt:
+              type: string
+              format: date-time
+              description: when the event becomes publicly visible
+            startAt:
+              type: string
+              format: date-time
+              description: when the event starts
+            endAt:
+              type: string
+              format: date-time
+              description: when the event ends
+    EventCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - event
+            attributes:
+              type: object
+              required:
+                - title
+                - description
+                - notificationNewTicket
+                - publishAt
+                - startAt
+                - endAt
+                - format
+                - companyId
+              properties:
+                title:
+                  type: string
+                  description: event title
+                  example: NestJS Workshop
+                description:
+                  type: string
+                  description: event description
+                  example: A hands-on workshop about NestJS
+                notificationNewTicket:
+                  type: boolean
+                  description: whether to notify attendees when a new ticket type is added
+                  example: false
+                publishAt:
+                  type: string
+                  format: date-time
+                  description: when the event becomes publicly visible
+                startAt:
+                  type: string
+                  format: date-time
+                  description: when the event starts
+                endAt:
+                  type: string
+                  format: date-time
+                  description: when the event ends
+                format:
+                  type: string
+                  description: event format/category
+                  enum:
+                    - Lection
+                    - Travel
+                    - Sport
+                    - Party
+                    - Art
+                    - Gaming
+                companyId:
+                  type: string
+                  format: uuid
+                  description: ID of the company hosting the event
+            included:
+              type: array
+              description: tags to attach to the event
+              items:
+                type: object
+                required:
+                  - type
+                  - attributes
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - tag
+                  attributes:
+                    type: object
+                    required:
+                      - name
+                    properties:
+                      name:
+                        type: string
+                        description: tag name (letters only, max 50 characters)
+                        example: Technology
+                      description:
+                        type: string
+                        description: optional tag description
+                        example: Tech-related events
+    Errors:
+      description: Standard JSON:API error
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          description: Non empty array of errors occurred during request processing
+          items:
+            type: object
+            required:
+              - title
+              - status
+            properties:
+              title:
+                type: string
+                description: Title is a short, human-readable summary of the problem
+                example: Bad Request
+              detail:
+                type: string
+                description: Detail is a human-readable explanation specific to this occurrence of the problem
+                example: Request body was expected
+              status:
+                type: integer
+                description: Status is the HTTP status code applicable to this problem
+                example: 400
+                enum:
+                  - 400
+                  - 401
+                  - 403
+                  - 404
+                  - 409
+                  - 500
+    PaginationData:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          format: uri
+          description: link to the current page
+        first:
+          type: string
+          format: uri
+          description: link to the first page
+        last:
+          type: string
+          format: uri
+          description: link to the last page
+        prev:
+          type: string
+          format: uri
+          description: link to the previous page
+        next:
+          type: string
+          format: uri
+          description: link to the next page

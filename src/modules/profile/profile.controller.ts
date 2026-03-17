@@ -78,7 +78,7 @@ export class ProfileController {
         @Query() dto: FilterProfilesDto
     ) {
         const [profiles, total] = await this.profileService.filterProfiles(dto);
-        const baseUrl = `${req.protocol}://${req.get("host")}/profiles`;
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/profiles`;
         return res.json(
             profilesResponse(
                 profiles,

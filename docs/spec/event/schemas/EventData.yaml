@@ -1,0 +1,52 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+    description: "event ID"
+  type:
+    type: string
+    enum: [ event ]
+  attributes:
+    type: object
+    required:
+      - title
+      - description
+      - avatar
+      - banner
+      - publishAt
+      - startAt
+      - endAt
+    properties:
+      title:
+        type: string
+        description: "event title"
+        example: "NestJS Workshop"
+      description:
+        type: string
+        description: "event description"
+        example: "A hands-on workshop about NestJS"
+      avatar:
+        type: string
+        description: "avatar file key or URL"
+        example: "default.png"
+      banner:
+        type: string
+        description: "banner file key or URL"
+        example: "default.png"
+      publishAt:
+        type: string
+        format: date-time
+        description: "when the event becomes publicly visible"
+      startAt:
+        type: string
+        format: date-time
+        description: "when the event starts"
+      endAt:
+        type: string
+        format: date-time
+        description: "when the event ends"

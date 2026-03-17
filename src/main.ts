@@ -9,7 +9,7 @@ async function bootstrap() {
     app.setGlobalPrefix("uevent/v1");
     app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
     app.use(cookieParser());
-    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

@@ -1,0 +1,46 @@
+post:
+  tags:
+    - events
+  summary: Create an event
+  description: >
+    Creates a new event for a company. Only the company owner can create events.
+    Tags can be attached by passing them in `data.included`.
+    Requires a valid access token.
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/EventCreate.yaml'
+
+  responses:
+    '200':
+      description: Event successfully created.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+
+    '400':
+      description: >
+        Bad request. Possible reasons: validation error, company not found,
+        or the authenticated account is not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

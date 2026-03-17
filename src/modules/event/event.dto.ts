@@ -38,6 +38,9 @@ export class EventAttributes {
 }
 
 class EventData {
+    @IsUUID()
+    id: string;
+
     @IsString()
     @Equals("event")
     type: string;
@@ -48,7 +51,7 @@ class EventData {
     attributes: EventAttributes;
 
     @IsOptional()
-    @ValidateNested()
+    @ValidateNested({ each: true })
     @Type(() => TagData)
     included?: TagData[];
 }

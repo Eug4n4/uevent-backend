@@ -35,6 +35,8 @@ export class UpdateProfileDataDto {
     type: string;
 
     @IsOptional()
+    @ValidateNested()
+    @Type(() => UpdateProfileAttributesDto)
     attributes?: UpdateProfileAttributesDto;
 }
 
