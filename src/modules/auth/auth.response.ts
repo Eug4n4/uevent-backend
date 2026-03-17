@@ -8,8 +8,8 @@ export const authResponse = (account: Account) => {
             attributes: {
                 role: account.role,
                 email: account.email,
-                updatedAt: account.updatedAt,
-                createdAt: account.createdAt
+                updated_at: account.updatedAt,
+                created_at: account.createdAt
             },
             relationships: {
                 profile: {
