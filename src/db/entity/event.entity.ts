@@ -14,6 +14,8 @@ import {
 import { Company } from "./company.entity";
 import { Tag } from "./tag.entity";
 
+export const eventFormats = ["Lection", "Workshop", "Concert", "Meeting"];
+
 @Entity({ name: "events" })
 export class EventEntity extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
@@ -36,7 +38,7 @@ export class EventEntity extends BaseEntity {
 
     @Column({
         type: "enum",
-        enum: ["Lection", "Travel", "Sport", "Party", "Art", "Gaming"]
+        enum: eventFormats
     })
     format: string;
 

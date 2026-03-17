@@ -1,12 +1,47 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { DataSource } from "typeorm";
-import { EventDetails } from "./event.dto";
+import { EventDetails, EventQuery } from "./event.dto";
 import { EventEntity } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
 
 @Injectable()
 export class EventService {
     constructor(private dataSource: DataSource) {}
+
+    async getById(id: string) {
+        const event = await EventEntity.findOneBy({ id });
+        if (event === null) {
+            throw new NotFoundException(`Can't find event with id = ${id}`);
+        }
+        return event;
+    }
+
+    async getAll(params: EventQuery) {
+        const qb = this.dataSource.manager
+            .createQueryBuilder(EventEntity, "events")
+            .innerJoin("events.tags", "tag");
+
+        if (params.tag) {
+            qb.where("tag.name IN (:...tagNames)", { tagNames: params.tag });
+        }
+        if (params.format) {
+            qb.andWhere("LOWER(events.format::text) = :format", {
+                format: params.format.toLowerCase()
+            });
+        }
+        let order: "ASC" | "DESC" = "ASC";
+        if (params.sort && params.sort.length > 0) {
+            if (params.sort.startsWith("-")) {
+                params.sort = params.sort.slice(1);
+                order = "DESC";
+            }
+            qb.orderBy(params.sort, order);
+        }
+
+        qb.limit(params["page[limit]"]);
+        qb.offset(params["page[offset]"]);
+        return qb.getManyAndCount();
+    }
 
     async create(dto: EventDetails) {
         const queryRunner = this.dataSource.createQueryRunner();

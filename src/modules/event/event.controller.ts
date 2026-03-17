@@ -4,12 +4,16 @@ import {
     Controller,
     Post,
     Res,
-    UseGuards
+    UseGuards,
+    Get,
+    Param,
+    Query,
+    Req
 } from "@nestjs/common";
-import { EventCreateDto } from "./event.dto";
+import { EventCreateDto, EventQuery } from "./event.dto";
 import { EventService } from "./event.service";
-import type { Response } from "express";
-import { eventResponse } from "./event.response";
+import type { Request, Response } from "express";
+import { eventResponse, paginatedEvents } from "./event.response";
 import { JwtGuard } from "../shared/jwt.guard";
 import { CurrentUser } from "../shared/decorators";
 import { CompanyService } from "../company/company.service";
@@ -20,6 +24,29 @@ export class EventController {
         private eventService: EventService,
         private companyService: CompanyService
     ) {}
+
+    @Get()
+    async getAll(
+        @Query() query: EventQuery,
+        @Req() req: Request,
+        @Res() res: Response
+    ) {
+        if (query["page[limit]"] === undefined) {
+            query["page[limit]"] = 20;
+        }
+        if (query["page[offset]"] === undefined) {
+            query["page[offset]"] = 0;
+        }
+        const events = await this.eventService.getAll(query);
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/event`;
+        res.json(paginatedEvents(events[0], query, events[1], baseUrl));
+    }
+
+    @Get(":id")
+    async getById(@Param("id") id: string, @Res() res: Response) {
+        const event = await this.eventService.getById(id);
+        res.json(eventResponse(event));
+    }
 
     @UseGuards(JwtGuard)
     @Post()
