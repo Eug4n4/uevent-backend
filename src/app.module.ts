@@ -7,6 +7,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 import { CompanyModule } from "./modules/company/company.module";
 import { EventModule } from "./modules/event/event.module";
+import { TagModule } from "./modules/tag/tag.module";
 
 @Module({
     imports: [
@@ -24,7 +25,8 @@ import { EventModule } from "./modules/event/event.module";
         AuthModule,
         ProfileModule,
         CompanyModule,
-        EventModule
+        EventModule,
+        TagModule
     ],
     controllers: [AppController],
     providers: [AppService]

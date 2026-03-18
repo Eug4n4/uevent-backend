@@ -1,0 +1,37 @@
+get:
+  tags:
+    - events
+  summary: Get event by ID
+  description: >
+    Returns a single event by its UUID. No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '200':
+      description: Event found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

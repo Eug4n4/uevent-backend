@@ -1,0 +1,27 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+    description: "tag ID"
+  type:
+    type: string
+    enum: [ tag ]
+  attributes:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: "tag name (letters only, max 50 characters)"
+        example: "Technology"
+      description:
+        type: string
+        nullable: true
+        description: "optional tag description"
+        example: "Tech-related events"

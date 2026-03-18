@@ -44,21 +44,17 @@ export const paginatedEvents = (
     const limit = Number(query["page[limit]"]);
     const currentPage = Math.floor(offset / limit);
     const lastPage = Math.max(0, Math.floor((total - 1) / limit));
-    const querySort = `sort=${query.sort}`;
+    const querySort = query.sort ? `&sort=${query.sort}` : "";
+    const pageParams = (offset: number) =>
+        `${baseUrl}?page[limit]=${limit}&page[offset]=${offset}${querySort}`;
     return {
         data: events.map(eventData),
         links: {
-            self: `${baseUrl}?page[limit]=${limit}&page[offset]=${offset}&${querySort}`,
-            first: `${baseUrl}?page[limit]=${limit}&page[offset]=0&${querySort}`,
-            last: `${baseUrl}?page[limit]=${limit}&page[offset]=${lastPage * limit}&${querySort}`,
-            prev:
-                currentPage > 0
-                    ? `${baseUrl}?page[limit]=${limit}&page[offset]=${(currentPage - 1) * limit}&${querySort}`
-                    : null,
-            next:
-                currentPage < lastPage
-                    ? `${baseUrl}?page[limit]=${limit}&page[offset]=${(currentPage + 1) * limit}&${querySort}`
-                    : null
+            self: pageParams(offset),
+            first: pageParams(0),
+            last: pageParams(lastPage * limit),
+            prev: currentPage > 0 ? pageParams((currentPage - 1) * limit) : null,
+            next: currentPage < lastPage ? pageParams((currentPage + 1) * limit) : null
         }
     };
 };

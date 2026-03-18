@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+    ForbiddenException,
+    Injectable,
+    NotFoundException
+} from "@nestjs/common";
 import { DataSource } from "typeorm";
 import { EventDetails, EventQuery } from "./event.dto";
 import { EventEntity } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
+import { Company } from "src/db/entity/company.entity";
 
 @Injectable()
 export class EventService {
@@ -13,13 +18,14 @@ export class EventService {
         if (event === null) {
             throw new NotFoundException(`Can't find event with id = ${id}`);
         }
+
         return event;
     }
 
     async getAll(params: EventQuery) {
         const qb = this.dataSource.manager
             .createQueryBuilder(EventEntity, "events")
-            .innerJoin("events.tags", "tag");
+            .leftJoin("events.tags", "tag");
 
         if (params.tag) {
             qb.where("tag.name IN (:...tagNames)", { tagNames: params.tag });
@@ -43,7 +49,17 @@ export class EventService {
         return qb.getManyAndCount();
     }
 
-    async create(dto: EventDetails) {
+    async create(dto: EventDetails, userId: string) {
+        const company = await Company.findOneBy({ id: dto.companyId });
+        if (!company) {
+            throw new NotFoundException("Company not found");
+        }
+        if (company.ownerId !== userId) {
+            throw new ForbiddenException(
+                "Only company owner can create events"
+            );
+        }
+
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
@@ -52,6 +68,7 @@ export class EventService {
                 ...dto,
                 tags: undefined
             });
+
             if (dto.included && dto.included.length > 0) {
                 const tags = dto.included.map((tag) =>
                     queryRunner.manager.create(Tag, {
@@ -62,11 +79,14 @@ export class EventService {
                 await queryRunner.manager.save(Tag, tags);
                 event.tags = tags;
             }
+
             await queryRunner.manager.save(event);
             await queryRunner.commitTransaction();
+
             return event;
         } catch (err) {
             await queryRunner.rollbackTransaction();
+
             throw err;
         } finally {
             await queryRunner.release();

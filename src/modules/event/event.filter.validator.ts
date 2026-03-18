@@ -17,7 +17,6 @@ export const IsRecord = (validationOptions?: ValidationOptions) => {
             },
             validator: {
                 validate(value: unknown) {
-                    console.log("validating");
                     if (!isObject(value)) return false;
                     if (Object.keys(value).length === 0) return true;
 

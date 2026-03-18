@@ -1,33 +1,20 @@
-import { Company } from "src/db/entity/company.entity";
-import { CompanyQuery } from "./company.dto";
+import { Tag } from "src/db/entity/tag.entity";
+import { TagQuery } from "./tag.dto";
 
-const companyData = (company: Company) => {
-    return {
-        id: company.id,
-        type: "company",
-        attributes: {
-            name: company.name,
-            email: company.email,
-            address: company.address,
-            avatar: company.avatar,
-            banner: company.banner
-        }
-    };
-};
-
-export const companyResponse = (company: Company) => {
-    return {
-        data: companyData(company)
-    };
-};
-
-export const manyCompaniesResponse = (companies: Company[]) => ({
-    data: companies.map(companyData)
+const tagData = (tag: Tag) => ({
+    id: tag.id,
+    type: "tag",
+    attributes: {
+        name: tag.name,
+        description: tag.description ?? null
+    }
 });
 
-export const paginatedCompanies = (
-    companies: Company[],
-    query: CompanyQuery,
+export const tagResponse = (tag: Tag) => ({ data: tagData(tag) });
+
+export const paginatedTags = (
+    tags: Tag[],
+    query: TagQuery,
     total: number,
     baseUrl: string
 ) => {
@@ -40,7 +27,7 @@ export const paginatedCompanies = (
         `${baseUrl}?page[limit]=${limit}&page[offset]=${o}${nameParam}`;
 
     return {
-        data: companies.map(companyData),
+        data: tags.map(tagData),
         links: {
             self: pageParams(offset),
             first: pageParams(0),

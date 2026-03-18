@@ -18,9 +18,10 @@ properties:
       - description
       - avatar
       - banner
-      - publishAt
-      - startAt
-      - endAt
+      - format
+      - publish_at
+      - start_at
+      - end_at
     properties:
       title:
         type: string
@@ -38,15 +39,19 @@ properties:
         type: string
         description: "banner file key or URL"
         example: "default.png"
-      publishAt:
+      format:
+        type: string
+        description: "event format/category"
+        enum: [ Lection, Workshop, Concert, Meeting ]
+      publish_at:
         type: string
         format: date-time
         description: "when the event becomes publicly visible"
-      startAt:
+      start_at:
         type: string
         format: date-time
         description: "when the event starts"
-      endAt:
+      end_at:
         type: string
         format: date-time
         description: "when the event ends"

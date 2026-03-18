@@ -15,6 +15,7 @@ postgres
 .vscode/*
 !.vscode/extensions.json
 .idea
+.claude
 .DS_Store
 *.suo
 *.ntvs*
@@ -27,6 +28,8 @@ postgres
 .env.development
 .env.production
 .env.*.local
+
+CLAUDE.md
 
 .*.swp
 .*.swo

@@ -1,82 +1,81 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     Equals,
     IsDefined,
-    IsEmail,
     IsInt,
     IsOptional,
     IsString,
     IsUUID,
+    Length,
+    Matches,
     Max,
     Min,
     ValidateNested
 } from "class-validator";
 
-export class CompanyAttributes {
+export class TagAttributes {
     @IsString()
+    @Length(1, 50)
+    @Matches(/^[a-zA-Z]+$/, { message: "Tag name must contain only letters" })
     name: string;
 
-    @IsEmail()
-    email: string;
-
-    @IsString()
-    address: string;
-}
-
-export class CompanyUpdateAttributes {
     @IsOptional()
     @IsString()
+    description?: string;
+}
+
+export class TagUpdateAttributes {
+    @IsOptional()
+    @IsString()
+    @Length(1, 50)
+    @Matches(/^[a-zA-Z]+$/, { message: "Tag name must contain only letters" })
     name?: string;
 
     @IsOptional()
-    @IsEmail()
-    email?: string;
-
-    @IsOptional()
     @IsString()
-    address?: string;
+    description?: string;
 }
 
-class CompanyData {
+class TagData {
     @IsString()
-    @Equals("company")
+    @Equals("tag")
     type: string;
 
     @IsDefined()
     @ValidateNested()
-    @Type(() => CompanyAttributes)
-    attributes: CompanyAttributes;
+    @Type(() => TagAttributes)
+    attributes: TagAttributes;
 }
 
-class CompanyUpdateData {
+class TagUpdateData {
     @IsUUID()
     id: string;
 
     @IsString()
-    @Equals("company")
+    @Equals("tag")
     type: string;
 
     @IsDefined()
     @ValidateNested()
-    @Type(() => CompanyUpdateAttributes)
-    attributes: CompanyUpdateAttributes;
+    @Type(() => TagUpdateAttributes)
+    attributes: TagUpdateAttributes;
 }
 
-export class CompanyCreateDto {
+export class TagCreateDto {
     @IsDefined()
     @ValidateNested()
-    @Type(() => CompanyData)
-    data: CompanyData;
+    @Type(() => TagData)
+    data: TagData;
 }
 
-export class CompanyUpdateDto {
+export class TagUpdateDto {
     @IsDefined()
     @ValidateNested()
-    @Type(() => CompanyUpdateData)
-    data: CompanyUpdateData;
+    @Type(() => TagUpdateData)
+    data: TagUpdateData;
 }
 
-export class CompanyQuery {
+export class TagQuery {
     @IsOptional()
     @IsString()
     name?: string;

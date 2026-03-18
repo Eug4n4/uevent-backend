@@ -1,0 +1,137 @@
+get:
+  tags:
+    - events
+  summary: Get events list
+  description: >
+    Returns a paginated list of events. Supports filtering by tag and format,
+    and sorting by date fields. No authentication required.
+
+  parameters:
+    - name: page[limit]
+      in: query
+      description: "Number of events per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of events to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    - name: sort
+      in: query
+      description: "Sort field. Prefix with `-` for descending order."
+      schema:
+        type: string
+        enum:
+          - start_at
+          - "-start_at"
+          - end_at
+          - "-end_at"
+          - publish_at
+          - "-publish_at"
+    - name: format
+      in: query
+      description: "Filter by event format (case-insensitive)"
+      schema:
+        type: string
+        enum: [ Lection, Workshop, Concert, Meeting ]
+    - name: tag
+      in: query
+      description: "Filter by one or more tag names"
+      schema:
+        oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+      style: form
+      explode: true
+
+  responses:
+    '200':
+      description: Paginated list of events.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/EventsCollection.yaml'
+
+    '400':
+      description: Validation error in query parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+post:
+  tags:
+    - events
+  summary: Create an event
+  description: >
+    Creates a new event for a company. Only the company owner can create events.
+    Tags can be attached by passing them in `data.included`.
+    Requires a valid access token.
+
+  security:
+    - cookieAuth: []
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/EventCreate.yaml'
+
+  responses:
+    '201':
+      description: Event successfully created.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '401':
+      description: Unauthorized. Access token is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '403':
+      description: Forbidden. The authenticated account is not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '404':
+      description: Company not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

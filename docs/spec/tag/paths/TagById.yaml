@@ -1,0 +1,131 @@
+get:
+  tags:
+    - tags
+  summary: Get tag by ID
+  description: Returns a single tag by its UUID. No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '200':
+      description: Tag found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Tag.yaml'
+    '404':
+      description: Tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+patch:
+  tags:
+    - tags
+  summary: Update a tag
+  description: >
+    Updates tag name and/or description. The `data.id` in the body must match the `:id` in the URL.
+    Requires a valid access token.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/TagUpdate.yaml'
+
+  responses:
+    '200':
+      description: Tag successfully updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Tag.yaml'
+    '400':
+      description: Validation error, body id mismatch, or name already taken.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - tags
+  summary: Delete a tag
+  description: >
+    Permanently deletes a tag. Requires a valid access token.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '204':
+      description: Tag successfully deleted.
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

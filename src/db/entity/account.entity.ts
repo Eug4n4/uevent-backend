@@ -6,10 +6,8 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
     BaseEntity,
-    OneToMany,
     PrimaryGeneratedColumn
 } from "typeorm";
-import { CompanyMember } from "./company.member.entity";
 
 @Entity({ name: "accounts" })
 export class Account extends BaseEntity {
@@ -33,7 +31,4 @@ export class Account extends BaseEntity {
 
     @DeleteDateColumn({ name: "deleted_at", nullable: true })
     deletedAt: Date;
-
-    @OneToMany(() => CompanyMember, (cm) => cm.member)
-    companyMembers: CompanyMember[];
 }

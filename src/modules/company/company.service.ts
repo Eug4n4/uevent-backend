@@ -4,11 +4,14 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
-import { CompanyAttributes } from "./company.dto";
-import { DataSource } from "typeorm";
+import {
+    CompanyAttributes,
+    CompanyQuery,
+    CompanyUpdateAttributes
+} from "./company.dto";
 import { Company } from "src/db/entity/company.entity";
 import { Account } from "src/db/entity/account.entity";
-import { CompanyMember } from "src/db/entity/company.member.entity";
+import { DataSource, ILike } from "typeorm";
 import { S3Service } from "../shared/s3.uploader";
 
 @Injectable()
@@ -18,11 +21,17 @@ export class CompanyService {
         private s3Service: S3Service
     ) {}
 
-    async findById(id: string) {
-        const company = await Company.findOne({
-            where: { id },
-            relations: { companyMembers: true }
+    async getAll(query: CompanyQuery): Promise<[Company[], number]> {
+        return this.dataSource.manager.findAndCount(Company, {
+            where: query.name ? { name: ILike(`%${query.name}%`) } : {},
+            order: { name: "ASC" },
+            take: query["page[limit]"],
+            skip: query["page[offset]"]
         });
+    }
+
+    async findById(id: string) {
+        const company = await Company.findOneBy({ id });
         if (!company) {
             throw new NotFoundException("Company not found");
         }
@@ -30,44 +39,25 @@ export class CompanyService {
     }
 
     async findByOwnerId(ownerId: string): Promise<Company[]> {
-        const companies = await Company.find({
-            where: { companyMembers: { accountId: ownerId, isOwner: true } }
-        });
-        return companies;
+        return Company.findBy({ ownerId });
     }
 
     async create(dto: CompanyAttributes, ownerId: string) {
         const account = await Account.findOneBy({ id: ownerId });
-        let company = await Company.findOneBy({ email: dto.email });
+        const existing = await Company.findOneBy({ email: dto.email });
         if (!account) {
             throw new BadRequestException(
                 "Can't create company for this account"
             );
         }
-        if (company !== null) {
+        if (existing !== null) {
             throw new BadRequestException(
                 "Company with this email already exists"
             );
         }
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
-        try {
-            company = queryRunner.manager.create(Company, { ...dto });
-            await queryRunner.manager.save(company);
-            await queryRunner.manager.save(CompanyMember, {
-                company,
-                member: account,
-                isOwner: true
-            });
-            await queryRunner.commitTransaction();
-            return company;
-        } catch (err) {
-            await queryRunner.rollbackTransaction();
-            throw err;
-        } finally {
-            await queryRunner.release();
-        }
+        const company = Company.create({ ...dto, ownerId });
+        await company.save();
+        return company;
     }
 
     async uploadAvatar(
@@ -124,9 +114,37 @@ export class CompanyService {
         return company;
     }
 
+    async update(
+        companyId: string,
+        ownerId: string,
+        dto: CompanyUpdateAttributes
+    ) {
+        const company = await this.findById(companyId);
+        if (!this.isCompanyOwner(company, ownerId)) {
+            throw new ForbiddenException("You are not the company owner");
+        }
+        if (dto.email && dto.email !== company.email) {
+            const existing = await Company.findOneBy({ email: dto.email });
+            if (existing) {
+                throw new BadRequestException(
+                    "Company with this email already exists"
+                );
+            }
+        }
+        Object.assign(company, dto);
+        await company.save();
+        return company;
+    }
+
+    async remove(companyId: string, ownerId: string) {
+        const company = await this.findById(companyId);
+        if (!this.isCompanyOwner(company, ownerId)) {
+            throw new ForbiddenException("You are not the company owner");
+        }
+        await company.softRemove();
+    }
+
     isCompanyOwner(company: Company, ownerId: string) {
-        return company.companyMembers.some(
-            (member) => member.accountId === ownerId && member.isOwner
-        );
+        return company.ownerId === ownerId;
     }
 }

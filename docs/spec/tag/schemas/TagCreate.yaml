@@ -1,0 +1,26 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ tag ]
+      attributes:
+        type: object
+        required:
+          - name
+        properties:
+          name:
+            type: string
+            description: "tag name (letters only, max 50 characters)"
+            example: "Technology"
+          description:
+            type: string
+            description: "optional tag description"
+            example: "Tech-related events"

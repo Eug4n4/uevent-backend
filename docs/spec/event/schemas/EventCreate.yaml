@@ -16,12 +16,12 @@ properties:
         required:
           - title
           - description
-          - notificationNewTicket
-          - publishAt
-          - startAt
-          - endAt
+          - notification_new_ticket
+          - publish_at
+          - start_at
+          - end_at
           - format
-          - companyId
+          - company_id
         properties:
           title:
             type: string
@@ -31,27 +31,27 @@ properties:
             type: string
             description: "event description"
             example: "A hands-on workshop about NestJS"
-          notificationNewTicket:
+          notification_new_ticket:
             type: boolean
             description: "whether to notify attendees when a new ticket type is added"
             example: false
-          publishAt:
+          publish_at:
             type: string
             format: date-time
             description: "when the event becomes publicly visible"
-          startAt:
+          start_at:
             type: string
             format: date-time
             description: "when the event starts"
-          endAt:
+          end_at:
             type: string
             format: date-time
             description: "when the event ends"
           format:
             type: string
             description: "event format/category"
-            enum: [ Lection, Travel, Sport, Party, Art, Gaming ]
-          companyId:
+            enum: [ Lection, Workshop, Concert, Meeting ]
+          company_id:
             type: string
             format: uuid
             description: "ID of the company hosting the event"

@@ -39,16 +39,25 @@ paths:
     $ref: './spec/user/paths/ProfileByUsername.yaml'
 
   /uevent/v1/company:
-    $ref: './spec/company/paths/CreateCompany.yaml'
+    $ref: './spec/company/paths/Companies.yaml'
   /uevent/v1/company/my:
     $ref: './spec/company/paths/MyCompanies.yaml'
+  /uevent/v1/company/{id}:
+    $ref: './spec/company/paths/CompanyById.yaml'
   /uevent/v1/company/{id}/avatar:
     $ref: './spec/company/paths/CompanyAvatar.yaml'
   /uevent/v1/company/{id}/banner:
     $ref: './spec/company/paths/CompanyBanner.yaml'
 
   /uevent/v1/event:
-    $ref: './spec/event/paths/CreateEvent.yaml'
+    $ref: './spec/event/paths/Events.yaml'
+  /uevent/v1/event/{id}:
+    $ref: './spec/event/paths/GetEventById.yaml'
+
+  /uevent/v1/tag:
+    $ref: './spec/tag/paths/Tags.yaml'
+  /uevent/v1/tag/{id}:
+    $ref: './spec/tag/paths/TagById.yaml'
 
 
 components:
@@ -84,11 +93,27 @@ components:
       $ref: './spec/company/schemas/CompaniesCollection.yaml'
     CompanyCreate:
       $ref: './spec/company/schemas/CompanyCreate.yaml'
+    CompanyUpdate:
+      $ref: './spec/company/schemas/CompanyUpdate.yaml'
 
     #event
     Event:
       $ref: './spec/event/schemas/Event.yaml'
     EventData:
       $ref: './spec/event/schemas/EventData.yaml'
+    EventsCollection:
+      $ref: './spec/event/schemas/EventsCollection.yaml'
     EventCreate:
       $ref: './spec/event/schemas/EventCreate.yaml'
+
+    #tag
+    Tag:
+      $ref: './spec/tag/schemas/Tag.yaml'
+    TagData:
+      $ref: './spec/tag/schemas/TagData.yaml'
+    TagsCollection:
+      $ref: './spec/tag/schemas/TagsCollection.yaml'
+    TagCreate:
+      $ref: './spec/tag/schemas/TagCreate.yaml'
+    TagUpdate:
+      $ref: './spec/tag/schemas/TagUpdate.yaml'

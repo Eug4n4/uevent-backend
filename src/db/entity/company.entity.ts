@@ -6,15 +6,20 @@ import {
     DeleteDateColumn,
     BaseEntity,
     OneToMany,
-    PrimaryGeneratedColumn
+    PrimaryGeneratedColumn,
+    ManyToOne,
+    JoinColumn
 } from "typeorm";
-import { CompanyMember } from "./company.member.entity";
 import { EventEntity } from "./event.entity";
+import { Account } from "./account.entity";
 
 @Entity({ name: "companies" })
 export class Company extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
+
+    @Column({ name: "owner_id", type: "uuid" })
+    ownerId: string;
 
     @Column({ length: 255 })
     name: string;
@@ -42,8 +47,9 @@ export class Company extends BaseEntity {
 
     // relations
 
-    @OneToMany(() => CompanyMember, (cm) => cm.company)
-    companyMembers: CompanyMember[];
+    @ManyToOne(() => Account)
+    @JoinColumn({ name: "owner_id" })
+    owner: Account;
 
     @OneToMany(() => EventEntity, (event) => event.company)
     events: EventEntity[];

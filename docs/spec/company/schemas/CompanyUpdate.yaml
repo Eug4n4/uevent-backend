@@ -1,0 +1,31 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "must match the :id in the URL"
+      type:
+        type: string
+        enum: [ company ]
+      attributes:
+        type: object
+        properties:
+          name:
+            type: string
+            example: "Acme Corp"
+          email:
+            type: string
+            format: email
+            example: "contact@acme.com"
+          address:
+            type: string
+            example: "123 Main St, Kyiv"
