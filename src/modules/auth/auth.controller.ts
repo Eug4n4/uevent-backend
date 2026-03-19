@@ -90,9 +90,9 @@ export class AuthController {
     @UseGuards(JwtRefreshGuard)
     @Post("refresh")
     @HttpCode(HttpStatus.OK)
-    async refresh(@Req() req: Request, @Res() res: Response) {
+    async refresh(@CurrentUser() user: Express.User, @Res() res: Response) {
         try {
-            const tokens = await this.authService.refresh(req.cookies.refresh);
+            const tokens = await this.authService.refresh(user.id);
             this.setTokenPair(res, tokens);
             res.send();
         } catch {
