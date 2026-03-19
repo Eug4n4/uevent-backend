@@ -3,16 +3,15 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
-import { DataSource, ILike } from "typeorm";
+import { ILike } from "typeorm";
+import { database } from "src/db/data-source";
 import { Tag } from "src/db/entity/tag.entity";
 import { TagAttributes, TagQuery, TagUpdateAttributes } from "./tag.dto";
 
 @Injectable()
 export class TagService {
-    constructor(private dataSource: DataSource) {}
-
     async getAll(query: TagQuery): Promise<[Tag[], number]> {
-        return this.dataSource.manager.findAndCount(Tag, {
+        return database.dataSource.manager.findAndCount(Tag, {
             where: query.name ? { name: ILike(`%${query.name}%`) } : {},
             order: { name: "ASC" },
             take: query["page[limit]"],

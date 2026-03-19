@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { DataSource } from "typeorm";
+import { database } from "src/db/data-source";
 import {
     LoginDto,
     RegisterAttributes,
@@ -16,8 +16,7 @@ import { GoogleOAuth } from "./google.oauth";
 export class AuthService {
     constructor(
         private jwtService: JwtService,
-        private oauth: GoogleOAuth,
-        private dataSource: DataSource
+        private oauth: GoogleOAuth
     ) {}
 
     public async register(dto: RegisterAttributes) {
@@ -52,7 +51,7 @@ export class AuthService {
                 creds.id_token
             );
 
-            account = await this.dataSource.manager.findOneBy(Account, {
+            account = await database.dataSource.manager.findOneBy(Account, {
                 email: payload.email
             });
             if (account === null) {
@@ -118,7 +117,7 @@ export class AuthService {
     }
 
     private async validateUser(dto: LoginDto) {
-        const account = await this.dataSource.manager.findOneBy(Account, {
+        const account = await database.dataSource.manager.findOneBy(Account, {
             email: dto.data.attributes.email
         });
         if (!account || !account.password) {
@@ -132,7 +131,7 @@ export class AuthService {
     }
 
     private async createAccount(dto: CreateAccountAttributes) {
-        const queryRunner = this.dataSource.createQueryRunner();
+        const queryRunner = database.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
         try {

@@ -11,18 +11,16 @@ import {
 } from "./company.dto";
 import { Company } from "src/db/entity/company.entity";
 import { Account } from "src/db/entity/account.entity";
-import { DataSource, ILike } from "typeorm";
+import { ILike } from "typeorm";
+import { database } from "src/db/data-source";
 import { S3Service } from "../shared/s3.uploader";
 
 @Injectable()
 export class CompanyService {
-    constructor(
-        private dataSource: DataSource,
-        private s3Service: S3Service
-    ) {}
+    constructor(private s3Service: S3Service) {}
 
     async getAll(query: CompanyQuery): Promise<[Company[], number]> {
-        return this.dataSource.manager.findAndCount(Company, {
+        return database.dataSource.manager.findAndCount(Company, {
             where: query.name ? { name: ILike(`%${query.name}%`) } : {},
             order: { name: "ASC" },
             take: query["page[limit]"],

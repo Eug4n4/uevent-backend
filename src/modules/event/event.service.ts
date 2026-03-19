@@ -3,16 +3,14 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
-import { DataSource } from "typeorm";
 import { EventDetails, EventQuery } from "./event.dto";
 import { EventEntity } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
 import { Company } from "src/db/entity/company.entity";
+import { database } from "src/db/data-source";
 
 @Injectable()
 export class EventService {
-    constructor(private dataSource: DataSource) {}
-
     async getById(id: string) {
         const event = await EventEntity.findOneBy({ id });
         if (event === null) {
@@ -23,7 +21,7 @@ export class EventService {
     }
 
     async getAll(params: EventQuery) {
-        const qb = this.dataSource.manager
+        const qb = database.dataSource.manager
             .createQueryBuilder(EventEntity, "events")
             .leftJoin("events.tags", "tag");
 
@@ -60,7 +58,7 @@ export class EventService {
             );
         }
 
-        const queryRunner = this.dataSource.createQueryRunner();
+        const queryRunner = database.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
         try {

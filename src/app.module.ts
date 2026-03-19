@@ -1,27 +1,18 @@
-import { Module } from "@nestjs/common";
+import { Module, OnModuleInit } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./modules/auth/auth.module";
 import { ProfileModule } from "./modules/profile/profile.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 import { CompanyModule } from "./modules/company/company.module";
 import { EventModule } from "./modules/event/event.module";
 import { TagModule } from "./modules/tag/tag.module";
 
+import { database } from "src/db/data-source";
+
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true, envFilePath: [".env"] }),
-        TypeOrmModule.forRoot({
-            type: "postgres",
-            host: process.env.DB_HOST,
-            port: Number(process.env.DB_PORT),
-            username: process.env.DB_USERNAME,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            synchronize: true,
-            entities: [`${__dirname}/db/entity/*{.js,.ts}`]
-        }),
         AuthModule,
         ProfileModule,
         CompanyModule,
@@ -31,4 +22,8 @@ import { TagModule } from "./modules/tag/tag.module";
     controllers: [AppController],
     providers: [AppService]
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+    async onModuleInit() {
+        await database.init();
+    }
+}

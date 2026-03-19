@@ -3,20 +3,17 @@ import {
     NotFoundException,
     ForbiddenException
 } from "@nestjs/common";
-import { DataSource } from "typeorm";
+import { database } from "src/db/data-source";
 import { Profile } from "src/db/entity/profile.entity";
 import { UpdateProfileDto, FilterProfilesDto } from "./profile.dto";
 import { S3Service } from "../shared/s3.uploader";
 
 @Injectable()
 export class ProfileService {
-    constructor(
-        private dataSource: DataSource,
-        private s3Service: S3Service
-    ) {}
+    constructor(private s3Service: S3Service) {}
 
     async getMyProfile(accountId: string): Promise<Profile> {
-        const profile = await this.dataSource.manager.findOneBy(Profile, {
+        const profile = await database.dataSource.manager.findOneBy(Profile, {
             accountId
         });
         if (!profile) throw new NotFoundException("Profile not found");
@@ -70,7 +67,7 @@ export class ProfileService {
     }
 
     async getProfileById(accountId: string): Promise<Profile> {
-        const profile = await this.dataSource.manager.findOne(Profile, {
+        const profile = await database.dataSource.manager.findOne(Profile, {
             where: { accountId },
             relations: { account: true }
         });
@@ -81,7 +78,7 @@ export class ProfileService {
     }
 
     async getProfileByUsername(username: string): Promise<Profile> {
-        const profile = await this.dataSource.manager.findOne(Profile, {
+        const profile = await database.dataSource.manager.findOne(Profile, {
             where: { username },
             relations: { account: true }
         });
@@ -92,7 +89,7 @@ export class ProfileService {
     }
 
     async filterProfiles(dto: FilterProfilesDto): Promise<[Profile[], number]> {
-        const qb = this.dataSource.manager
+        const qb = database.dataSource.manager
             .createQueryBuilder(Profile, "profile")
             .innerJoin("profile.account", "account")
             .where("account.deleted_at IS NULL");
