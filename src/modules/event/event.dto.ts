@@ -15,6 +15,8 @@ import {
     ValidateNested
 } from "class-validator";
 import { TagData } from "../company/tag.dto";
+import { OmitType } from "@nestjs/swagger";
+import { eventFormats } from "src/db/entity/event.entity";
 
 export class EventAttributes {
     @IsString()
@@ -36,6 +38,7 @@ export class EventAttributes {
     endAt: Date;
 
     @IsString()
+    @IsIn(eventFormats)
     format: string;
 
     @IsUUID()
@@ -61,11 +64,13 @@ class EventData {
     included?: TagData[];
 }
 
+class EventCreateData extends OmitType(EventData, ["id"]) {}
+
 export class EventCreateDto {
     @IsDefined()
     @ValidateNested()
-    @Type(() => EventData)
-    data: EventData;
+    @Type(() => EventCreateData)
+    data: EventCreateData;
 }
 
 const eventSortingOptions = [

@@ -1,7 +1,23 @@
 services:
+  backend:
+    container_name: uevent_be
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_started
+    command: > 
+      sh -c "npm run migration:run && npm run start:dev"
   db:
     container_name: uevent_postgres
-    image: postgres:latest
+    image: postgres:18-alpine
     restart: unless-stopped
     env_file:
       - .env
@@ -12,4 +28,16 @@ services:
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - ./postgres:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
+  docs-swagger:
+    image: swaggerapi/swagger-ui
+    container_name: docs-swagger
+    environment:
+      - SWAGGER_JSON=/docs/api-bundled.yaml
+    volumes:
+      - ./docs:/docs:ro
+    ports:
+      - "6767:8080"
+
+volumes:
+  postgres_data:
