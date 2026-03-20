@@ -8,6 +8,7 @@ import { EventEntity } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
 import { Company } from "src/db/entity/company.entity";
 import { database } from "src/db/data-source";
+import { SelectQueryBuilder } from "typeorm";
 
 @Injectable()
 export class EventService {
@@ -26,26 +27,17 @@ export class EventService {
             .leftJoin("events.tags", "tag")
             .where("events.publish_at <= current_timestamp");
 
-        if (params.tag) {
-            qb.andWhere("tag.name IN (:...tagNames)", { tagNames: params.tag });
-        }
-        if (params.format) {
-            qb.andWhere("LOWER(events.format::text) = :format", {
-                format: params.format.toLowerCase()
-            });
-        }
-        let order: "ASC" | "DESC" = "ASC";
-        if (params.sort && params.sort.length > 0) {
-            if (params.sort.startsWith("-")) {
-                params.sort = params.sort.slice(1);
-                order = "DESC";
-            }
-            qb.orderBy(params.sort, order);
-        }
+        return this.getPaginatedAndCount(qb, params);
+    }
 
-        qb.limit(params["page[limit]"]);
-        qb.offset(params["page[offset]"]);
-        return qb.getManyAndCount();
+    async getMy(accountId: string, query: EventQuery) {
+        const qb = database.dataSource.manager
+            .createQueryBuilder(EventEntity, "events")
+            .leftJoin(Company, "companies")
+            .where("companies.ownerId = :id", { id: accountId })
+            .leftJoin("events.tags", "tag");
+
+        return this.getPaginatedAndCount(qb, query);
     }
 
     async create(dto: EventDetails, userId: string) {
@@ -90,5 +82,33 @@ export class EventService {
         } finally {
             await queryRunner.release();
         }
+    }
+
+    private getPaginatedAndCount(
+        queryBuilder: SelectQueryBuilder<EventEntity>,
+        query: EventQuery
+    ) {
+        if (query.tag) {
+            queryBuilder.andWhere("tag.name IN (:...tagNames)", {
+                tagNames: query.tag
+            });
+        }
+        if (query.format) {
+            queryBuilder.andWhere("LOWER(events.format::text) = :format", {
+                format: query.format.toLowerCase()
+            });
+        }
+        let order: "ASC" | "DESC" = "ASC";
+        if (query.sort && query.sort.length > 0) {
+            if (query.sort.startsWith("-")) {
+                query.sort = query.sort.slice(1);
+                order = "DESC";
+            }
+            queryBuilder.orderBy(query.sort, order);
+        }
+
+        queryBuilder.limit(query["page[limit]"]);
+        queryBuilder.offset(query["page[offset]"]);
+        return queryBuilder.getManyAndCount();
     }
 }

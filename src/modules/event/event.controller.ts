@@ -15,6 +15,7 @@ import type { Request, Response } from "express";
 import { eventResponse, paginatedEvents } from "./event.response";
 import { JwtGuard } from "../shared/jwt.guard";
 import { CurrentUser } from "../shared/decorators";
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from "../shared/constants";
 
 @Controller("event")
 export class EventController {
@@ -27,13 +28,32 @@ export class EventController {
         @Res() res: Response
     ) {
         if (query["page[limit]"] === undefined) {
-            query["page[limit]"] = 20;
+            query["page[limit]"] = DEFAULT_PAGE_LIMIT;
         }
         if (query["page[offset]"] === undefined) {
-            query["page[offset]"] = 0;
+            query["page[offset]"] = DEFAULT_PAGE_OFFSET;
         }
         const events = await this.eventService.getAll(query);
         const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/event`;
+        res.json(paginatedEvents(events[0], query, events[1], baseUrl));
+    }
+
+    @UseGuards(JwtGuard)
+    @Get("my")
+    async getMyEvents(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Query() query: EventQuery,
+        @CurrentUser() user: Express.User
+    ) {
+        if (query["page[limit]"] === undefined) {
+            query["page[limit]"] = DEFAULT_PAGE_LIMIT;
+        }
+        if (query["page[offset]"] === undefined) {
+            query["page[offset]"] = DEFAULT_PAGE_OFFSET;
+        }
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/event/my`;
+        const events = await this.eventService.getMy(user.id, query);
         res.json(paginatedEvents(events[0], query, events[1], baseUrl));
     }
 
