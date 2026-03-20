@@ -23,10 +23,11 @@ export class EventService {
     async getAll(params: EventQuery) {
         const qb = database.dataSource.manager
             .createQueryBuilder(EventEntity, "events")
-            .leftJoin("events.tags", "tag");
+            .leftJoin("events.tags", "tag")
+            .where("events.publish_at <= current_timestamp");
 
         if (params.tag) {
-            qb.where("tag.name IN (:...tagNames)", { tagNames: params.tag });
+            qb.andWhere("tag.name IN (:...tagNames)", { tagNames: params.tag });
         }
         if (params.format) {
             qb.andWhere("LOWER(events.format::text) = :format", {
