@@ -45,22 +45,41 @@ export class EventEntity extends BaseEntity {
     @Column({ default: false, name: "notification_new_ticket" })
     notificationNewTicket: boolean;
 
-    @Column({ name: "publish_at" })
+    @Column({
+        name: "publish_at",
+        type: "timestamp with time zone"
+    })
     publishAt: Date;
 
-    @Column({ name: "start_at" })
+    @Column({
+        name: "start_at",
+        type: "timestamp with time zone"
+    })
     startAt: Date;
 
-    @Column({ name: "end_at" })
+    @Column({
+        name: "end_at",
+        type: "timestamp with time zone"
+    })
     endAt: Date;
 
-    @CreateDateColumn({ name: "created_at" })
+    @CreateDateColumn({
+        name: "created_at",
+        type: "timestamp with time zone"
+    })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: "updated_at" })
+    @UpdateDateColumn({
+        name: "updated_at",
+        type: "timestamp with time zone"
+    })
     updatedAt: Date;
 
-    @DeleteDateColumn({ name: "deleted_at", nullable: true })
+    @DeleteDateColumn({
+        name: "deleted_at",
+        nullable: true,
+        type: "timestamp with time zone"
+    })
     deletedAt: Date;
 
     // relations

@@ -36,13 +36,23 @@ export class Company extends BaseEntity {
     @Column({ length: 255, default: "default.png" })
     banner: string;
 
-    @CreateDateColumn({ name: "created_at" })
+    @CreateDateColumn({
+        name: "created_at",
+        type: "timestamp with time zone"
+    })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: "updated_at" })
+    @UpdateDateColumn({
+        name: "updated_at",
+        type: "timestamp with time zone"
+    })
     updatedAt: Date;
 
-    @DeleteDateColumn({ name: "deleted_at", nullable: true })
+    @DeleteDateColumn({
+        name: "deleted_at",
+        nullable: true,
+        type: "timestamp with time zone"
+    })
     deletedAt: Date;
 
     // relations
