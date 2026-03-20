@@ -67,7 +67,10 @@ export class EventService {
                         description: tag.attributes.description
                     })
                 );
-                await queryRunner.manager.save(Tag, tags);
+                await queryRunner.manager.upsert(Tag, tags, {
+                    conflictPaths: ["name"],
+                    skipUpdateIfNoValuesChanged: true
+                });
                 event.tags = tags;
             }
 
