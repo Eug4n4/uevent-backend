@@ -7,11 +7,14 @@ import {
 import {
     CompanyAttributes,
     CompanyQuery,
-    CompanyUpdateAttributes
+    CompanyUpdateAttributes,
+    PageQuery
 } from "./company.dto";
 import { Company } from "src/db/entity/company.entity";
+import { CompanySub } from "src/db/entity/company_subs.entity";
+import { Profile } from "src/db/entity/profile.entity";
 import { Account } from "src/db/entity/account.entity";
-import { ILike } from "typeorm";
+import { ILike, In } from "typeorm";
 import { database } from "src/db/data-source";
 import { S3Service } from "../shared/s3.uploader";
 
@@ -144,5 +147,56 @@ export class CompanyService {
 
     isCompanyOwner(company: Company, ownerId: string) {
         return company.ownerId === ownerId;
+    }
+
+    async getSubscribers(
+        companyId: string,
+        query: PageQuery
+    ): Promise<[Profile[], number]> {
+        await this.findById(companyId);
+        const [subs, total] = await database.dataSource.manager.findAndCount(
+            CompanySub,
+            { where: { companyId }, take: query["page[limit]"], skip: query["page[offset]"] }
+        );
+        if (subs.length === 0) return [[], total];
+        const profiles = await Profile.findBy({
+            accountId: In(subs.map((s) => s.accountId))
+        });
+        return [profiles, total];
+    }
+
+    async getSubscriptions(
+        accountId: string,
+        query: PageQuery
+    ): Promise<[Company[], number]> {
+        const [subs, total] = await database.dataSource.manager.findAndCount(
+            CompanySub,
+            { where: { accountId }, take: query["page[limit]"], skip: query["page[offset]"] }
+        );
+        if (subs.length === 0) return [[], total];
+        const companies = await Company.findBy({
+            id: In(subs.map((s) => s.companyId))
+        });
+        return [companies, total];
+    }
+
+    async subscribe(companyId: string, accountId: string) {
+        await this.findById(companyId);
+        const existing = await CompanySub.findOneBy({ companyId, accountId });
+        if (existing) {
+            throw new BadRequestException("Already subscribed to this company");
+        }
+        const sub = CompanySub.create({ companyId, accountId });
+        await sub.save();
+        return sub;
+    }
+
+    async unsubscribe(companyId: string, accountId: string) {
+        await this.findById(companyId);
+        const sub = await CompanySub.findOneBy({ companyId, accountId });
+        if (!sub) {
+            throw new NotFoundException("Subscription not found");
+        }
+        await sub.remove();
     }
 }

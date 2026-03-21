@@ -1,0 +1,24 @@
+type: object
+properties:
+  data:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: Subscription record ID
+      type:
+        type: string
+        enum: [company-sub]
+      attributes:
+        type: object
+        properties:
+          company_id:
+            type: string
+            format: uuid
+          account_id:
+            type: string
+            format: uuid
+          created_at:
+            type: string
+            format: date-time

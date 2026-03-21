@@ -1,0 +1,32 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "must match the :id in the URL"
+      type:
+        type: string
+        enum: [ news ]
+      attributes:
+        type: object
+        description: "All fields are optional"
+        properties:
+          name:
+            type: string
+            maxLength: 255
+            description: "news title"
+            example: "Updated Title"
+          text:
+            type: string
+            maxLength: 255
+            description: "news body text"
+            example: "Updated content..."

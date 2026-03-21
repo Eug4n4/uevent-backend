@@ -41,7 +41,7 @@ export class EventService {
     }
 
     async create(dto: EventDetails, userId: string) {
-        const company = await Company.findOneBy({ id: dto.companyId });
+        const company = await Company.findOneBy({ id: dto.company_id });
         if (!company) {
             throw new NotFoundException("Company not found");
         }
@@ -56,8 +56,14 @@ export class EventService {
         await queryRunner.startTransaction();
         try {
             const event = queryRunner.manager.create(EventEntity, {
-                ...dto,
-                tags: undefined
+                companyId: dto.company_id,
+                title: dto.title,
+                description: dto.description,
+                notificationNewTicket: dto.notification_new_ticket,
+                publishAt: dto.publish_at,
+                startAt: dto.start_at,
+                endAt: dto.end_at,
+                format: dto.format
             });
 
             if (dto.included && dto.included.length > 0) {

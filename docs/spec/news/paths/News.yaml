@@ -1,0 +1,99 @@
+get:
+  tags:
+    - news
+  summary: Get news list
+  description: >
+    Returns a paginated list of news items. Supports filtering by company_id and text (partial match).
+    No authentication required.
+
+  parameters:
+    - name: company_id
+      in: query
+      description: "Filter by company ID"
+      schema:
+        type: string
+        format: uuid
+    - name: text
+      in: query
+      description: "Filter by text content (partial match)"
+      schema:
+        type: string
+    - name: page[limit]
+      in: query
+      description: "Number of news items per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of news items to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    '200':
+      description: Paginated list of news items.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/NewsCollection.yaml'
+    '400':
+      description: Validation error in query parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+post:
+  tags:
+    - news
+  summary: Create a news item
+  description: >
+    Creates a new news item associated with a company.
+    Requires a valid access token.
+
+  security:
+    - cookieAuth: []
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/NewsCreate.yaml'
+
+  responses:
+    '200':
+      description: News item successfully created.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/News.yaml'
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

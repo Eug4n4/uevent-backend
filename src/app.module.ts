@@ -7,6 +7,7 @@ import { ConfigModule } from "@nestjs/config";
 import { CompanyModule } from "./modules/company/company.module";
 import { EventModule } from "./modules/event/event.module";
 import { TagModule } from "./modules/tag/tag.module";
+import { NewsModule } from "./modules/news/news.module";
 
 import { database } from "src/db/data-source";
 
@@ -17,7 +18,8 @@ import { database } from "src/db/data-source";
         ProfileModule,
         CompanyModule,
         EventModule,
-        TagModule
+        TagModule,
+        NewsModule
     ],
     controllers: [AppController],
     providers: [AppService]

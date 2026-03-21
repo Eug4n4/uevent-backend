@@ -1,0 +1,26 @@
+type: object
+required:
+  - data
+  - links
+properties:
+  data:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Account ID of the subscriber
+        type:
+          type: string
+          enum: [profile]
+        attributes:
+          type: object
+          properties:
+            username:
+              type: string
+            avatar:
+              type: string
+  links:
+    $ref: '../../shared/PaginationData.yaml'

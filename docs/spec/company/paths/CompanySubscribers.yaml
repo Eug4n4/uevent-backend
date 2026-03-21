@@ -1,0 +1,50 @@
+get:
+  tags:
+    - companies
+  summary: Get company subscribers
+  description: >
+    Returns a paginated list of profiles subscribed to a company.
+    No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      description: "Number of subscribers per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of subscribers to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    '200':
+      description: Paginated list of subscriber profiles.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/CompanySubscribersCollection.yaml'
+    '404':
+      description: Company not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

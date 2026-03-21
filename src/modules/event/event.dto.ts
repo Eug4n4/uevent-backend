@@ -26,23 +26,23 @@ export class EventAttributes {
     description: string;
 
     @IsBoolean()
-    notificationNewTicket: boolean;
+    notification_new_ticket: boolean;
 
     @IsDateString()
-    publishAt: Date;
+    publish_at: Date;
 
     @IsDateString()
-    startAt: Date;
+    start_at: Date;
 
     @IsDateString()
-    endAt: Date;
+    end_at: Date;
 
     @IsString()
     @IsIn(eventFormats)
     format: string;
 
     @IsUUID()
-    companyId: string;
+    company_id: string;
 }
 
 class EventData {

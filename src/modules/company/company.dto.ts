@@ -94,3 +94,18 @@ export class CompanyQuery {
     @Min(0)
     "page[offset]"?: number;
 }
+
+export class PageQuery {
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    "page[limit]"?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    "page[offset]"?: number;
+}

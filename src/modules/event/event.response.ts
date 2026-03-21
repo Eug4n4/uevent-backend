@@ -24,7 +24,7 @@ export const eventResponse = (event: EventEntity) => {
     };
 };
 
-export const manyEventsResponse = (events: EventEntity[]) => {
+export const collectionEventsResponse = (events: EventEntity[]) => {
     const arr: ReturnType<typeof eventData>[] = [];
     for (const event of events) {
         arr.push(eventData(event));

@@ -48,6 +48,14 @@ paths:
     $ref: './spec/company/paths/CompanyAvatar.yaml'
   /uevent/v1/company/{id}/banner:
     $ref: './spec/company/paths/CompanyBanner.yaml'
+  /uevent/v1/company/subscriptions:
+    $ref: './spec/company/paths/MySubscriptions.yaml'
+  /uevent/v1/company/{id}/subscribers:
+    $ref: './spec/company/paths/CompanySubscribers.yaml'
+  /uevent/v1/company/{id}/subscribe:
+    $ref: './spec/company/paths/CompanySubscribe.yaml'
+
+
 
   /uevent/v1/event:
     $ref: './spec/event/paths/Events.yaml'
@@ -58,6 +66,11 @@ paths:
     $ref: './spec/tag/paths/Tags.yaml'
   /uevent/v1/tag/{id}:
     $ref: './spec/tag/paths/TagById.yaml'
+
+  /uevent/v1/news:
+    $ref: './spec/news/paths/News.yaml'
+  /uevent/v1/news/{id}:
+    $ref: './spec/news/paths/NewsById.yaml'
 
 
 components:
@@ -95,6 +108,10 @@ components:
       $ref: './spec/company/schemas/CompanyCreate.yaml'
     CompanyUpdate:
       $ref: './spec/company/schemas/CompanyUpdate.yaml'
+    CompanySub:
+      $ref: './spec/company/schemas/CompanySub.yaml'
+    CompanySubscribersCollection:
+      $ref: './spec/company/schemas/CompanySubscribersCollection.yaml'
 
     #event
     Event:
@@ -117,3 +134,15 @@ components:
       $ref: './spec/tag/schemas/TagCreate.yaml'
     TagUpdate:
       $ref: './spec/tag/schemas/TagUpdate.yaml'
+
+    #news
+    News:
+      $ref: './spec/news/schemas/News.yaml'
+    NewsData:
+      $ref: './spec/news/schemas/NewsData.yaml'
+    NewsCollection:
+      $ref: './spec/news/schemas/NewsCollection.yaml'
+    NewsCreate:
+      $ref: './spec/news/schemas/NewsCreate.yaml'
+    NewsUpdate:
+      $ref: './spec/news/schemas/NewsUpdate.yaml'

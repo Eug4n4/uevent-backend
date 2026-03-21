@@ -14,6 +14,7 @@ export class LoginAttributes {
     @IsString()
     @Length(6, 256, { message: "Email length must be in range [6, 256]" })
     email: string;
+
     @IsString()
     @Length(6)
     password: string;
@@ -41,10 +42,12 @@ export class RegisterAttributes {
     @IsString()
     @Length(6, 256, { message: "Email length must be in range [6, 256]" })
     email: string;
+
     @IsString()
     @Length(3, 32)
     @Matches(USERNAME_PATTERN)
     username: string;
+
     @IsString()
     @Length(6)
     password: string;

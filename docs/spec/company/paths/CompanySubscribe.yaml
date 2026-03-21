@@ -1,0 +1,91 @@
+post:
+  tags:
+    - companies
+  summary: Subscribe to a company
+  description: >
+    Subscribes the authenticated user to a company.
+    Returns 400 if already subscribed.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '201':
+      description: Successfully subscribed.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/CompanySub.yaml'
+    '400':
+      description: Already subscribed or validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Company not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - companies
+  summary: Unsubscribe from a company
+  description: >
+    Removes the authenticated user's subscription from a company.
+    Returns 404 if not subscribed.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '204':
+      description: Successfully unsubscribed.
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Company not found or not subscribed.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

@@ -1,0 +1,33 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ news ]
+      attributes:
+        type: object
+        required:
+          - name
+          - text
+          - company_id
+        properties:
+          name:
+            type: string
+            maxLength: 255
+            description: "news title"
+            example: "Company Announces New Event"
+          text:
+            type: string
+            description: "news body text"
+            example: "We are excited to announce our upcoming event..."
+          company_id:
+            type: string
+            format: uuid
+            description: "ID of the company this news belongs to"

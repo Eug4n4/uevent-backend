@@ -16,16 +16,24 @@ import {
     UseInterceptors
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { CompanyCreateDto, CompanyQuery, CompanyUpdateDto } from "./company.dto";
+import {
+    CompanyCreateDto,
+    CompanyQuery,
+    CompanyUpdateDto,
+    PageQuery
+} from "./company.dto";
 import { CompanyService } from "./company.service";
 import type { Request, Response } from "express";
 import { JwtGuard } from "../shared/jwt.guard";
 import {
     companyResponse,
-    manyCompaniesResponse,
-    paginatedCompanies
+    collectionCompaniesResponse,
+    paginatedCompanies,
+    paginatedSubscribers,
+    paginatedSubscriptions
 } from "./company.response";
 import { CurrentUser } from "../shared/decorators";
+import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from "../shared/constants";
 
 @Controller("company")
 export class CompanyController {
@@ -48,7 +56,25 @@ export class CompanyController {
     @Get("my")
     async getMy(@CurrentUser() user: Express.User, @Res() res: Response) {
         const companies = await this.companyService.findByOwnerId(user.id);
-        res.json(manyCompaniesResponse(companies));
+        res.json(collectionCompaniesResponse(companies));
+    }
+
+    @UseGuards(JwtGuard)
+    @Get("subscriptions")
+    async getSubscriptions(
+        @Query() query: PageQuery,
+        @CurrentUser() user: Express.User,
+        @Req() req: Request,
+        @Res() res: Response
+    ) {
+        if (query["page[limit]"] === undefined) query["page[limit]"] = DEFAULT_PAGE_LIMIT;
+        if (query["page[offset]"] === undefined) query["page[offset]"] = DEFAULT_PAGE_OFFSET;
+        const [companies, total] = await this.companyService.getSubscriptions(
+            user.id,
+            query
+        );
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/company/subscriptions`;
+        res.json(paginatedSubscriptions(companies, query, total, baseUrl));
     }
 
     @UseGuards(JwtGuard)
@@ -128,5 +154,55 @@ export class CompanyController {
             banner
         );
         res.json(companyResponse(company));
+    }
+
+    @Get(":id/subscribers")
+    async getSubscribers(
+        @Param("id") id: string,
+        @Query() query: PageQuery,
+        @Req() req: Request,
+        @Res() res: Response
+    ) {
+        if (query["page[limit]"] === undefined) query["page[limit]"] = DEFAULT_PAGE_LIMIT;
+        if (query["page[offset]"] === undefined) query["page[offset]"] = DEFAULT_PAGE_OFFSET;
+        const [profiles, total] = await this.companyService.getSubscribers(
+            id,
+            query
+        );
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/company/${id}/subscribers`;
+        res.json(paginatedSubscribers(profiles, query, total, baseUrl));
+    }
+
+    @UseGuards(JwtGuard)
+    @Post(":id/subscribe")
+    async subscribe(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        const sub = await this.companyService.subscribe(id, user.id);
+        res.status(201).json({
+            data: {
+                id: sub.id,
+                type: "company-sub",
+                attributes: {
+                    company_id: sub.companyId,
+                    account_id: sub.accountId,
+                    created_at: sub.createdAt
+                }
+            }
+        });
+    }
+
+    @UseGuards(JwtGuard)
+    @Delete(":id/subscribe")
+    @HttpCode(204)
+    async unsubscribe(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        await this.companyService.unsubscribe(id, user.id);
+        res.status(204).send();
     }
 }

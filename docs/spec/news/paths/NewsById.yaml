@@ -1,0 +1,145 @@
+get:
+  tags:
+    - news
+  summary: Get a news item by ID
+  description: >
+    Returns a single news item by its UUID. No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '200':
+      description: News item found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/News.yaml'
+    '404':
+      description: News item not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+patch:
+  tags:
+    - news
+  summary: Update a news item
+  description: >
+    Updates news item fields. All attributes are optional.
+    The `data.id` in the body must match the `:id` in the URL.
+    Only the author can perform this action.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/NewsUpdate.yaml'
+
+  responses:
+    '200':
+      description: News item successfully updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/News.yaml'
+    '400':
+      description: Validation error or body id mismatch.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. You are not the author of this news item.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: News item not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - news
+  summary: Delete a news item
+  description: >
+    Permanently deletes a news item. Only the author can perform this action.
+
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '204':
+      description: News item successfully deleted.
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. You are not the author of this news item.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: News item not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

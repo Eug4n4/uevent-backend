@@ -50,7 +50,6 @@ export class AuthController {
         if (result) {
             this.setTokenPair(res, result);
             res.json(authResponse(result.account));
-
             return;
         }
 

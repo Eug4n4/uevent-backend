@@ -1,0 +1,43 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+    description: "news ID"
+  type:
+    type: string
+    enum: [ news ]
+  attributes:
+    type: object
+    required:
+      - name
+      - text
+      - company_id
+      - created_at
+      - updated_at
+    properties:
+      name:
+        type: string
+        maxLength: 255
+        description: "news title"
+        example: "Company Announces New Event"
+      text:
+        type: string
+        description: "news body text"
+        example: "We are excited to announce our upcoming event..."
+      company_id:
+        type: string
+        format: uuid
+        description: "ID of the company this news belongs to"
+      created_at:
+        type: string
+        format: date-time
+        description: "creation timestamp"
+      updated_at:
+        type: string
+        format: date-time
+        description: "last update timestamp"
