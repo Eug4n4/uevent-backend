@@ -17,7 +17,11 @@ import {
 import { EventCreateDto, EventQuery, EventUpdateDto } from "./event.dto";
 import { EventService } from "./event.service";
 import type { Request, Response } from "express";
-import { eventResponse, paginatedEvents } from "./event.response";
+import {
+    eventResponse,
+    paginatedEvents,
+    subscriberResponse
+} from "./event.response";
 import { JwtGuard } from "../shared/jwt.guard";
 import { CurrentUser } from "../shared/decorators";
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from "../shared/constants";
@@ -106,5 +110,26 @@ export class EventController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async remove(@Param("id") id: string, @CurrentUser() user: Express.User) {
         await this.eventService.remove(id, user.id);
+    }
+
+    @UseGuards(JwtGuard)
+    @Post(":id/subscribe")
+    async subscribe(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        const subscriber = await this.eventService.subscribe(id, user.id);
+        res.json(subscriberResponse(subscriber));
+    }
+
+    @UseGuards(JwtGuard)
+    @Delete(":id/subscribe")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async unsubscribe(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User
+    ) {
+        await this.eventService.unsubscribe(id, user.id);
     }
 }

@@ -1,5 +1,6 @@
 import { EventEntity } from "src/db/entity/event.entity";
 import { EventQuery } from "./event.dto";
+import { EventSub } from "src/db/entity/event_subs.entity";
 
 const eventData = (event: EventEntity) => {
     return {
@@ -15,6 +16,24 @@ const eventData = (event: EventEntity) => {
             start_at: event.startAt,
             end_at: event.endAt
         }
+    };
+};
+
+const subscriberData = (subscriber: EventSub) => {
+    return {
+        id: subscriber.id,
+        type: "event-sub",
+        attributes: {
+            account_id: subscriber.accountId,
+            event_id: subscriber.eventId,
+            created_at: subscriber.createdAt
+        }
+    };
+};
+
+export const subscriberResponse = (subscriber: EventSub) => {
+    return {
+        data: subscriberData(subscriber)
     };
 };
 
@@ -53,8 +72,12 @@ export const paginatedEvents = (
             self: pageParams(offset),
             first: pageParams(0),
             last: pageParams(lastPage * limit),
-            prev: currentPage > 0 ? pageParams((currentPage - 1) * limit) : null,
-            next: currentPage < lastPage ? pageParams((currentPage + 1) * limit) : null
+            prev:
+                currentPage > 0 ? pageParams((currentPage - 1) * limit) : null,
+            next:
+                currentPage < lastPage
+                    ? pageParams((currentPage + 1) * limit)
+                    : null
         }
     };
 };

@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     ForbiddenException,
     Injectable,
     NotFoundException
@@ -9,6 +10,7 @@ import { Tag } from "src/db/entity/tag.entity";
 import { Company } from "src/db/entity/company.entity";
 import { database } from "src/db/data-source";
 import { In, SelectQueryBuilder } from "typeorm";
+import { EventSub } from "src/db/entity/event_subs.entity";
 
 @Injectable()
 export class EventService {
@@ -168,6 +170,26 @@ export class EventService {
             );
         }
         return event.softRemove();
+    }
+
+    async subscribe(eventId: string, accountId: string) {
+        await this.getById(eventId);
+        const subscriber = await EventSub.findOneBy({ accountId, eventId });
+        if (subscriber) {
+            throw new BadRequestException("Already subscribed to this event");
+        }
+        return EventSub.save({ accountId, eventId });
+    }
+
+    async unsubscribe(eventId: string, accountId: string) {
+        await this.getById(eventId);
+        const subscriber = await EventSub.findOneBy({ accountId, eventId });
+        if (subscriber === null) {
+            throw new BadRequestException(
+                "Trying to unsubscribe when not subscribed"
+            );
+        }
+        await EventSub.delete({ id: subscriber.id });
     }
 
     private getPaginatedAndCount(
