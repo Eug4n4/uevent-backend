@@ -3,12 +3,12 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
-import { EventDetails, EventQuery } from "./event.dto";
+import { EventDetails, EventQuery, EventUpdateDetails } from "./event.dto";
 import { EventEntity } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
 import { Company } from "src/db/entity/company.entity";
 import { database } from "src/db/data-source";
-import { SelectQueryBuilder } from "typeorm";
+import { In, SelectQueryBuilder } from "typeorm";
 
 @Injectable()
 export class EventService {
@@ -87,6 +87,71 @@ export class EventService {
         } catch (err) {
             await queryRunner.rollbackTransaction();
 
+            throw err;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async update(dto: EventUpdateDetails, accountId: string, eventId: string) {
+        const event = await EventEntity.findOne({
+            where: { id: eventId, company: { ownerId: accountId } },
+            relations: { tags: true }
+        });
+        if (event === null) {
+            throw new NotFoundException(
+                `Can't find event with id = ${eventId}`
+            );
+        }
+        let company: Company | null = null;
+        if (dto.company_id) {
+            company = await Company.findOneBy({
+                id: dto.company_id,
+                ownerId: accountId
+            });
+            if (company === null) {
+                throw new NotFoundException(
+                    `Can't find company with id = ${dto.company_id}`
+                );
+            }
+        }
+        const queryRunner = database.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        const camelCase = {
+            title: dto.title,
+            description: dto.description,
+            notificationNewTicket: dto.notification_new_ticket,
+            publishAt: dto.publish_at,
+            startAt: dto.start_at,
+            endAt: dto.end_at,
+            format: dto.format,
+            companyId: dto.company_id
+        };
+        try {
+            Object.assign(event, camelCase);
+            let tags: Tag[] = [];
+            if (dto.included && dto.included.length > 0) {
+                for (const tagData of dto.included) {
+                    tags.push(
+                        queryRunner.manager.create(Tag, tagData.attributes)
+                    );
+                }
+
+                await queryRunner.manager.upsert(Tag, tags, {
+                    conflictPaths: ["name"],
+                    skipUpdateIfNoValuesChanged: true
+                });
+                tags = await queryRunner.manager.find(Tag, {
+                    where: { name: In(tags.map((t) => t.name)) }
+                });
+            }
+            event.tags = tags;
+            await queryRunner.manager.save(event);
+            await queryRunner.commitTransaction();
+            return event;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
             throw err;
         } finally {
             await queryRunner.release();

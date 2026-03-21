@@ -14,8 +14,8 @@ import {
     Min,
     ValidateNested
 } from "class-validator";
-import { TagData } from "../company/tag.dto";
-import { OmitType } from "@nestjs/swagger";
+import { TagData } from "../tag/tag.dto";
+import { OmitType, PartialType } from "@nestjs/swagger";
 import { eventFormats } from "src/db/entity/event.entity";
 
 export class EventAttributes {
@@ -73,6 +73,34 @@ export class EventCreateDto {
     data: EventCreateData;
 }
 
+class EventUpdateAttributes extends PartialType(EventAttributes) {}
+
+class EventUpdateData {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("event")
+    type: string;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => EventUpdateAttributes)
+    attributes: EventUpdateAttributes;
+
+    @IsOptional()
+    @ValidateNested({ each: true })
+    @Type(() => TagData)
+    included?: TagData[];
+}
+
+export class EventUpdateDto {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => EventUpdateData)
+    data: EventUpdateData;
+}
+
 const eventSortingOptions = [
     "start_at",
     "-start_at",
@@ -111,3 +139,5 @@ export class EventQuery {
 }
 
 export type EventDetails = EventAttributes & Pick<EventData, "included">;
+export type EventUpdateDetails = EventUpdateAttributes &
+    Pick<EventUpdateData, "included">;

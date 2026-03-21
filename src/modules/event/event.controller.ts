@@ -7,9 +7,11 @@ import {
     Get,
     Param,
     Query,
-    Req
+    Req,
+    Patch,
+    BadRequestException
 } from "@nestjs/common";
-import { EventCreateDto, EventQuery } from "./event.dto";
+import { EventCreateDto, EventQuery, EventUpdateDto } from "./event.dto";
 import { EventService } from "./event.service";
 import type { Request, Response } from "express";
 import { eventResponse, paginatedEvents } from "./event.response";
@@ -73,6 +75,25 @@ export class EventController {
         const event = await this.eventService.create(
             { ...dto.data.attributes, included: dto.data.included },
             user.id
+        );
+        res.json(eventResponse(event));
+    }
+
+    @UseGuards(JwtGuard)
+    @Patch(":id")
+    async update(
+        @Param("id") id: string,
+        @Body() dto: EventUpdateDto,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        if (dto.data.id !== id) {
+            throw new BadRequestException("Body id does not match URL id");
+        }
+        const event = await this.eventService.update(
+            { ...dto.data.attributes, included: dto.data.included },
+            user.id,
+            id
         );
         res.json(eventResponse(event));
     }

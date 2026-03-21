@@ -36,7 +36,7 @@ export class TagUpdateAttributes {
     description?: string;
 }
 
-class TagData {
+export class TagData {
     @IsString()
     @Equals("tag")
     type: string;
