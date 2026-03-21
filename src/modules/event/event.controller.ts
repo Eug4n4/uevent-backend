@@ -9,7 +9,10 @@ import {
     Query,
     Req,
     Patch,
-    BadRequestException
+    BadRequestException,
+    Delete,
+    HttpCode,
+    HttpStatus
 } from "@nestjs/common";
 import { EventCreateDto, EventQuery, EventUpdateDto } from "./event.dto";
 import { EventService } from "./event.service";
@@ -96,5 +99,12 @@ export class EventController {
             id
         );
         res.json(eventResponse(event));
+    }
+
+    @UseGuards(JwtGuard)
+    @Delete(":id")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async remove(@Param("id") id: string, @CurrentUser() user: Express.User) {
+        await this.eventService.remove(id, user.id);
     }
 }

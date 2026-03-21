@@ -158,6 +158,18 @@ export class EventService {
         }
     }
 
+    async remove(eventId: string, accountId: string) {
+        const event = await EventEntity.findOne({
+            where: { id: eventId, company: { ownerId: accountId } }
+        });
+        if (event === null) {
+            throw new NotFoundException(
+                `Event with id ${eventId} doesn't exist or you're not creator of this event`
+            );
+        }
+        return event.softRemove();
+    }
+
     private getPaginatedAndCount(
         queryBuilder: SelectQueryBuilder<EventEntity>,
         query: EventQuery
