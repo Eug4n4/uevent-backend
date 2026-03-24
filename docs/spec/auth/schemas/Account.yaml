@@ -28,6 +28,7 @@ properties:
           role:
             type: string
             description: "The role assigned to the account"
+            example: "user"
           email:
             type: string
             format: email
@@ -42,6 +43,8 @@ properties:
             description: "The date and time when the account was last updated"
       relationships:
         type: object
+        required:
+          - profile
         properties:
           profile:
             type: object
@@ -57,12 +60,7 @@ properties:
                   id:
                     type: string
                     format: uuid
-                    description: "Profile id"
+                    description: "Profile id (same as account id)"
                   type:
                     type: string
                     enum: [ profile ]
-  included:
-    type: array
-    items:
-      oneOf:
-        - $ref: '../../profile/schemas/Profile.yaml'

@@ -3,16 +3,17 @@ get:
     - profiles
   summary: Filter profiles
   description: >
-    Returns a paginated list of public profiles filtered by optional query parameters.
-    Supports prefix-based filtering for `username` and `pseudonym`.
+    Returns a paginated list of public profiles.
+    Supports text-based filtering against username (partial match).
+    No authentication required.
+
   parameters:
     - in: query
       name: text
       required: false
       schema:
         type: string
-      description: >
-        Text to filter profiles by. Matches against `username` and `pseudonym` fields using prefix-based filtering.
+      description: "Filter by text (partial match on username)"
     - in: query
       name: page[limit]
       required: false
@@ -20,25 +21,33 @@ get:
         type: integer
         minimum: 1
         maximum: 100
-      description: Max number of items to return (1-100).
+        default: 20
+      description: "Max number of items to return (1–100, default: 20)"
     - in: query
       name: page[offset]
       required: false
       schema:
         type: integer
         minimum: 0
-      description: Number of items to skip.
+        default: 0
+      description: "Number of items to skip (default: 0)"
+
   responses:
-    "200":
-      description: Profiles list.
+    '200':
+      description: Paginated list of profiles.
       content:
         application/json:
           schema:
-            $ref: "../schemas/ProfilesCollection.yaml"
-
-    "500":
+            $ref: '../schemas/ProfilesCollection.yaml'
+    '400':
+      description: Validation error in query parameters.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
       description: Internal server error.
       content:
-        application/problem+json:
+        application/json:
           schema:
-            $ref: "../../shared/Errors.yaml"
+            $ref: '../../shared/Errors.yaml'

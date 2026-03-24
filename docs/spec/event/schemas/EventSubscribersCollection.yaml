@@ -32,6 +32,5 @@ properties:
               type: string
               nullable: true
               description: "public URL of the subscriber's avatar"
-              example: "https://s3.example.com/avatars/abc.png"
   links:
     $ref: '../../shared/PaginationData.yaml'

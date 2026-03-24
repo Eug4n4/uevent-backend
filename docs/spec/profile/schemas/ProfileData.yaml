@@ -7,7 +7,7 @@ properties:
   id:
     type: string
     format: uuid
-    description: "account id"
+    description: "account ID"
   type:
     type: string
     enum: [ profile ]
@@ -15,24 +15,23 @@ properties:
     type: object
     required:
       - username
-      - pseudonym
       - updated_at
       - created_at
     properties:
       username:
         type: string
-        description: "username for this account and profile"
-      pseudonym:
-        type: string
-        description: "profile pseudonym"
+        description: "username (3–32 chars, letters/numbers/-._!)"
+        example: "john_doe"
       avatar_url:
         type: string
-        description: "avatar key"
+        nullable: true
+        description: "public URL of the avatar image, or null if not set"
+        example: "https://s3.example.com/avatars/abc123.png"
       updated_at:
         type: string
         format: date-time
-        description: "updated at"
+        description: "last update timestamp"
       created_at:
         type: string
         format: date-time
-        description: "created at"
+        description: "creation timestamp"

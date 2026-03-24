@@ -3,8 +3,9 @@ get:
     - events
   summary: Get events list
   description: >
-    Returns a paginated list of events. Supports filtering by tag and format,
-    and sorting by date fields. No authentication required.
+    Returns a paginated list of events. Supports filtering by various parameters
+    and sorting by date fields. No authentication required (optional authentication
+    to access subscribed_by_user filtering).
 
   parameters:
     - name: page[limit]
@@ -36,10 +37,10 @@ get:
           - "-publish_at"
     - name: format
       in: query
-      description: "Filter by event format (case-insensitive)"
+      description: "Filter by one or more event formats (comma-separated)"
       schema:
         type: string
-        enum: [ Lection, Workshop, Concert, Meeting ]
+        example: "Lection,Workshop"
     - name: tag
       in: query
       description: "Filter by one or more tag names"
@@ -51,6 +52,71 @@ get:
               type: string
       style: form
       explode: true
+    - name: tag_id
+      in: query
+      description: "Filter by one or more tag UUIDs"
+      schema:
+        oneOf:
+          - type: string
+            format: uuid
+          - type: array
+            items:
+              type: string
+              format: uuid
+      style: form
+      explode: true
+    - name: company_id
+      in: query
+      description: "Filter events by company UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: published
+      in: query
+      description: "Filter by published status (comma-separated booleans, e.g. true,false)"
+      schema:
+        type: string
+    - name: subscribed_by_user
+      in: query
+      description: "Filter events subscribed by the given account UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: text
+      in: query
+      description: "Filter by text content (partial match on title/description)"
+      schema:
+        type: string
+    - name: start_after
+      in: query
+      description: "Filter events starting after this datetime (ISO 8601)"
+      schema:
+        type: string
+        format: date-time
+    - name: start_before
+      in: query
+      description: "Filter events starting before this datetime (ISO 8601)"
+      schema:
+        type: string
+        format: date-time
+    - name: end_after
+      in: query
+      description: "Filter events ending after this datetime (ISO 8601)"
+      schema:
+        type: string
+        format: date-time
+    - name: end_before
+      in: query
+      description: "Filter events ending before this datetime (ISO 8601)"
+      schema:
+        type: string
+        format: date-time
+    - name: include
+      in: query
+      description: "Comma-separated list of related resources to include. Supported: `tags`, `companies`"
+      schema:
+        type: string
+        example: "tags,companies"
 
   responses:
     '200':
@@ -59,14 +125,12 @@ get:
         application/json:
           schema:
             $ref: '../schemas/EventsCollection.yaml'
-
     '400':
       description: Validation error in query parameters.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '500':
       description: Internal server error.
       content:
@@ -80,9 +144,9 @@ post:
   summary: Create an event
   description: >
     Creates a new event for a company. Only the company owner can create events.
-    Tags can be attached by passing them in `data.included`.
+    Company ID is passed in `data.relationships.company.data.id`.
+    Optional tags can be passed in `data.relationships.tags.data`.
     Requires a valid access token.
-
   security:
     - cookieAuth: []
 
@@ -100,35 +164,30 @@ post:
         application/json:
           schema:
             $ref: '../schemas/Event.yaml'
-
     '400':
       description: Validation error.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '401':
       description: Unauthorized. Access token is missing or invalid.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '403':
       description: Forbidden. The authenticated account is not the company owner.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '404':
       description: Company not found.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '500':
       description: Internal server error.
       content:

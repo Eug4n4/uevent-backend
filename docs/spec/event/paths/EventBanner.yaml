@@ -1,19 +1,19 @@
 post:
   tags:
-    - companies
-  summary: Upload company avatar
+    - events
+  summary: Upload event banner
   description: >
-    Uploads or replaces a company's avatar image.
+    Uploads or replaces an event's banner image.
     Only the company owner can perform this action.
     Requires a valid access token.
   security:
     - cookieAuth: []
 
   parameters:
-    - in: path
-      name: id
+    - name: id
+      in: path
       required: true
-      description: "Company UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
@@ -25,20 +25,20 @@ post:
         schema:
           type: object
           required:
-            - avatar
+            - banner
           properties:
-            avatar:
+            banner:
               type: string
               format: binary
-              description: "Avatar image file"
+              description: "Banner image file"
 
   responses:
     '200':
-      description: Avatar uploaded. Returns the updated company.
+      description: Banner uploaded. Returns the updated event.
       content:
         application/json:
           schema:
-            $ref: '../schemas/Company.yaml'
+            $ref: '../schemas/Event.yaml'
     '400':
       description: Bad request (invalid file).
       content:
@@ -58,7 +58,7 @@ post:
           schema:
             $ref: '../../shared/Errors.yaml'
     '404':
-      description: Company not found.
+      description: Event not found.
       content:
         application/json:
           schema:

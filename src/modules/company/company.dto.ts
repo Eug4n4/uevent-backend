@@ -1,4 +1,5 @@
 import { Transform, Type } from "class-transformer";
+import { NullIfEmpty } from "../shared/decorators";
 import {
     Equals,
     IsDefined,
@@ -26,10 +27,12 @@ export class CompanyAttributes {
 
 export class CompanyUpdateAttributes {
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     name?: string;
 
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     address?: string;
 }

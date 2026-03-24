@@ -17,8 +17,6 @@ properties:
       - name
       - email
       - address
-      - avatar
-      - banner
     properties:
       name:
         type: string
@@ -33,11 +31,13 @@ properties:
         type: string
         description: "company physical address"
         example: "123 Main St, Kyiv"
-      avatar:
+      avatar_url:
         type: string
-        description: "avatar file key or URL"
-        example: "default.png"
-      banner:
+        nullable: true
+        description: "public URL of the company avatar image, or null if not set"
+        example: "https://s3.example.com/company/avatar.png"
+      banner_url:
         type: string
-        description: "banner file key or URL"
-        example: "default.png"
+        nullable: true
+        description: "public URL of the company banner image, or null if not set"
+        example: "https://s3.example.com/company/banner.png"

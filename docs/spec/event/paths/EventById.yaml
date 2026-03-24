@@ -1,35 +1,35 @@
 get:
   tags:
-    - tags
-  summary: Get tag by ID
+    - events
+  summary: Get event by ID
   description: >
-    Returns a single tag by its UUID. No authentication required.
-    Pass `?include=events` to include related events in the tag's `relationships`.
+    Returns a single event by its UUID. No authentication required.
+    Optional `?include` query parameter to include related resources.
 
   parameters:
     - name: id
       in: path
       required: true
-      description: "Tag UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
     - name: include
       in: query
-      description: "Pass `events` to include related events in the tag's `relationships`"
+      description: "Comma-separated list of related resources to include. Supported: `tags`, `companies`"
       schema:
         type: string
-        enum: [ events ]
+        example: "tags,companies"
 
   responses:
     '200':
-      description: Tag found.
+      description: Event found.
       content:
         application/json:
           schema:
-            $ref: '../schemas/Tag.yaml'
+            $ref: '../schemas/Event.yaml'
     '404':
-      description: Tag not found.
+      description: Event not found.
       content:
         application/json:
           schema:
@@ -43,10 +43,12 @@ get:
 
 patch:
   tags:
-    - tags
-  summary: Update a tag
+    - events
+  summary: Update an event
   description: >
-    Updates tag name and/or description. The `data.id` in the body must match the `:id` in the URL.
+    Updates event fields. All attributes are optional.
+    The `data.id` in the body must match the `:id` in the URL.
+    Only the company owner can perform this action.
     Requires a valid access token.
   security:
     - cookieAuth: []
@@ -55,7 +57,7 @@ patch:
     - name: id
       in: path
       required: true
-      description: "Tag UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
@@ -65,15 +67,15 @@ patch:
     content:
       application/json:
         schema:
-          $ref: '../schemas/TagUpdate.yaml'
+          $ref: '../schemas/EventUpdate.yaml'
 
   responses:
     '200':
-      description: Tag successfully updated.
+      description: Event successfully updated.
       content:
         application/json:
           schema:
-            $ref: '../schemas/Tag.yaml'
+            $ref: '../schemas/Event.yaml'
     '400':
       description: Validation error or body id mismatch.
       content:
@@ -86,14 +88,14 @@ patch:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-    '404':
-      description: Tag not found.
+    '403':
+      description: Forbidden. Not the company owner.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-    '409':
-      description: Tag name already taken.
+    '404':
+      description: Event not found.
       content:
         application/json:
           schema:
@@ -107,10 +109,11 @@ patch:
 
 delete:
   tags:
-    - tags
-  summary: Delete a tag
+    - events
+  summary: Delete an event
   description: >
-    Permanently deletes a tag. Requires a valid access token.
+    Soft-deletes an event. Only the company owner can perform this action.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -118,22 +121,28 @@ delete:
     - name: id
       in: path
       required: true
-      description: "Tag UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
 
   responses:
     '204':
-      description: Tag successfully deleted.
+      description: Event successfully deleted.
     '401':
       description: Unauthorized.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
     '404':
-      description: Tag not found.
+      description: Event not found.
       content:
         application/json:
           schema:

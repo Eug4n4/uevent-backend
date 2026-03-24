@@ -27,8 +27,11 @@ export class EventEntity extends BaseEntity {
     @Column({ length: 255 })
     title: string;
 
-    @Column({ length: 255 })
+    @Column({ length: 1024 })
     description: string;
+
+    @Column({ type: "text", nullable: true })
+    text: string | null;
 
     @Column({
         name: "avatar_key",
@@ -48,12 +51,10 @@ export class EventEntity extends BaseEntity {
 
     @Column({
         type: "enum",
-        enum: eventFormats
+        enum: eventFormats,
+        enumName: "event_format_enum"
     })
     format: string;
-
-    @Column({ default: false, name: "notification_new_ticket" })
-    notificationNewTicket: boolean;
 
     @Column({
         name: "publish_at",

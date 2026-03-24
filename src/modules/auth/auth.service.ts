@@ -77,11 +77,11 @@ export class AuthService {
                 account: account,
                 access: await this.generateJwt(
                     { sub: account.id, role: account.role },
-                    Date.now() + 5 * 60 * 1000
+                    Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
                 ),
                 refresh: await this.generateJwt(
                     { sub: account.id },
-                    Date.now() + 15 * 60 * 1000
+                    Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
                 )
             };
         }
@@ -114,11 +114,11 @@ export class AuthService {
             account: account,
             access: await this.generateJwt(
                 { sub: account.id, role: account.role },
-                Date.now() + 5 * 60 * 1000
+                Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
             ),
             refresh: await this.generateJwt(
                 { sub: account.id },
-                Date.now() + 15 * 60 * 1000
+                Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
             )
         };
     }
@@ -135,11 +135,11 @@ export class AuthService {
         return {
             access: await this.generateJwt(
                 { sub: account.id, role: account.role },
-                Date.now() + 5 * 60 * 1000
+                Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
             ),
             refresh: await this.generateJwt(
                 { sub: account.id },
-                Date.now() + 15 * 60 * 1000
+                Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
             )
         };
     }

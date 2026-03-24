@@ -13,10 +13,12 @@ import {
     Equals
 } from "class-validator";
 import { Type } from "class-transformer";
+import { NullIfEmpty } from "../shared/decorators";
 import { USERNAME_PATTERN } from "../shared/constants";
 
 export class UpdateProfileAttributesDto {
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     @MinLength(3)
     @MaxLength(32)

@@ -18,10 +18,22 @@ properties:
     properties:
       name:
         type: string
-        description: "tag name (letters only, max 50 characters)"
+        description: "tag name (letters only, 1–50 characters)"
         example: "Technology"
       description:
         type: string
         nullable: true
         description: "optional tag description"
         example: "Tech-related events"
+  relationships:
+    type: object
+    description: "Present only when ?include=events is used"
+    properties:
+      events:
+        type: object
+        properties:
+          data:
+            type: array
+            description: "Full event data objects for events tagged with this tag"
+            items:
+              $ref: '../../event/schemas/EventData.yaml'

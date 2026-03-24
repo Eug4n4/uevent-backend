@@ -17,8 +17,8 @@ import { database } from "src/db/data-source";
         AuthModule,
         ProfileModule,
         CompanyModule,
-        EventModule,
         TagModule,
+        EventModule,
         NewsModule
     ],
     controllers: [AppController],

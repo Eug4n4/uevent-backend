@@ -1,10 +1,11 @@
 post:
   tags:
-    - companies
-  summary: Subscribe to a company
+    - events
+  summary: Subscribe to an event
   description: >
-    Subscribes the authenticated user to a company.
-    Returns 400 if already subscribed.
+    Subscribes the authenticated user to an event.
+    Returns the subscriber's profile on success.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -12,16 +13,20 @@ post:
     - name: id
       in: path
       required: true
-      description: "Company UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
 
   responses:
     '201':
-      description: Successfully subscribed.
+      description: Successfully subscribed. Returns the subscriber profile.
+      content:
+        application/json:
+          schema:
+            $ref: '../../profile/schemas/Profile.yaml'
     '400':
-      description: Already subscribed or validation error.
+      description: Already subscribed.
       content:
         application/json:
           schema:
@@ -33,7 +38,7 @@ post:
           schema:
             $ref: '../../shared/Errors.yaml'
     '404':
-      description: Company not found.
+      description: Event not found.
       content:
         application/json:
           schema:
@@ -47,10 +52,11 @@ post:
 
 delete:
   tags:
-    - companies
-  summary: Unsubscribe from a company
+    - events
+  summary: Unsubscribe from an event
   description: >
-    Removes the authenticated user's subscription from a company.
+    Removes the authenticated user's subscription from an event.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -58,7 +64,7 @@ delete:
     - name: id
       in: path
       required: true
-      description: "Company UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
@@ -73,7 +79,7 @@ delete:
           schema:
             $ref: '../../shared/Errors.yaml'
     '404':
-      description: Company not found or not subscribed.
+      description: Event not found or not subscribed.
       content:
         application/json:
           schema:
@@ -87,17 +93,17 @@ delete:
 
 get:
   tags:
-    - companies
-  summary: Get company subscribers
+    - events
+  summary: Get event subscribers
   description: >
-    Returns a paginated list of profiles subscribed to a company.
+    Returns a paginated list of profiles subscribed to an event.
     No authentication required.
 
   parameters:
     - name: id
       in: path
       required: true
-      description: "Company UUID"
+      description: "Event UUID"
       schema:
         type: string
         format: uuid
@@ -123,9 +129,9 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../schemas/CompanySubscribersCollection.yaml'
+            $ref: '../schemas/EventSubscribersCollection.yaml'
     '404':
-      description: Company not found.
+      description: Event not found.
       content:
         application/json:
           schema:

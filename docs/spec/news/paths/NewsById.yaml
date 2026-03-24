@@ -4,14 +4,22 @@ get:
   summary: Get a news item by ID
   description: >
     Returns a single news item by its UUID. No authentication required.
+    Pass `?include=companies` to include the full company object.
 
   parameters:
     - name: id
       in: path
       required: true
+      description: "News UUID"
       schema:
         type: string
         format: uuid
+    - name: include
+      in: query
+      description: "Pass `companies` to include the full company object in `included`"
+      schema:
+        type: string
+        enum: [ companies ]
 
   responses:
     '200':
@@ -40,8 +48,8 @@ patch:
   description: >
     Updates news item fields. All attributes are optional.
     The `data.id` in the body must match the `:id` in the URL.
-    Only the author can perform this action.
-
+    Only the company owner can perform this action.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -49,6 +57,7 @@ patch:
     - name: id
       in: path
       required: true
+      description: "News UUID"
       schema:
         type: string
         format: uuid
@@ -80,7 +89,7 @@ patch:
           schema:
             $ref: '../../shared/Errors.yaml'
     '403':
-      description: Forbidden. You are not the author of this news item.
+      description: Forbidden. Not the company owner.
       content:
         application/json:
           schema:
@@ -103,8 +112,8 @@ delete:
     - news
   summary: Delete a news item
   description: >
-    Permanently deletes a news item. Only the author can perform this action.
-
+    Permanently deletes a news item. Only the company owner can perform this action.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -112,6 +121,7 @@ delete:
     - name: id
       in: path
       required: true
+      description: "News UUID"
       schema:
         type: string
         format: uuid
@@ -126,7 +136,7 @@ delete:
           schema:
             $ref: '../../shared/Errors.yaml'
     '403':
-      description: Forbidden. You are not the author of this news item.
+      description: Forbidden. Not the company owner.
       content:
         application/json:
           schema:

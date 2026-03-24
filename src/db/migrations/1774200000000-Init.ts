@@ -117,9 +117,10 @@ export class Init1774200000000 implements MigrationInterface {
             `CREATE TABLE "events" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "company_id" uuid NOT NULL,
-                "formats" "public"."formats" NOT NULL,
+                "format" "public"."formats" NOT NULL,
                 "visiability" "public"."visitors_visibility" NOT NULL,
                 "title" character varying(255) NOT NULL,
+                "description" character varying(1024),
                 "text" character varying NOT NULL,
                 "avatar_key" character varying,
                 "banner_key" character varying,
@@ -321,30 +322,78 @@ export class Init1774200000000 implements MigrationInterface {
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         // Drop foreign keys
-        await queryRunner.query(`ALTER TABLE "transactions" DROP CONSTRAINT "FK_transactions_user_ticket_id"`);
-        await queryRunner.query(`ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_ticket_id"`);
-        await queryRunner.query(`ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_account_id"`);
-        await queryRunner.query(`ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_promo_code_id"`);
-        await queryRunner.query(`ALTER TABLE "promo_code_stats" DROP CONSTRAINT "FK_promo_code_stats_code_id"`);
-        await queryRunner.query(`ALTER TABLE "promo_codes" DROP CONSTRAINT "FK_promo_codes_ticket_id"`);
-        await queryRunner.query(`ALTER TABLE "tickets_stats" DROP CONSTRAINT "FK_tickets_stats_ticket_id"`);
-        await queryRunner.query(`ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_event_id"`);
-        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_parent_id"`);
-        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_account_id"`);
-        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_event_id"`);
-        await queryRunner.query(`ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_account_id"`);
-        await queryRunner.query(`ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_event_id"`);
-        await queryRunner.query(`ALTER TABLE "event_tags" DROP CONSTRAINT "FK_event_tags_tag_id"`);
-        await queryRunner.query(`ALTER TABLE "event_tags" DROP CONSTRAINT "FK_event_tags_event_id"`);
-        await queryRunner.query(`ALTER TABLE "event_locations" DROP CONSTRAINT "FK_event_location_event_id"`);
-        await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT "FK_events_company_id"`);
-        await queryRunner.query(`ALTER TABLE "news" DROP CONSTRAINT "FK_news_company_id"`);
-        await queryRunner.query(`ALTER TABLE "company_subs" DROP CONSTRAINT "FK_company_subs_account_id"`);
-        await queryRunner.query(`ALTER TABLE "company_subs" DROP CONSTRAINT "FK_company_subs_company_id"`);
-        await queryRunner.query(`ALTER TABLE "company_billings" DROP CONSTRAINT "FK_company_billing_company_id"`);
-        await queryRunner.query(`ALTER TABLE "company_members" DROP CONSTRAINT "FK_company_member_company_id"`);
-        await queryRunner.query(`ALTER TABLE "company_members" DROP CONSTRAINT "FK_company_member_account_id"`);
-        await queryRunner.query(`ALTER TABLE "profiles" DROP CONSTRAINT "FK_profiles_account_id"`);
+        await queryRunner.query(
+            `ALTER TABLE "transactions" DROP CONSTRAINT "FK_transactions_user_ticket_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_ticket_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_account_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_promo_code_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "promo_code_stats" DROP CONSTRAINT "FK_promo_code_stats_code_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "promo_codes" DROP CONSTRAINT "FK_promo_codes_ticket_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "tickets_stats" DROP CONSTRAINT "FK_tickets_stats_ticket_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_event_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_parent_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_account_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_event_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_account_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_event_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_tags" DROP CONSTRAINT "FK_event_tags_tag_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_tags" DROP CONSTRAINT "FK_event_tags_event_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_locations" DROP CONSTRAINT "FK_event_location_event_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "events" DROP CONSTRAINT "FK_events_company_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "news" DROP CONSTRAINT "FK_news_company_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "company_subs" DROP CONSTRAINT "FK_company_subs_account_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "company_subs" DROP CONSTRAINT "FK_company_subs_company_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "company_billings" DROP CONSTRAINT "FK_company_billing_company_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "company_members" DROP CONSTRAINT "FK_company_member_company_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "company_members" DROP CONSTRAINT "FK_company_member_account_id"`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "profiles" DROP CONSTRAINT "FK_profiles_account_id"`
+        );
 
         // Drop tables (reverse dependency order)
         await queryRunner.query(`DROP TABLE "transactions"`);

@@ -1,11 +1,13 @@
 post:
   tags:
-    - login
-  summary: Refresh tokens
+    - auth
+  summary: Refresh access token
   description: >
-    Issues a new access/refresh token pair using the refresh token stored in the
-    `refresh` httpOnly cookie. Both cookies are replaced on success.
+    Issues a new access/refresh token pair using the `refresh` httpOnly cookie.
+    Both `access` and `refresh` cookies are replaced on success.
     Requires a valid refresh token cookie.
+  security:
+    - refreshCookieAuth: []
 
   responses:
     '200':

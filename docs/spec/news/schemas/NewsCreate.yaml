@@ -7,6 +7,7 @@ properties:
     required:
       - type
       - attributes
+      - relationships
     properties:
       type:
         type: string
@@ -16,7 +17,6 @@ properties:
         required:
           - name
           - text
-          - company_id
         properties:
           name:
             type: string
@@ -25,9 +25,29 @@ properties:
             example: "Company Announces New Event"
           text:
             type: string
+            maxLength: 255
             description: "news body text"
             example: "We are excited to announce our upcoming event..."
-          company_id:
-            type: string
-            format: uuid
-            description: "ID of the company this news belongs to"
+      relationships:
+        type: object
+        required:
+          - company
+        properties:
+          company:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "ID of the company this news belongs to"
+                  type:
+                    type: string
+                    enum: [ company ]

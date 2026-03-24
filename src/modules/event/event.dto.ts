@@ -11,10 +11,54 @@ import {
     IsString,
     IsUUID,
     Max,
+    MaxLength,
     Min,
     ValidateNested
 } from "class-validator";
-import { TagData } from "../tag/tag.dto";
+class TagIdRef {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("tag")
+    type: string;
+}
+
+class TagRelationships {
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => TagIdRef)
+    data?: TagIdRef[];
+}
+
+class CompanyRef {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("company")
+    type: string;
+}
+
+class CompanyRelationships {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRef)
+    data: CompanyRef;
+}
+
+class EventRelationships {
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => TagRelationships)
+    tags?: TagRelationships;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRelationships)
+    company: CompanyRelationships;
+}
 import { OmitType, PartialType } from "@nestjs/swagger";
 import { eventFormats } from "src/db/entity/event.entity";
 
@@ -23,10 +67,8 @@ export class EventAttributes {
     title: string;
 
     @IsString()
+    @MaxLength(1024)
     description: string;
-
-    @IsBoolean()
-    notification_new_ticket: boolean;
 
     @IsDateString()
     publish_at: Date;
@@ -41,8 +83,9 @@ export class EventAttributes {
     @IsIn(eventFormats)
     format: string;
 
-    @IsUUID()
-    company_id: string;
+    @IsString()
+    @MaxLength(10000)
+    text: string;
 }
 
 class EventData {
@@ -57,14 +100,14 @@ class EventData {
     @ValidateNested()
     @Type(() => EventAttributes)
     attributes: EventAttributes;
-
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TagData)
-    included?: TagData[];
 }
 
-class EventCreateData extends OmitType(EventData, ["id"]) {}
+class EventCreateData extends OmitType(EventData, ["id"]) {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => EventRelationships)
+    relationships: EventRelationships;
+}
 
 export class EventCreateDto {
     @IsDefined()
@@ -73,7 +116,11 @@ export class EventCreateDto {
     data: EventCreateData;
 }
 
-class EventUpdateAttributes extends PartialType(EventAttributes) {}
+class EventUpdateAttributes extends PartialType(EventAttributes) {
+    @IsOptional()
+    @IsUUID()
+    company_id?: string;
+}
 
 class EventUpdateData {
     @IsUUID()
@@ -87,11 +134,6 @@ class EventUpdateData {
     @ValidateNested()
     @Type(() => EventUpdateAttributes)
     attributes: EventUpdateAttributes;
-
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TagData)
-    included?: TagData[];
 }
 
 export class EventUpdateDto {
@@ -99,6 +141,13 @@ export class EventUpdateDto {
     @ValidateNested()
     @Type(() => EventUpdateData)
     data: EventUpdateData;
+}
+
+export class EventTagsDto {
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => TagIdRef)
+    data: TagIdRef[];
 }
 
 const eventSortingOptions = [
@@ -129,18 +178,79 @@ export class EventQuery {
     "sort"?: string;
 
     @IsOptional()
-    @IsString()
-    "format"?: string;
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        return String(value)
+            .split(",")
+            .map((v) => v.trim());
+    })
+    @IsArray()
+    @IsIn(eventFormats, { each: true })
+    "format"?: string[];
 
     @IsOptional()
     @Transform(({ value }) => (typeof value === "string" ? [value] : value))
     @IsArray()
     "tag"?: string[];
+
+    @IsOptional()
+    @Transform(({ value }) => (typeof value === "string" ? [value] : value))
+    @IsArray()
+    @IsUUID(undefined, { each: true })
+    "tag_id"?: string[];
+
+    @IsOptional()
+    @IsUUID()
+    "company_id"?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        const values = String(value).split(",");
+        return values.map((v) => v.trim() === "true");
+    })
+    @IsArray()
+    @IsBoolean({ each: true })
+    "published"?: boolean[];
+
+    @IsOptional()
+    @IsUUID()
+    "subscribed_by_user"?: string;
+
+    @IsOptional()
+    @IsString()
+    "text"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "start_after"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "start_before"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "end_after"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "end_before"?: string;
 }
 
-export type EventDetails = EventAttributes & Pick<EventData, "included">;
-export type EventUpdateDetails = EventUpdateAttributes &
-    Pick<EventUpdateData, "included">;
+export type EventDetails = EventAttributes & {
+    company_id: string;
+    tagIds?: string[];
+};
+export type EventUpdateDetails = EventUpdateAttributes;
+
+export const parseIncludes = (include?: string): Set<string> =>
+    new Set(
+        (include ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+    );
 
 export class PageQuery {
     @IsOptional()

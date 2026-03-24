@@ -7,6 +7,7 @@ properties:
     required:
       - type
       - attributes
+      - relationships
     properties:
       type:
         type: string
@@ -14,27 +15,32 @@ properties:
       attributes:
         type: object
         required:
+          - format
           - title
           - description
-          - notification_new_ticket
+          - text
           - publish_at
           - start_at
           - end_at
-          - format
-          - company_id
         properties:
+          format:
+            type: string
+            description: "event format/category"
+            enum: [ Lection, Workshop, Concert, Meeting ]
           title:
             type: string
             description: "event title"
             example: "NestJS Workshop"
           description:
             type: string
-            description: "event description"
+            maxLength: 1024
+            description: "short event description"
             example: "A hands-on workshop about NestJS"
-          notification_new_ticket:
-            type: boolean
-            description: "whether to notify attendees when a new ticket type is added"
-            example: false
+          text:
+            type: string
+            maxLength: 10000
+            description: "detailed event information (HTML allowed)"
+            example: "<p>Join us for an in-depth NestJS workshop covering controllers, services, and more!</p>"
           publish_at:
             type: string
             format: date-time
@@ -47,36 +53,44 @@ properties:
             type: string
             format: date-time
             description: "when the event ends"
-          format:
-            type: string
-            description: "event format/category"
-            enum: [ Lection, Workshop, Concert, Meeting ]
-          company_id:
-            type: string
-            format: uuid
-            description: "ID of the company hosting the event"
-      included:
-        type: array
-        description: "tags to attach to the event"
-        items:
-          type: object
-          required:
-            - type
-            - attributes
-          properties:
-            type:
-              type: string
-              enum: [ tag ]
-            attributes:
-              type: object
-              required:
-                - name
-              properties:
-                name:
-                  type: string
-                  description: "tag name (letters only, max 50 characters)"
-                  example: "Technology"
-                description:
-                  type: string
-                  description: "optional tag description"
-                  example: "Tech-related events"
+      relationships:
+        type: object
+        required:
+          - company
+        properties:
+          company:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "ID of the company hosting the event"
+                  type:
+                    type: string
+                    enum: [ company ]
+          tags:
+            type: object
+            description: "Optional list of tags to attach to the event"
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    type:
+                      type: string
+                      enum: [ tag ]

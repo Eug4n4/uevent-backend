@@ -1,4 +1,5 @@
 import { Type } from "class-transformer";
+import { NullIfEmpty } from "../shared/decorators";
 import {
     Equals,
     IsDefined,
@@ -20,18 +21,21 @@ export class TagAttributes {
     name: string;
 
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     description?: string;
 }
 
 export class TagUpdateAttributes {
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     @Length(1, 50)
     @Matches(/^[a-zA-Z]+$/, { message: "Tag name must contain only letters" })
     name?: string;
 
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     description?: string;
 }
@@ -45,6 +49,24 @@ export class TagData {
     @ValidateNested()
     @Type(() => TagAttributes)
     attributes: TagAttributes;
+}
+
+export class TagRefAttributes {
+    @IsString()
+    @Length(1, 50)
+    @Matches(/^[a-zA-Z]+$/, { message: "Tag name must contain only letters" })
+    name: string;
+}
+
+export class TagRef {
+    @IsString()
+    @Equals("tag")
+    type: string;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => TagRefAttributes)
+    attributes: TagRefAttributes;
 }
 
 class TagUpdateData {

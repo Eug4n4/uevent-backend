@@ -4,7 +4,8 @@ get:
   summary: Get companies list
   description: >
     Returns a paginated list of companies. Supports filtering by name (case-insensitive, partial match).
-    Pass `me=true` (requires authentication) to return only companies where the current user is a member.
+    Pass `me=true` (requires authentication via `access` cookie) to return only companies
+    where the current user is a member.
 
   security:
     - {}
@@ -18,7 +19,9 @@ get:
         type: string
     - name: me
       in: query
-      description: "When true, return only companies where the authenticated user is a member. Requires a valid access token."
+      description: >
+        When true, return only companies where the authenticated user is a member.
+        Requires a valid access token.
       schema:
         type: boolean
         default: false
@@ -65,7 +68,6 @@ post:
   description: >
     Creates a new company. The authenticated account becomes the owner.
     Requires a valid access token.
-
   security:
     - cookieAuth: []
 
@@ -97,12 +99,6 @@ post:
             $ref: '../../shared/Errors.yaml'
     '409':
       description: Company with this email already exists.
-      content:
-        application/json:
-          schema:
-            $ref: '../../shared/Errors.yaml'
-    '500':
-      description: Unauthorized.
       content:
         application/json:
           schema:

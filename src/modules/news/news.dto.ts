@@ -1,5 +1,6 @@
 import { OmitType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
+import { NullIfEmpty } from "../shared/decorators";
 import {
     Equals,
     IsDefined,
@@ -21,21 +22,43 @@ export class NewsAttributes {
     @IsString()
     @MaxLength(255)
     text: string;
-
-    @IsUUID()
-    company_id: string;
 }
 
 export class NewsUpdateAttributes {
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     @MaxLength(255)
     name?: string;
 
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     @MaxLength(255)
     text?: string;
+}
+
+class CompanyRef {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("company")
+    type: string;
+}
+
+class CompanyRelationships {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRef)
+    data: CompanyRef;
+}
+
+class NewsRelationships {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRelationships)
+    company: CompanyRelationships;
 }
 
 class NewsData {
@@ -52,7 +75,12 @@ class NewsData {
     attributes: NewsAttributes;
 }
 
-class NewsCreateData extends OmitType(NewsData, ["id"]) {}
+class NewsCreateData extends OmitType(NewsData, ["id"]) {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => NewsRelationships)
+    relationships: NewsRelationships;
+}
 
 class NewsUpdateData extends OmitType(NewsData, ["attributes"] as const) {
     @IsDefined()
@@ -97,3 +125,5 @@ export class NewsQuery {
     @IsString()
     text?: string;
 }
+
+export type NewsCreateDetails = NewsAttributes & { company_id: string };

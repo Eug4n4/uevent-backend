@@ -1,57 +1,10 @@
-get:
-  tags:
-    - accounts
-  summary: Get my account
-  description: >
-    Returns the authenticated account.
-
-  parameters:
-    - in: query
-      name: include
-      required: false
-      schema:
-        type: array
-        items:
-          type: string
-          enum:
-            - profile
-      style: form
-      explode: false
-      description: >
-        Optional related resources to include. Supported values: `profile`.
-
-
-  responses:
-    '200':
-      description: Account successfully retrieved
-      content:
-        application/json:
-          schema:
-            $ref: '../schemas/Account.yaml'
-
-    '401':
-      description: >
-        Unauthorized. Invalid session.
-      content:
-        application/json:
-          schema:
-            $ref: '../../shared/Errors.yaml'
-
-    '500':
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '../../shared/Errors.yaml'
-
 delete:
   tags:
-    - accounts
+    - auth
   summary: Delete my account
   description: >
-    Soft-deletes the authenticated account and clears auth cookies.
-    The account must not be a member of any active (non-deleted) company.
-
+    Soft-deletes the authenticated account and clears `access` and `refresh` cookies.
+    Requires a valid access token.
   security:
     - cookieAuth: []
 
@@ -66,17 +19,8 @@ delete:
           schema:
             $ref: '../../shared/Errors.yaml'
 
-    '403':
-      description: >
-        Account is a member of one or more active companies.
-        Must leave all active companies before deleting the account.
-      content:
-        application/json:
-          schema:
-            $ref: '../../shared/Errors.yaml'
-
     '500':
-      description: Internal Server Error
+      description: Internal server error.
       content:
         application/json:
           schema:
