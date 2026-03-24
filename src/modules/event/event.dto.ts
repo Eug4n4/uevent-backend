@@ -141,3 +141,18 @@ export class EventQuery {
 export type EventDetails = EventAttributes & Pick<EventData, "included">;
 export type EventUpdateDetails = EventUpdateAttributes &
     Pick<EventUpdateData, "included">;
+
+export class PageQuery {
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    "page[limit]"?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    "page[offset]"?: number;
+}

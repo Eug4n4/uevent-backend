@@ -4,7 +4,11 @@ get:
   summary: Get companies list
   description: >
     Returns a paginated list of companies. Supports filtering by name (case-insensitive, partial match).
-    No authentication required.
+    Pass `me=true` (requires authentication) to return only companies where the current user is a member.
+
+  security:
+    - {}
+    - cookieAuth: []
 
   parameters:
     - name: name
@@ -12,6 +16,12 @@ get:
       description: "Filter by company name (case-insensitive, partial match)"
       schema:
         type: string
+    - name: me
+      in: query
+      description: "When true, return only companies where the authenticated user is a member. Requires a valid access token."
+      schema:
+        type: boolean
+        default: false
     - name: page[limit]
       in: query
       description: "Number of companies per page (1–100, default: 20)"
@@ -74,12 +84,24 @@ post:
           schema:
             $ref: '../schemas/Company.yaml'
     '400':
-      description: Validation error or company with this email already exists.
+      description: Validation error.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
     '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: Company with this email already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
       description: Unauthorized.
       content:
         application/json:

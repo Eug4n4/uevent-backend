@@ -3,24 +3,19 @@ import {
     Column,
     CreateDateColumn,
     BaseEntity,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     ManyToOne,
-    JoinColumn,
-    Unique
+    JoinColumn
 } from "typeorm";
 import { Company } from "./company.entity";
 import { Account } from "./account.entity";
 
 @Entity({ name: "company_subs" })
-@Unique(["accountId", "companyId"])
 export class CompanySub extends BaseEntity {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
-
-    @Column({ name: "account_id", type: "uuid" })
+    @PrimaryColumn({ name: "account_id", type: "uuid" })
     accountId: string;
 
-    @Column({ name: "company_id", type: "uuid" })
+    @PrimaryColumn({ name: "company_id", type: "uuid" })
     companyId: string;
 
     @CreateDateColumn({

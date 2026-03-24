@@ -1,7 +1,8 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
     Equals,
     IsDefined,
+    IsBoolean,
     IsEmail,
     IsInt,
     IsOptional,
@@ -27,10 +28,6 @@ export class CompanyUpdateAttributes {
     @IsOptional()
     @IsString()
     name?: string;
-
-    @IsOptional()
-    @IsEmail()
-    email?: string;
 
     @IsOptional()
     @IsString()
@@ -80,6 +77,11 @@ export class CompanyQuery {
     @IsOptional()
     @IsString()
     name?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => value === "true" || value === true)
+    @IsBoolean()
+    me?: boolean;
 
     @IsOptional()
     @Type(() => Number)

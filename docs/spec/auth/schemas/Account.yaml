@@ -65,4 +65,4 @@ properties:
     type: array
     items:
       oneOf:
-        - $ref: './Profile.yaml'
+        - $ref: '../../profile/schemas/Profile.yaml'

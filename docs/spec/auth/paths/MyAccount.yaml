@@ -49,16 +49,18 @@ delete:
     - accounts
   summary: Delete my account
   description: >
-    Deletes the authenticated account.
+    Soft-deletes the authenticated account and clears auth cookies.
+    The account must not be a member of any active (non-deleted) company.
 
+  security:
+    - cookieAuth: []
 
   responses:
     '204':
-      description: Account successfully deleted
+      description: Account successfully deleted. Auth cookies are cleared.
 
     '401':
-      description: >
-        Unauthorized. Invalid session.
+      description: Unauthorized. Missing or invalid access token.
       content:
         application/json:
           schema:
@@ -66,8 +68,8 @@ delete:
 
     '403':
       description: >
-        Account is have membership in an company, 
-        must leave all company before deleting the account.
+        Account is a member of one or more active companies.
+        Must leave all active companies before deleting the account.
       content:
         application/json:
           schema:

@@ -4,23 +4,17 @@ import {
     BaseEntity,
     ManyToOne,
     JoinColumn,
-    Column,
-    PrimaryGeneratedColumn,
-    Unique
+    PrimaryColumn
 } from "typeorm";
 import { Account } from "./account.entity";
 import { EventEntity } from "./event.entity";
 
 @Entity({ name: "event_subs" })
-@Unique(["accountId", "eventId"])
 export class EventSub extends BaseEntity {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
-
-    @Column({ name: "account_id", type: "uuid" })
+    @PrimaryColumn({ name: "account_id", type: "uuid" })
     accountId: string;
 
-    @Column({ name: "event_id", type: "uuid" })
+    @PrimaryColumn({ name: "event_id", type: "uuid" })
     eventId: string;
 
     @CreateDateColumn({

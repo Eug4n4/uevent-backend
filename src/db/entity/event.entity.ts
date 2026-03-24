@@ -30,11 +30,21 @@ export class EventEntity extends BaseEntity {
     @Column({ length: 255 })
     description: string;
 
-    @Column({ length: 255, default: "default.png" })
-    avatar: string;
+    @Column({
+        name: "avatar_key",
+        type: "varchar",
+        length: 255,
+        nullable: true
+    })
+    avatarKey: string | null;
 
-    @Column({ length: 255, default: "default.png" })
-    banner: string;
+    @Column({
+        name: "banner_key",
+        type: "varchar",
+        length: 255,
+        nullable: true
+    })
+    bannerKey: string | null;
 
     @Column({
         type: "enum",

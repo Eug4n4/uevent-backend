@@ -9,39 +9,37 @@ servers:
 
 paths:
   /uevent/v1/account/registration/:
-    $ref: './spec/user/paths/Registration.yaml'
+    $ref: './spec/auth/paths/Registration.yaml'
   /uevent/v1/account/registration/admin:
-    $ref: './spec/user/paths/RegistrationByAdmin.yaml'
+    $ref: './spec/auth/paths/RegistrationByAdmin.yaml'
 
   /uevent/v1/account/login:
-    $ref: './spec/user/paths/LoginByEmail.yaml'
+    $ref: './spec/auth/paths/LoginByEmail.yaml'
   /uevent/v1/account/login/google:
-    $ref: './spec/user/paths/LoginByGoogle.yaml'
+    $ref: './spec/auth/paths/LoginByGoogle.yaml'
   /uevent/v1/account/login/google/callback:
-    $ref: './spec/user/paths/LoginByGoogleCallback.yaml'
+    $ref: './spec/auth/paths/LoginByGoogleCallback.yaml'
 
   /uevent/v1/account/refresh:
-    $ref: './spec/user/paths/Refresh.yaml'
+    $ref: './spec/auth/paths/Refresh.yaml'
   /uevent/v1/account/logout:
-    $ref: './spec/user/paths/Logout.yaml'
+    $ref: './spec/auth/paths/Logout.yaml'
   /uevent/v1/account/me:
-    $ref: './spec/user/paths/MyAccount.yaml'
+    $ref: './spec/auth/paths/MyAccount.yaml'
 
   /uevent/v1/profiles/:
-    $ref: './spec/user/paths/FilterProfiles.yaml'
+    $ref: './spec/profile/paths/FilterProfiles.yaml'
   /uevent/v1/profiles/me:
-    $ref: './spec/user/paths/MyProfile.yaml'
+    $ref: './spec/profile/paths/MyProfile.yaml'
   /uevent/v1/profiles/me/avatar:
-    $ref: './spec/user/paths/MyProfileAvatar.yaml'
+    $ref: './spec/profile/paths/MyProfileAvatar.yaml'
   /uevent/v1/profiles/{account_id}:
-    $ref: './spec/user/paths/ProfileById.yaml'
+    $ref: './spec/profile/paths/ProfileById.yaml'
   /uevent/v1/profiles/@{username}:
-    $ref: './spec/user/paths/ProfileByUsername.yaml'
+    $ref: './spec/profile/paths/ProfileByUsername.yaml'
 
   /uevent/v1/company:
     $ref: './spec/company/paths/Companies.yaml'
-  /uevent/v1/company/my:
-    $ref: './spec/company/paths/MyCompanies.yaml'
   /uevent/v1/company/{id}:
     $ref: './spec/company/paths/CompanyById.yaml'
   /uevent/v1/company/{id}/avatar:
@@ -77,25 +75,25 @@ components:
   schemas:
     #auth
     LoginByEmail:
-      $ref: './spec/user/schemas/LoginByEmail.yaml'
+      $ref: './spec/auth/schemas/LoginByEmail.yaml'
     Registration:
-      $ref: './spec/user/schemas/Registration.yaml'
+      $ref: './spec/auth/schemas/Registration.yaml'
     RegistrationAdmin:
-      $ref: './spec/user/schemas/RegistrationAdmin.yaml'
+      $ref: './spec/auth/schemas/RegistrationAdmin.yaml'
 
     Account:
-      $ref: './spec/user/schemas/Account.yaml'
+      $ref: './spec/auth/schemas/Account.yaml'
 
     #profile
     UpdateProfile:
-      $ref: './spec/user/schemas/UpdateProfile.yaml'
+      $ref: './spec/profile/schemas/UpdateProfile.yaml'
 
     Profile:
-      $ref: './spec/user/schemas/Profile.yaml'
+      $ref: './spec/profile/schemas/Profile.yaml'
     ProfileData:
-      $ref: './spec/user/schemas/ProfileData.yaml'
+      $ref: './spec/profile/schemas/ProfileData.yaml'
     ProfilesCollection:
-      $ref: './spec/user/schemas/ProfilesCollection.yaml'
+      $ref: './spec/profile/schemas/ProfilesCollection.yaml'
 
     #company
     Company:

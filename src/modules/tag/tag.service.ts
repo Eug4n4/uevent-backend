@@ -47,7 +47,7 @@ export class TagService {
                 );
             }
         }
-        Object.assign(tag, dto);
+        Object.assign(tag, Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined)));
         await tag.save();
         return tag;
     }

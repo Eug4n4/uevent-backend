@@ -1,18 +1,19 @@
 import { Company } from "src/db/entity/company.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { CompanyQuery, PageQuery } from "./company.dto";
+import { buildFileUrl, stripNulls } from "../shared/s3.uploader";
 
 const companyData = (company: Company) => {
     return {
         id: company.id,
         type: "company",
-        attributes: {
+        attributes: stripNulls({
             name: company.name,
             email: company.email,
             address: company.address,
-            avatar: company.avatar,
-            banner: company.banner
-        }
+            avatar_url: buildFileUrl(company.avatarKey),
+            banner_url: buildFileUrl(company.bannerKey)
+        })
     };
 };
 
@@ -36,19 +37,19 @@ const buildLinks = (
     const lastPage = Math.max(0, Math.floor((total - 1) / limit));
     const url = (o: number) =>
         `${baseUrl}?page[limit]=${limit}&page[offset]=${o}`;
-    return {
+    return stripNulls({
         self: url(offset),
         first: url(0),
         last: url(lastPage * limit),
         prev: currentPage > 0 ? url((currentPage - 1) * limit) : null,
         next: currentPage < lastPage ? url((currentPage + 1) * limit) : null
-    };
+    });
 };
 
 const subscriberData = (profile: Profile) => ({
     id: profile.accountId,
     type: "profile",
-    attributes: { username: profile.username, avatar: profile.avatar }
+    attributes: stripNulls({ username: profile.username, avatar_url: buildFileUrl(profile.avatarKey) })
 });
 
 export const paginatedSubscribers = (

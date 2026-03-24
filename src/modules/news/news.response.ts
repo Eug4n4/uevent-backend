@@ -1,5 +1,6 @@
 import { News } from "src/db/entity/news.entity";
 import { NewsQuery } from "./news.dto";
+import { stripNulls } from "../shared/s3.uploader";
 
 const newsData = (news: News) => {
     return {
@@ -39,7 +40,7 @@ export const paginatedNews = (
         `${baseUrl}?page[limit]=${limit}&page[offset]=${o}${extraParams}${textParam}`;
     return {
         data: newsList.map(newsData),
-        links: {
+        links: stripNulls({
             self: pageParams(offset),
             first: pageParams(0),
             last: pageParams(lastPage * limit),
@@ -49,6 +50,6 @@ export const paginatedNews = (
                 currentPage < lastPage
                     ? pageParams((currentPage + 1) * limit)
                     : null
-        }
+        })
     };
 };
