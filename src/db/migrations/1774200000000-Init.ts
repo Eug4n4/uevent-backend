@@ -120,7 +120,6 @@ export class Init1774200000000 implements MigrationInterface {
                 "format" "public"."formats" NOT NULL,
                 "visiability" "public"."visitors_visibility" NOT NULL,
                 "title" character varying(255) NOT NULL,
-                "description" character varying(1024),
                 "text" character varying NOT NULL,
                 "avatar_key" character varying,
                 "banner_key" character varying,

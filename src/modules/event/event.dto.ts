@@ -66,10 +66,6 @@ export class EventAttributes {
     @IsString()
     title: string;
 
-    @IsString()
-    @MaxLength(1024)
-    description: string;
-
     @IsDateString()
     publish_at: Date;
 

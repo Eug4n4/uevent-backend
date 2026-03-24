@@ -28,10 +28,6 @@ properties:
             type: string
             description: "event title"
             example: "Updated Workshop Title"
-          description:
-            type: string
-            maxLength: 1024
-            description: "short event description"
           text:
             type: string
             maxLength: 10000

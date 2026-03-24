@@ -27,9 +27,6 @@ export class EventEntity extends BaseEntity {
     @Column({ length: 255 })
     title: string;
 
-    @Column({ length: 1024 })
-    description: string;
-
     @Column({ type: "text", nullable: true })
     text: string | null;
 

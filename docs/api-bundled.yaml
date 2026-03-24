@@ -2754,7 +2754,6 @@ components:
           type: object
           required:
             - title
-            - description
             - text
             - format
             - publish_at
@@ -2765,11 +2764,6 @@ components:
               type: string
               description: event title
               example: NestJS Workshop
-            description:
-              type: string
-              maxLength: 1024
-              description: short event description
-              example: A hands-on workshop about NestJS
             text:
               type: string
               maxLength: 10000
@@ -2889,7 +2883,6 @@ components:
               required:
                 - format
                 - title
-                - description
                 - text
                 - publish_at
                 - start_at
@@ -2907,11 +2900,6 @@ components:
                   type: string
                   description: event title
                   example: NestJS Workshop
-                description:
-                  type: string
-                  maxLength: 1024
-                  description: short event description
-                  example: A hands-on workshop about NestJS
                 text:
                   type: string
                   maxLength: 10000
@@ -3008,10 +2996,6 @@ components:
                   type: string
                   description: event title
                   example: Updated Workshop Title
-                description:
-                  type: string
-                  maxLength: 1024
-                  description: short event description
                 text:
                   type: string
                   maxLength: 10000

@@ -10,7 +10,6 @@ export const eventData = (event: EventEntity) => ({
     type: "event",
     attributes: stripNulls({
         title: event.title,
-        description: event.description,
         text: event.text,
         avatar_url: buildFileUrl(event.avatarKey),
         banner_url: buildFileUrl(event.bannerKey),
