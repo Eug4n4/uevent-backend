@@ -1,0 +1,104 @@
+post:
+  tags:
+    - payments
+  summary: Purchase a ticket
+  description: >
+    Initiates a ticket purchase. Creates a transaction (pending) with pessimistic locking to prevent overselling.
+    Returns a Stripe `client_secret` for the frontend to complete payment with Stripe.js.
+    A 5% platform commission is collected automatically via Stripe Connect application fees.
+    If a promo code is provided, the discount is applied to the price.
+    Free tickets (price = 0 or 100% discount) are fulfilled immediately — no Stripe step required.
+    The company must have completed Stripe Connect onboarding (`stripe_onboarded = true`).
+    After the payment succeeds, the Stripe webhook creates the `user_ticket` automatically.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              type: object
+              required:
+                - type
+                - attributes
+              properties:
+                type:
+                  type: string
+                  enum: [purchase]
+                attributes:
+                  type: object
+                  properties:
+                    promo_code:
+                      type: string
+                      description: Optional promo code to apply a discount
+                      example: SUMMER20
+  responses:
+    '201':
+      description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment. Null for free tickets.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [purchase]
+                  attributes:
+                    type: object
+                    properties:
+                      client_secret:
+                        type: string
+                        description: Stripe PaymentIntent client secret. Null for free tickets.
+                        nullable: true
+                        example: pi_xxx_secret_yyy
+                      transaction_id:
+                        type: string
+                        format: uuid
+                      final_price:
+                        type: integer
+                        description: Amount in smallest currency unit (e.g. cents)
+                        example: 3999
+                      currency:
+                        type: string
+                        example: USD
+    '400':
+      description: Ticket canceled, sold out, invalid promo code, or company not onboarded.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Ticket or promo code not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

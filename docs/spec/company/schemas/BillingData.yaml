@@ -1,0 +1,26 @@
+type: object
+required:
+  - type
+  - attributes
+properties:
+  type:
+    type: string
+    enum: [billing]
+  attributes:
+    type: object
+    required:
+      - stripe_account_id
+      - stripe_onboarded
+      - created_at
+    properties:
+      stripe_account_id:
+        type: string
+        description: Stripe connected account ID (acct_xxx)
+        example: acct_1234567890
+      stripe_onboarded:
+        type: boolean
+        description: Whether the company has completed Stripe Connect onboarding
+        example: true
+      created_at:
+        type: string
+        format: date-time

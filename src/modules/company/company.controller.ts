@@ -17,6 +17,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import {
+    BillingCreateDto,
     CompanyCreateDto,
     CompanyQuery,
     CompanyUpdateDto,
@@ -35,7 +36,7 @@ import { CurrentUser } from "../shared/decorators";
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_OFFSET } from "../shared/constants";
 import { AppLogger } from "../shared/logger";
 
-//jsonapi agreement states that paths must be referred to in the plural
+// JSON:API convention requires plural resource names in paths
 @Controller("companies")
 export class CompanyController {
     private readonly log = new AppLogger(CompanyController.name);
@@ -54,7 +55,6 @@ export class CompanyController {
             user.id
         );
         this.log.info("POST", "/companies", 201, `id=${company.id}`);
-
         res.status(201).json(companyResponse(company));
     }
 
@@ -62,7 +62,6 @@ export class CompanyController {
     async getById(@Param("id") id: string, @Res() res: Response) {
         const company = await this.companyService.getById(id);
         this.log.debug("GET", `/companies/${id}`, 200);
-
         res.json(companyResponse(company));
     }
 
@@ -85,7 +84,6 @@ export class CompanyController {
         );
         const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/companies`;
         this.log.debug("GET", "/companies", 200, `total=${total}`);
-
         res.json(paginatedCompanies(companies, query, total, baseUrl));
     }
 
@@ -97,18 +95,17 @@ export class CompanyController {
         @CurrentUser() user: Express.User,
         @Res() res: Response
     ) {
+        // Sanity check: body id must match path param
         if (dto.data.id !== id) {
             this.log.warn("PATCH", `/companies/${id}`, 400, "Body id mismatch");
             throw new BadRequestException("Body id does not match URL id");
         }
-
         const company = await this.companyService.update(
             id,
             user.id,
             dto.data.attributes
         );
         this.log.info("PATCH", `/companies/${id}`, 200);
-
         res.json(companyResponse(company));
     }
 
@@ -127,7 +124,6 @@ export class CompanyController {
             avatar
         );
         this.log.info("POST", `/companies/${id}/avatar`, 200);
-
         res.json(companyResponse(company));
     }
 
@@ -146,7 +142,6 @@ export class CompanyController {
             banner
         );
         this.log.info("POST", `/companies/${id}/banner`, 200);
-
         res.json(companyResponse(company));
     }
 
@@ -160,7 +155,6 @@ export class CompanyController {
     ) {
         await this.companyService.delete(id, user.id);
         this.log.info("DELETE", `/companies/${id}`, 204);
-
         res.status(204).send();
     }
 
@@ -173,7 +167,6 @@ export class CompanyController {
     ) {
         await this.companyService.subscribe(id, user.id);
         this.log.info("POST", `/companies/${id}/subscriptions`, 201);
-
         res.status(201).send();
     }
 
@@ -187,7 +180,6 @@ export class CompanyController {
     ) {
         await this.companyService.unsubscribe(id, user.id);
         this.log.info("DELETE", `/companies/${id}/subscriptions`, 204);
-
         res.status(204).send();
     }
 
@@ -214,7 +206,6 @@ export class CompanyController {
             200,
             `total=${total}`
         );
-
         res.json(paginatedSubscribers(profiles, query, total, baseUrl));
     }
 
@@ -242,7 +233,51 @@ export class CompanyController {
             200,
             `total=${total}`
         );
-
         res.json(paginatedSubscriptions(companies, query, total, baseUrl));
+    }
+
+    @UseGuards(JwtGuard)
+    @Post(":id/billing")
+    async createBilling(
+        @Param("id") id: string,
+        @Body() dto: BillingCreateDto,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        const billing = await this.companyService.createBilling(
+            id,
+            user.id,
+            dto.data.attributes
+        );
+        this.log.info("POST", `/companies/${id}/billing`, 201);
+        res.status(201).json({
+            data: {
+                type: "billing",
+                attributes: {
+                    stripe_account_id: billing.stripeAccountId,
+                    created_at: billing.createdAt
+                }
+            }
+        });
+    }
+
+    @UseGuards(JwtGuard)
+    @Get(":id/billing")
+    async getBilling(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        const billing = await this.companyService.getBilling(id, user.id);
+        this.log.debug("GET", `/companies/${id}/billing`, 200);
+        res.json({
+            data: {
+                type: "billing",
+                attributes: {
+                    stripe_account_id: billing.stripeAccountId,
+                    created_at: billing.createdAt
+                }
+            }
+        });
     }
 }

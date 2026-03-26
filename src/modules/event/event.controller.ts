@@ -136,6 +136,18 @@ export class EventController {
     }
 
     @UseGuards(JwtGuard)
+    @Delete(":id")
+    async cancelEvent(
+        @Param("id") id: string,
+        @CurrentUser() user: Express.User,
+        @Res() res: Response
+    ) {
+        const event = await this.eventService.cancelEvent(id, user.id);
+        this.log.info("DELETE", `/events/${id}`, 200, "status=canceled");
+        res.json(eventResponse(event));
+    }
+
+    @UseGuards(JwtGuard)
     @UseInterceptors(FileInterceptor("avatar"))
     @Post(":id/avatar")
     async uploadAvatar(
@@ -163,14 +175,6 @@ export class EventController {
         this.log.info("POST", `/events/${id}/banner`, 200);
 
         res.json(eventResponse(event));
-    }
-
-    @UseGuards(JwtGuard)
-    @Delete(":id")
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async remove(@Param("id") id: string, @CurrentUser() user: Express.User) {
-        await this.eventService.remove(id, user.id);
-        this.log.info("DELETE", `/events/${id}`, 204);
     }
 
     @UseGuards(JwtGuard)

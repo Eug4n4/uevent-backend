@@ -41,7 +41,3 @@ properties:
           end_at:
             type: string
             format: date-time
-          company_id:
-            type: string
-            format: uuid
-            description: "UUID of the company hosting the event (to transfer event ownership)"

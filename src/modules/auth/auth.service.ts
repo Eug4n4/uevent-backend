@@ -14,7 +14,7 @@ import {
 } from "./auth.dto";
 import { GoogleIdTokenPayload, type TokenPair } from "./auth.types";
 import { Account } from "src/db/entity/account.entity";
-import { CompanyMember } from "src/db/entity/company_member.entity";
+import { CompanyMember } from "src/db/entity/company.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
 import { GoogleOAuth } from "./google.oauth";

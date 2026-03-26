@@ -110,10 +110,16 @@ patch:
 delete:
   tags:
     - events
-  summary: Delete an event
+  summary: Cancel an event
   description: >
-    Soft-deletes an event. Only the company owner can perform this action.
-    Requires a valid access token.
+    Permanently cancels an event (sets `status` to `canceled`). This action is **irreversible** —
+    a canceled event cannot be reactivated.
+
+    **Cascade effects:**
+    - All ticket types for this event are set to `canceled`.
+    - All purchased user tickets for those ticket types are set to `canceled`.
+
+    Returns the updated event object (status: canceled). Only the company owner can cancel an event.
   security:
     - cookieAuth: []
 
@@ -127,8 +133,18 @@ delete:
         format: uuid
 
   responses:
-    '204':
-      description: Event successfully deleted.
+    '200':
+      description: Event successfully canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '400':
+      description: Event is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
     '401':
       description: Unauthorized.
       content:

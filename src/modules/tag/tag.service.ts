@@ -7,7 +7,7 @@ import {
 import { ILike } from "typeorm";
 import { database } from "src/db/data-source";
 import { Tag } from "src/db/entity/tag.entity";
-import { CompanyMember } from "src/db/entity/company_member.entity";
+import { CompanyMember } from "src/db/entity/company.entity";
 import { TagAttributes, TagQuery, TagUpdateAttributes } from "./tag.dto";
 import { EventEntity } from "src/db/entity/event.entity";
 

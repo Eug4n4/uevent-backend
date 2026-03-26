@@ -8,7 +8,7 @@ import { CompanyModule } from "./modules/company/company.module";
 import { EventModule } from "./modules/event/event.module";
 import { TagModule } from "./modules/tag/tag.module";
 import { NewsModule } from "./modules/news/news.module";
-
+import { TicketModule } from "./modules/ticket/ticket.module";
 import { database } from "src/db/data-source";
 
 @Module({
@@ -19,7 +19,8 @@ import { database } from "src/db/data-source";
         CompanyModule,
         TagModule,
         EventModule,
-        NewsModule
+        NewsModule,
+        TicketModule,
     ],
     controllers: [AppController],
     providers: [AppService]

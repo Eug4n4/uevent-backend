@@ -4,21 +4,20 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
+import { Ticket, TicketStatus } from "src/db/entity/ticket.entity";
+import { UserTicket, UserTicketStatus } from "src/db/entity/ticket.entity";
 import {
     EventDetails,
     EventQuery,
     EventUpdateDetails,
     PageQuery
 } from "./event.dto";
-import { EventEntity } from "src/db/entity/event.entity";
+import { EventEntity, EventStatus } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
-import {
-    CompanyMember,
-    CompanyMemberRole
-} from "src/db/entity/company_member.entity";
+import { CompanyMember, CompanyMemberRole } from "src/db/entity/company.entity";
 import { database } from "src/db/data-source";
 import { In, SelectQueryBuilder } from "typeorm";
-import { EventSub } from "src/db/entity/event_subs.entity";
+import { EventSub } from "src/db/entity/event.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { CompanyService } from "../company/company.service";
 import { S3Service } from "../shared/s3.uploader";
@@ -49,7 +48,6 @@ export class EventService {
             const event = queryRunner.manager.create(EventEntity, {
                 companyId: dto.company_id,
                 title: dto.title,
-                description: dto.description,
                 text: dto.text ?? null,
                 publishAt: dto.publish_at,
                 startAt: dto.start_at,
@@ -84,6 +82,7 @@ export class EventService {
         if (event === null) {
             throw new NotFoundException(`Can't find event with id = ${id}`);
         }
+
         const isPublished = event.publishAt <= new Date();
         if (!isPublished) {
             const isMember = userId
@@ -121,16 +120,26 @@ export class EventService {
         const wantsUnpublished = params.published?.includes(false) ?? false;
 
         if (wantsPublished && wantsUnpublished && isMember) {
-            // no publish_at filter — see everything
+            // Company member requesting both → no publish_at filter
         } else if (wantsUnpublished && !wantsPublished && isMember) {
             qb.where("events.publish_at > current_timestamp");
         } else {
             qb.where("events.publish_at <= current_timestamp");
         }
 
+        if (params.status && params.status.length > 0) {
+            qb.andWhere("events.status IN (:...statuses)", {
+                statuses: params.status
+            });
+        } else {
+            qb.andWhere("events.status = :defaultStatus", {
+                defaultStatus: EventStatus.ACTIVE
+            });
+        }
+
         if (params.text) {
             qb.andWhere(
-                "(events.title ILIKE :text OR events.description ILIKE :text)",
+                "(events.title ILIKE :text OR events.text ILIKE :text)",
                 { text: `%${params.text}%` }
             );
         }
@@ -191,9 +200,9 @@ export class EventService {
         const queryRunner = database.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
+
         const camelCase = {
             title: dto.title,
-            description: dto.description,
             text: dto.text,
             publishAt: dto.publish_at,
             startAt: dto.start_at,
@@ -219,19 +228,62 @@ export class EventService {
         }
     }
 
-    async remove(eventId: string, accountId: string) {
+    async cancelEvent(eventId: string, accountId: string): Promise<EventEntity> {
         const event = await EventEntity.findOneBy({ id: eventId });
-        if (event === null) {
-            throw new NotFoundException(
-                `Event with id ${eventId} doesn't exist`
-            );
-        }
+        if (!event) throw new NotFoundException(`Event with id ${eventId} doesn't exist`);
+
+        if (event.status === EventStatus.CANCELED)
+            throw new BadRequestException("Event is already canceled");
+
         await this.companyService.requireCompanyRole(
             event.companyId,
             accountId,
             [CompanyMemberRole.OWNER]
         );
-        return event.softRemove();
+
+        const queryRunner = database.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        try {
+            // 1. Mark the event as canceled
+            await queryRunner.manager.update(EventEntity, { id: eventId }, {
+                status: EventStatus.CANCELED
+            });
+
+            // 2. Collect all ticket IDs for this event so we can cancel UserTickets
+            const tickets = await queryRunner.manager.find(Ticket, {
+                where: { eventId },
+                select: { id: true }
+            });
+
+            // 3. Cancel all ticket types for this event
+            if (tickets.length > 0) {
+                await queryRunner.manager.update(
+                    Ticket,
+                    { eventId },
+                    { status: TicketStatus.CANCELED }
+                );
+
+                // 4. Cancel all purchased user tickets linked to those ticket types
+                const ticketIds = tickets.map((t) => t.id);
+                await queryRunner.manager.update(
+                    UserTicket,
+                    { ticketId: In(ticketIds) },
+                    { status: UserTicketStatus.CANCELED }
+                );
+            }
+
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
+        }
+
+        // Reload the event to reflect the updated status
+        event.status = EventStatus.CANCELED;
+        return event;
     }
 
     async uploadAvatar(
@@ -245,6 +297,7 @@ export class EventService {
             accountId,
             [CompanyMemberRole.OWNER]
         );
+
         if (event.avatarKey) await this.s3Service.deleteObject(event.avatarKey);
         const avatarKey = `event/${eventId}/avatar_${Date.now()}`;
         await this.s3Service.putObject(file.buffer, file.mimetype, avatarKey);
@@ -252,6 +305,7 @@ export class EventService {
         await event.save();
         return event;
     }
+
 
     async uploadBanner(
         eventId: string,
@@ -293,7 +347,7 @@ export class EventService {
     }
 
     async subscribe(eventId: string, accountId: string): Promise<Profile> {
-        await this.getById(eventId, accountId);
+        await this.getById(eventId, accountId); // ensure event is visible to the caller
         const existing = await EventSub.findOneBy({ accountId, eventId });
         if (existing) {
             throw new ConflictException("Already subscribed to this event");
@@ -393,6 +447,7 @@ export class EventService {
                 tagNames: query.tag
             });
         }
+
         if (query.start_after) {
             queryBuilder.andWhere("events.start_at >= :startAfter", {
                 startAfter: query.start_after
@@ -403,6 +458,7 @@ export class EventService {
                 startBefore: query.start_before
             });
         }
+
         if (query.end_after) {
             queryBuilder.andWhere("events.end_at >= :endAfter", {
                 endAfter: query.end_after
@@ -413,11 +469,13 @@ export class EventService {
                 endBefore: query.end_before
             });
         }
+
         if (query.format && query.format.length > 0) {
             queryBuilder.andWhere("events.format IN (:...formats)", {
                 formats: query.format
             });
         }
+
         let order: "ASC" | "DESC" = "ASC";
         if (query.sort && query.sort.length > 0) {
             if (query.sort.startsWith("-")) {

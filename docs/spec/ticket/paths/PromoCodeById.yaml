@@ -1,0 +1,59 @@
+patch:
+  tags:
+    - tickets
+  summary: Update a promo code
+  description: >
+    Updates a promo code's attributes. Can change the code string, discount percentage,
+    or set status to `canceled` to deactivate it. Only the company owner can perform this action.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: codeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/PromoCodeUpdate.yaml'
+  responses:
+    '200':
+      description: Promo code updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PromoCode.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the event owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Promo code not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

@@ -4,7 +4,7 @@ import { News } from "src/db/entity/news.entity";
 import { database } from "src/db/data-source";
 import { ILike } from "typeorm";
 import { CompanyService } from "../company/company.service";
-import { CompanyMemberRole } from "src/db/entity/company_member.entity";
+import { CompanyMemberRole } from "src/db/entity/company.entity";
 
 @Injectable()
 export class NewsService {

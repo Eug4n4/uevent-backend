@@ -15,6 +15,9 @@ import {
     Min,
     ValidateNested
 } from "class-validator";
+import { eventFormats } from "src/db/entity/event.entity";
+
+// tag ref
 class TagIdRef {
     @IsUUID()
     id: string;
@@ -32,6 +35,7 @@ class TagRelationships {
     data?: TagIdRef[];
 }
 
+// company ref
 class CompanyRef {
     @IsUUID()
     id: string;
@@ -48,6 +52,7 @@ class CompanyRelationships {
     data: CompanyRef;
 }
 
+// event relationships
 class EventRelationships {
     @IsOptional()
     @ValidateNested()
@@ -59,12 +64,19 @@ class EventRelationships {
     @Type(() => CompanyRelationships)
     company: CompanyRelationships;
 }
-import { OmitType, PartialType } from "@nestjs/swagger";
-import { eventFormats } from "src/db/entity/event.entity";
 
-export class EventAttributes {
+// event create
+class EventCreateAttributes {
     @IsString()
     title: string;
+
+    @IsString()
+    @IsIn(eventFormats)
+    format: string;
+
+    @IsString()
+    @MaxLength(10000)
+    text: string;
 
     @IsDateString()
     publish_at: Date;
@@ -74,31 +86,18 @@ export class EventAttributes {
 
     @IsDateString()
     end_at: Date;
-
-    @IsString()
-    @IsIn(eventFormats)
-    format: string;
-
-    @IsString()
-    @MaxLength(10000)
-    text: string;
 }
 
-class EventData {
-    @IsUUID()
-    id: string;
-
+class EventCreateData {
     @IsString()
     @Equals("event")
     type: string;
 
     @IsDefined()
     @ValidateNested()
-    @Type(() => EventAttributes)
-    attributes: EventAttributes;
-}
+    @Type(() => EventCreateAttributes)
+    attributes: EventCreateAttributes;
 
-class EventCreateData extends OmitType(EventData, ["id"]) {
     @IsDefined()
     @ValidateNested()
     @Type(() => EventRelationships)
@@ -112,7 +111,34 @@ export class EventCreateDto {
     data: EventCreateData;
 }
 
-class EventUpdateAttributes extends PartialType(EventAttributes) {
+// event update
+export class EventUpdateAttributes {
+    @IsOptional()
+    @IsString()
+    title?: string;
+
+    @IsOptional()
+    @IsString()
+    @IsIn(eventFormats)
+    format?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(10000)
+    text?: string;
+
+    @IsOptional()
+    @IsDateString()
+    publish_at?: Date;
+
+    @IsOptional()
+    @IsDateString()
+    start_at?: Date;
+
+    @IsOptional()
+    @IsDateString()
+    end_at?: Date;
+
     @IsOptional()
     @IsUUID()
     company_id?: string;
@@ -139,6 +165,7 @@ export class EventUpdateDto {
     data: EventUpdateData;
 }
 
+// event tags
 export class EventTagsDto {
     @IsArray()
     @ValidateNested({ each: true })
@@ -218,6 +245,17 @@ export class EventQuery {
     "text"?: string;
 
     @IsOptional()
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        return String(value)
+            .split(",")
+            .map((v) => v.trim());
+    })
+    @IsArray()
+    @IsIn(["active", "canceled"], { each: true })
+    "status"?: string[];
+
+    @IsOptional()
     @IsDateString()
     "start_after"?: string;
 
@@ -234,7 +272,7 @@ export class EventQuery {
     "end_before"?: string;
 }
 
-export type EventDetails = EventAttributes & {
+export type EventDetails = EventCreateAttributes & {
     company_id: string;
     tagIds?: string[];
 };

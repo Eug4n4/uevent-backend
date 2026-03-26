@@ -100,6 +100,29 @@ export class CompanyQuery {
     "page[offset]"?: number;
 }
 
+export class BillingAttributes {
+    @IsString()
+    stripe_account_id: string;
+}
+
+class BillingData {
+    @IsString()
+    @Equals("billing")
+    type: string;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => BillingAttributes)
+    attributes: BillingAttributes;
+}
+
+export class BillingCreateDto {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => BillingData)
+    data: BillingData;
+}
+
 export class PageQuery {
     @IsOptional()
     @Type(() => Number)

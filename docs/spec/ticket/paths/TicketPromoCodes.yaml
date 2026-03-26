@@ -1,0 +1,126 @@
+get:
+  tags:
+    - tickets
+  summary: List promo codes for a ticket
+  description: >
+    Returns a paginated list of promo codes for the given ticket.
+    Only the company owner can view promo codes.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    - name: page[offset]
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    '200':
+      description: Paginated list of promo codes.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PromoCodesCollection.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the event owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+post:
+  tags:
+    - tickets
+  summary: Create a promo code for a ticket
+  description: >
+    Creates a new promo code for the given ticket. The `code` must be globally unique.
+    Also creates the promo_code_stats record with the given `total`.
+    Only the company owner can perform this action.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/PromoCodeCreate.yaml'
+  responses:
+    '201':
+      description: Promo code created.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/PromoCode.yaml'
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the event owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: Promo code already exists.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

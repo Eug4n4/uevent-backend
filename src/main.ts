@@ -6,7 +6,7 @@ import cors from "cors";
 import { GlobalExceptionFilter } from "./modules/shared/exception.filter";
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, { rawBody: true });
     app.setGlobalPrefix("uevent/v1");
     app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
     app.use(cookieParser());

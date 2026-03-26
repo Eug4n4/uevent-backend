@@ -1,0 +1,71 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum: [user_ticket]
+  attributes:
+    type: object
+    required:
+      - account_id
+      - ticket_id
+      - transaction_id
+      - status
+      - created_at
+      - updated_at
+    properties:
+      account_id:
+        type: string
+        format: uuid
+      ticket_id:
+        type: string
+        format: uuid
+      promo_code_id:
+        type: string
+        format: uuid
+        nullable: true
+      transaction_id:
+        type: string
+        format: uuid
+      status:
+        type: string
+        enum: [unused, used]
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  relationships:
+    type: object
+    properties:
+      ticket:
+        type: object
+        properties:
+          data:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              type:
+                type: string
+                enum: [ticket]
+          attributes:
+            type: object
+            properties:
+              name:
+                type: string
+              price:
+                type: number
+              currency:
+                type: string
+              event_id:
+                type: string
+                format: uuid

@@ -1,0 +1,59 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+      - relationships
+    properties:
+      type:
+        type: string
+        enum: [promo_code]
+      attributes:
+        type: object
+        required:
+          - code
+          - discount_percent
+          - total
+        properties:
+          code:
+            type: string
+            maxLength: 50
+            example: SUMMER20
+          discount_percent:
+            type: integer
+            minimum: 1
+            maximum: 100
+            example: 20
+          total:
+            type: integer
+            minimum: 1
+            description: Maximum number of uses
+            example: 50
+      relationships:
+        type: object
+        required:
+          - ticket
+        properties:
+          company:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "ID of the event hosting the ticket"
+                  type:
+                    type: string
+                    enum: [ ticket ]
+

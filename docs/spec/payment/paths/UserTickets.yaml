@@ -1,0 +1,41 @@
+get:
+  tags:
+    - payments
+  summary: List my purchased tickets
+  description: >
+    Returns a paginated list of all tickets purchased by the authenticated user,
+    ordered by most recent first. Includes ticket details in `relationships.ticket`.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: page[limit]
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    - name: page[offset]
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    '200':
+      description: Paginated list of user tickets.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserTicketsCollection.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

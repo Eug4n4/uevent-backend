@@ -11,6 +11,7 @@ export const eventData = (event: EventEntity) => ({
     attributes: stripNulls({
         title: event.title,
         text: event.text,
+        status: event.status,
         avatar_url: buildFileUrl(event.avatarKey),
         banner_url: buildFileUrl(event.bannerKey),
         format: event.format,

@@ -1,0 +1,53 @@
+post:
+  tags:
+    - payments
+  summary: Stripe webhook endpoint
+  description: >
+    Receives and processes Stripe webhook events. The request body must be the raw payload
+    and the `Stripe-Signature` header must be present for signature verification.
+
+    Handled events:
+
+    - `payment_intent.succeeded` — marks the corresponding transaction as `paid`
+
+    - `refund.updated` (status=succeeded) — marks transaction as `returned` and user_ticket as `returned`
+
+    **Do not call this endpoint manually.** Register the URL in the Stripe dashboard
+    and configure `STRIPE_WEBHOOK_SECRET` in your environment.
+  parameters:
+    - name: Stripe-Signature
+      in: header
+      required: true
+      schema:
+        type: string
+      description: HMAC signature provided by Stripe for webhook verification
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          description: Raw Stripe event payload
+  responses:
+    '200':
+      description: Webhook received and processed.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              received:
+                type: boolean
+                example: true
+    '400':
+      description: Missing or invalid Stripe signature.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

@@ -1,0 +1,27 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [ticket]
+      attributes:
+        type: object
+        properties:
+          name:
+            type: string
+            maxLength: 255
+          description:
+            type: string
+            maxLength: 255
+          total:
+            type: integer
+            minimum: 1
+            description: Maximum number of uses
+            example: 50

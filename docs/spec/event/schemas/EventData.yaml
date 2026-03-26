@@ -15,6 +15,7 @@ properties:
   attributes:
     type: object
     required:
+      - status
       - title
       - text
       - format
@@ -22,6 +23,10 @@ properties:
       - start_at
       - end_at
     properties:
+      status:
+        type: string
+        enum: [ active, canceled ]
+        description: "event status"
       title:
         type: string
         description: "event title"

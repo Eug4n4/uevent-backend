@@ -97,6 +97,46 @@ components:
     NewsUpdate:
       $ref: './spec/news/schemas/NewsUpdate.yaml'
 
+    # company billing
+    Billing:
+      $ref: './spec/company/schemas/Billing.yaml'
+    BillingData:
+      $ref: './spec/company/schemas/BillingData.yaml'
+    BillingCreate:
+      $ref: './spec/company/schemas/BillingCreate.yaml'
+    BillingUpdate:
+      $ref: './spec/company/schemas/BillingUpdate.yaml'
+
+    # tickets
+    Ticket:
+      $ref: './spec/ticket/schemas/Ticket.yaml'
+    TicketData:
+      $ref: './spec/ticket/schemas/TicketData.yaml'
+    TicketsCollection:
+      $ref: './spec/ticket/schemas/TicketsCollection.yaml'
+    TicketCreate:
+      $ref: './spec/ticket/schemas/TicketCreate.yaml'
+    TicketUpdate:
+      $ref: './spec/ticket/schemas/TicketUpdate.yaml'
+    PromoCode:
+      $ref: './spec/ticket/schemas/PromoCode.yaml'
+    PromoCodeData:
+      $ref: './spec/ticket/schemas/PromoCodeData.yaml'
+    PromoCodesCollection:
+      $ref: './spec/ticket/schemas/PromoCodesCollection.yaml'
+    PromoCodeCreate:
+      $ref: './spec/ticket/schemas/PromoCodeCreate.yaml'
+    PromoCodeUpdate:
+      $ref: './spec/ticket/schemas/PromoCodeUpdate.yaml'
+
+    # payments
+    UserTicket:
+      $ref: './spec/payment/schemas/UserTicket.yaml'
+    UserTicketData:
+      $ref: './spec/payment/schemas/UserTicketData.yaml'
+    UserTicketsCollection:
+      $ref: './spec/payment/schemas/UserTicketsCollection.yaml'
+
 paths:
   # auth
   /uevent/v1/accounts/registration:
@@ -139,6 +179,8 @@ paths:
     $ref: './spec/company/paths/CompanyBanner.yaml'
   /uevent/v1/companies/{id}/subscriptions:
     $ref: './spec/company/paths/CompanySubscribe.yaml'
+  /uevent/v1/companies/{id}/billing:
+    $ref: './spec/company/paths/CompanyBilling.yaml'
 
   # events
   /uevent/v1/events:
@@ -167,3 +209,23 @@ paths:
     $ref: './spec/news/paths/News.yaml'
   /uevent/v1/news/{id}:
     $ref: './spec/news/paths/NewsById.yaml'
+
+  # tickets
+  /uevent/v1/events/{eventId}/tickets:
+    $ref: './spec/ticket/paths/EventTickets.yaml'
+  /uevent/v1/events/{eventId}/tickets/{ticketId}:
+    $ref: './spec/ticket/paths/TicketById.yaml'
+  /uevent/v1/tickets/{ticketId}/promo-codes:
+    $ref: './spec/ticket/paths/TicketPromoCodes.yaml'
+  /uevent/v1/tickets/{ticketId}/promo-codes/{codeId}:
+    $ref: './spec/ticket/paths/PromoCodeById.yaml'
+
+  # payments
+  /uevent/v1/tickets/{ticketId}/purchase:
+    $ref: './spec/payment/paths/Purchase.yaml'
+  /uevent/v1/stripe/webhook:
+    $ref: './spec/payment/paths/StripeWebhook.yaml'
+  /uevent/v1/user-tickets:
+    $ref: './spec/payment/paths/UserTickets.yaml'
+  /uevent/v1/user-tickets/{id}:
+    $ref: './spec/payment/paths/UserTicketById.yaml'

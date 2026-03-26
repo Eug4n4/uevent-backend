@@ -82,9 +82,18 @@ get:
       schema:
         type: string
         format: uuid
+    - name: status
+      in: query
+      description: >
+        Filter by event status. Accepts a comma-separated list: `active`, `canceled`, or `active,canceled`.
+        Defaults to `active` when omitted — canceled events are hidden from public listings by default.
+      schema:
+        type: string
+        example: "active"
+        default: "active"
     - name: text
       in: query
-      description: "Filter by text content (partial match on title/description)"
+      description: "Filter by text content (partial match on title and body text)"
       schema:
         type: string
     - name: start_after
