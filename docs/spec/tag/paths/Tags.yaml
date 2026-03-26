@@ -3,8 +3,8 @@ get:
     - tags
   summary: Get tags list
   description: >
-    Returns a paginated list of tags. Supports filtering by name (case-insensitive contains).
-    No authentication required.
+    Returns a paginated list of tags. Supports filtering by name (case-insensitive, partial match).
+    No authentication required. Pass `?include=events` to include related events for each tag.
 
   parameters:
     - name: name
@@ -27,6 +27,12 @@ get:
         type: integer
         minimum: 0
         default: 0
+    - name: include
+      in: query
+      description: "Pass `events` to include related events in each tag's `relationships`"
+      schema:
+        type: string
+        enum: [ events ]
 
   responses:
     '200':
@@ -53,9 +59,8 @@ post:
     - tags
   summary: Create a tag
   description: >
-    Creates a new global tag. Tag name must be unique and contain only letters.
+    Creates a new global tag. Tag name must be unique and contain only letters (1–50 chars).
     Requires a valid access token.
-
   security:
     - cookieAuth: []
 
@@ -74,13 +79,19 @@ post:
           schema:
             $ref: '../schemas/Tag.yaml'
     '400':
-      description: Validation error or tag with this name already exists.
+      description: Validation error.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
     '401':
       description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: Tag with this name already exists.
       content:
         application/json:
           schema:

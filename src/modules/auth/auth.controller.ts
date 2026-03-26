@@ -1,57 +1,57 @@
 import {
     Body,
     Controller,
+    Delete,
     Post,
     Res,
-    Req,
     HttpStatus,
     HttpCode,
     UseGuards,
     Get,
     Query
 } from "@nestjs/common";
-import type { Request, Response } from "express";
+import type { Response } from "express";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto } from "./auth.dto";
 import type { TokenPair } from "./auth.types";
 import { JwtGuard, JwtRefreshGuard } from "../shared/jwt.guard";
-import { authResponse } from "./auth.response";
+import { accountResponse } from "./auth.response";
 import { CurrentUser } from "../shared/decorators";
+import { AppLogger } from "../shared/logger";
 
-@Controller("account")
+// i think /accounts its better than /account because we must decide
+// use always xxxs or xxx so i think we already decide xxxs
+// and i think 95% project use xxxs
+@Controller("accounts")
 export class AuthController {
+    private readonly log = new AppLogger(AuthController.name);
+
     constructor(private authService: AuthService) {}
 
     @Post("registration")
     async register(@Body() dto: RegisterDto) {
         await this.authService.register({ ...dto.data.attributes });
+        this.log.info("POST", "/account/registration", 201);
     }
 
     @Post("login")
     @HttpCode(HttpStatus.OK)
-    async login(
-        @Body() dto: LoginDto,
-        @Req() req: Request,
-        @Res() res: Response
-    ) {
-        if (req.cookies.access && req.cookies.refresh) {
-            return res.status(HttpStatus.CONFLICT).json({
-                errors: [
-                    {
-                        title: "Conflict",
-                        detail: "Already authenticated",
-                        status: HttpStatus.CONFLICT
-                    }
-                ]
-            });
-        }
+    async login(@Body() dto: LoginDto, @Res() res: Response) {
+        //so honestly dosent metter does user already have tokens or not
+        //and btw vpadly while testing use /logout /login and do again and again so I decided clean cookies here
+        res.clearCookie("access");
+        res.clearCookie("refresh");
 
         const result = await this.authService.login(dto);
         if (result) {
             this.setTokenPair(res, result);
-            res.json(authResponse(result.account));
+            this.log.info("POST", "/account/login", 200);
+
+            res.json(accountResponse(result.account));
             return;
         }
+
+        this.log.warn("POST", "/account/login", 400, "Invalid credentials");
 
         res.status(HttpStatus.BAD_REQUEST).json({
             errors: [
@@ -66,6 +66,8 @@ export class AuthController {
 
     @Post("login/google")
     loginConsent(@Res() res: Response) {
+        this.log.info("POST", "/account/login/google", 307);
+
         res.status(HttpStatus.TEMPORARY_REDIRECT).redirect(
             this.authService.generateGoogleAuthUrl()
         );
@@ -75,7 +77,9 @@ export class AuthController {
     async loginWithGoogle(@Query("code") code: string, @Res() res: Response) {
         const result = await this.authService.loginWithGoogle(code);
         this.setTokenPair(res, result);
-        res.json(authResponse(result.account));
+        this.log.info("GET", "/account/login/google/callback", 200);
+
+        res.json(accountResponse(result.account));
     }
 
     @UseGuards(JwtGuard)
@@ -84,33 +88,41 @@ export class AuthController {
     logout(@Res({ passthrough: true }) res: Response) {
         res.clearCookie("access");
         res.clearCookie("refresh");
+
+        this.log.info("POST", "/account/logout", 204);
+    }
+
+    //delete user and I think it all about this method
+    @UseGuards(JwtGuard)
+    @Delete()
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteAccount(
+        @CurrentUser() user: Express.User,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        await this.authService.deleteAccount(user.id);
+        res.clearCookie("access");
+        res.clearCookie("refresh");
+
+        this.log.info("DELETE", "/account", 204);
     }
 
     @UseGuards(JwtRefreshGuard)
     @Post("refresh")
     @HttpCode(HttpStatus.OK)
     async refresh(@CurrentUser() user: Express.User, @Res() res: Response) {
-        try {
-            const tokens = await this.authService.refresh(user.id);
-            this.setTokenPair(res, tokens);
-            res.send();
-        } catch {
-            res.status(HttpStatus.UNAUTHORIZED).json({
-                errors: [
-                    {
-                        title: "Forbidden",
-                        detail: "Invalid refresh token",
-                        status: HttpStatus.UNAUTHORIZED
-                    }
-                ]
-            });
-        }
+        const tokens = await this.authService.refresh(user.id);
+        this.setTokenPair(res, tokens);
+        this.log.info("POST", "/account/refresh", 200);
+
+        res.send();
     }
 
     private setTokenPair(res: Response, tokens: TokenPair) {
         res.cookie("access", tokens.access.token, {
             expires: new Date(tokens.access.expires)
         });
+
         res.cookie("refresh", tokens.refresh.token, {
             httpOnly: true,
             expires: new Date(tokens.refresh.expires)

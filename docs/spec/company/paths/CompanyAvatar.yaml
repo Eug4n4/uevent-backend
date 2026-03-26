@@ -6,15 +6,17 @@ post:
     Uploads or replaces a company's avatar image.
     Only the company owner can perform this action.
     Requires a valid access token.
+  security:
+    - cookieAuth: []
 
   parameters:
     - in: path
       name: id
       required: true
+      description: "Company UUID"
       schema:
         type: string
         format: uuid
-      description: "Company ID"
 
   requestBody:
     required: true
@@ -37,28 +39,30 @@ post:
         application/json:
           schema:
             $ref: '../schemas/Company.yaml'
-
     '400':
-      description: Bad request (invalid file or not the owner).
+      description: Bad request (invalid file).
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '401':
       description: Unauthorized.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
     '404':
       description: Company not found.
       content:
         application/json:
           schema:
             $ref: '../../shared/Errors.yaml'
-
     '500':
       description: Internal server error.
       content:

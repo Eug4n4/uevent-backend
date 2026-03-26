@@ -1,0 +1,81 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+  - relationships
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum: [ticket]
+  attributes:
+    type: object
+    required:
+      - name
+      - price
+      - status
+      - total
+      - sold
+      - available
+      - created_at
+      - updated_at
+    properties:
+      name:
+        type: string
+        example: VIP
+      description:
+        type: string
+        example: Front row access
+        nullable: true
+      price:
+        type: number
+        format: double
+        minimum: 0
+        example: 49.99
+      status:
+        type: string
+        enum: [active, canceled]
+      total:
+        type: integer
+        description: Total number of tickets available
+        example: 100
+      sold:
+        type: integer
+        description: Number of tickets sold
+        example: 42
+      available:
+        type: integer
+        description: Remaining tickets (total - sold)
+        example: 58
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  relationships:
+    type: object
+    required:
+      - event
+    properties:
+      event:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the event hosting the ticket"
+              type:
+                type: string
+                enum: [event]

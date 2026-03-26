@@ -11,22 +11,72 @@ import {
     IsString,
     IsUUID,
     Max,
+    MaxLength,
     Min,
     ValidateNested
 } from "class-validator";
-import { TagData } from "../tag/tag.dto";
-import { OmitType, PartialType } from "@nestjs/swagger";
 import { eventFormats } from "src/db/entity/event.entity";
 
-export class EventAttributes {
+// tag ref
+class TagIdRef {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("tag")
+    type: string;
+}
+
+class TagRelationships {
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => TagIdRef)
+    data?: TagIdRef[];
+}
+
+// company ref
+class CompanyRef {
+    @IsUUID()
+    id: string;
+
+    @IsString()
+    @Equals("company")
+    type: string;
+}
+
+class CompanyRelationships {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRef)
+    data: CompanyRef;
+}
+
+// event relationships
+class EventRelationships {
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => TagRelationships)
+    tags?: TagRelationships;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => CompanyRelationships)
+    company: CompanyRelationships;
+}
+
+// event create
+class EventCreateAttributes {
     @IsString()
     title: string;
 
     @IsString()
-    description: string;
+    @IsIn(eventFormats)
+    format: string;
 
-    @IsBoolean()
-    notification_new_ticket: boolean;
+    @IsString()
+    @MaxLength(10000)
+    text: string;
 
     @IsDateString()
     publish_at: Date;
@@ -36,35 +86,23 @@ export class EventAttributes {
 
     @IsDateString()
     end_at: Date;
-
-    @IsString()
-    @IsIn(eventFormats)
-    format: string;
-
-    @IsUUID()
-    company_id: string;
 }
 
-class EventData {
-    @IsUUID()
-    id: string;
-
+class EventCreateData {
     @IsString()
     @Equals("event")
     type: string;
 
     @IsDefined()
     @ValidateNested()
-    @Type(() => EventAttributes)
-    attributes: EventAttributes;
+    @Type(() => EventCreateAttributes)
+    attributes: EventCreateAttributes;
 
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TagData)
-    included?: TagData[];
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => EventRelationships)
+    relationships: EventRelationships;
 }
-
-class EventCreateData extends OmitType(EventData, ["id"]) {}
 
 export class EventCreateDto {
     @IsDefined()
@@ -73,7 +111,38 @@ export class EventCreateDto {
     data: EventCreateData;
 }
 
-class EventUpdateAttributes extends PartialType(EventAttributes) {}
+// event update
+export class EventUpdateAttributes {
+    @IsOptional()
+    @IsString()
+    title?: string;
+
+    @IsOptional()
+    @IsString()
+    @IsIn(eventFormats)
+    format?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(10000)
+    text?: string;
+
+    @IsOptional()
+    @IsDateString()
+    publish_at?: Date;
+
+    @IsOptional()
+    @IsDateString()
+    start_at?: Date;
+
+    @IsOptional()
+    @IsDateString()
+    end_at?: Date;
+
+    @IsOptional()
+    @IsUUID()
+    company_id?: string;
+}
 
 class EventUpdateData {
     @IsUUID()
@@ -87,11 +156,6 @@ class EventUpdateData {
     @ValidateNested()
     @Type(() => EventUpdateAttributes)
     attributes: EventUpdateAttributes;
-
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TagData)
-    included?: TagData[];
 }
 
 export class EventUpdateDto {
@@ -99,6 +163,14 @@ export class EventUpdateDto {
     @ValidateNested()
     @Type(() => EventUpdateData)
     data: EventUpdateData;
+}
+
+// event tags
+export class EventTagsDto {
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => TagIdRef)
+    data: TagIdRef[];
 }
 
 const eventSortingOptions = [
@@ -129,15 +201,102 @@ export class EventQuery {
     "sort"?: string;
 
     @IsOptional()
-    @IsString()
-    "format"?: string;
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        return String(value)
+            .split(",")
+            .map((v) => v.trim());
+    })
+    @IsArray()
+    @IsIn(eventFormats, { each: true })
+    "format"?: string[];
 
     @IsOptional()
     @Transform(({ value }) => (typeof value === "string" ? [value] : value))
     @IsArray()
     "tag"?: string[];
+
+    @IsOptional()
+    @Transform(({ value }) => (typeof value === "string" ? [value] : value))
+    @IsArray()
+    @IsUUID(undefined, { each: true })
+    "tag_id"?: string[];
+
+    @IsOptional()
+    @IsUUID()
+    "company_id"?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        const values = String(value).split(",");
+        return values.map((v) => v.trim() === "true");
+    })
+    @IsArray()
+    @IsBoolean({ each: true })
+    "published"?: boolean[];
+
+    @IsOptional()
+    @IsUUID()
+    "subscribed_by_user"?: string;
+
+    @IsOptional()
+    @IsString()
+    "text"?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        return String(value)
+            .split(",")
+            .map((v) => v.trim());
+    })
+    @IsArray()
+    @IsIn(["active", "canceled"], { each: true })
+    "status"?: string[];
+
+    @IsOptional()
+    @IsDateString()
+    "start_after"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "start_before"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "end_after"?: string;
+
+    @IsOptional()
+    @IsDateString()
+    "end_before"?: string;
 }
 
-export type EventDetails = EventAttributes & Pick<EventData, "included">;
-export type EventUpdateDetails = EventUpdateAttributes &
-    Pick<EventUpdateData, "included">;
+export type EventDetails = EventCreateAttributes & {
+    company_id: string;
+    tagIds?: string[];
+};
+export type EventUpdateDetails = EventUpdateAttributes;
+
+export const parseIncludes = (include?: string): Set<string> =>
+    new Set(
+        (include ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+    );
+
+export class PageQuery {
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    @Max(100)
+    "page[limit]"?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(0)
+    "page[offset]"?: number;
+}

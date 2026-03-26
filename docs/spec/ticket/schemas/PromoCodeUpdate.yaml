@@ -1,0 +1,23 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [promo_code]
+      attributes:
+        type: object
+        required:
+          - total
+        properties:
+          total:
+            type: integer
+            minimum: 1
+            description: Maximum number of uses
+            example: 50

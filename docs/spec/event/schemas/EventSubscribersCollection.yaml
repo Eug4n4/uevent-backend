@@ -1,0 +1,36 @@
+type: object
+required:
+  - data
+  - links
+properties:
+  data:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "account ID of the subscriber"
+        type:
+          type: string
+          enum: [ profile ]
+        attributes:
+          type: object
+          required:
+            - username
+          properties:
+            username:
+              type: string
+              description: "subscriber username"
+              example: "john_doe"
+            avatar_url:
+              type: string
+              nullable: true
+              description: "public URL of the subscriber's avatar"
+  links:
+    $ref: '../../shared/PaginationData.yaml'

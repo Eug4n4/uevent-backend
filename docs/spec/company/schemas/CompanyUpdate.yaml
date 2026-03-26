@@ -22,10 +22,6 @@ properties:
           name:
             type: string
             example: "Acme Corp"
-          email:
-            type: string
-            format: email
-            example: "contact@acme.com"
           address:
             type: string
             example: "123 Main St, Kyiv"

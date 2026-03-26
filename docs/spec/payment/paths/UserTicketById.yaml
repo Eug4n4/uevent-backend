@@ -1,0 +1,179 @@
+get:
+  tags:
+    - payments
+  summary: Get a purchased ticket by ID
+  description: >
+    Returns a single purchased ticket belonging to the authenticated user.
+    Returns 404 if the ticket does not exist or belongs to another user.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: User ticket found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserTicket.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: User ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+patch:
+  tags:
+    - payments
+  summary: Update user ticket status (redeem)
+  description: >
+    Allows a company member to mark a ticket as `used` or `unused`.
+    Only members of the company that owns the event can change the status.
+    This is the ticket redemption endpoint (e.g., scanning a ticket at the door).
+    Cannot change the status of an already canceled ticket.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              type: object
+              required:
+                - type
+                - attributes
+              properties:
+                type:
+                  type: string
+                  enum: [user_ticket]
+                attributes:
+                  type: object
+                  required:
+                    - status
+                  properties:
+                    status:
+                      type: string
+                      enum: [used, unused]
+  responses:
+    '200':
+      description: Status updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserTicket.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Not a company member.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: User ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: User ticket is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - payments
+  summary: Cancel a user ticket
+  description: >
+    Cancels a user ticket (sets `status = canceled`).
+    Only members of the company that owns the event can cancel a ticket.
+    Returns the updated user ticket with status `canceled`.
+    Cannot cancel an already canceled ticket.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: User ticket canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserTicket.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Not a company member.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: User ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: User ticket is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

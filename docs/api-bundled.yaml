@@ -1,17 +1,19 @@
-openapi: 3.1.1
+openapi: 3.1.0
 info:
-  title: uevent user-svc API
-  description: API documentation for uevent
+  title: uevent API
+  description: API documentation for uevent backend
   version: 0.1.0
 servers:
   - url: http://localhost:6767
+security: []
 paths:
-  /uevent/v1/account/registration/:
+  /uevent/v1/accounts/registration:
     post:
       tags:
-        - registration
+        - auth
       summary: Register a new account
-      description: Endpoint to register a new user account.
+      description: |
+        Registers a new user account with email, username, and password. Returns 201 with no body on success.
       requestBody:
         required: true
         content:
@@ -20,81 +22,33 @@ paths:
               $ref: '#/components/schemas/Registration'
       responses:
         '201':
-          description: Account successfully registered, always return without include parameters
-        '409':
-          description: |
-            Conflict: An account with this email or username already exists. Check the 'detail' field in the response for more information.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/registration/admin:
-    post:
-      tags:
-        - registration
-      summary: Register a new admin account
-      description: |
-        Registers a new account by an authenticated admin.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegistrationAdmin'
-      responses:
-        '201':
-          description: Account successfully registered by admin, always return without include parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
+          description: Account successfully registered.
         '400':
-          description: |
-            Bad Request. Request body is invalid or some attributes do not meet requirements. Check the `errors` array for details.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '401':
-          description: |
-            Unauthorized. Invalid session.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '403':
-          description: |
-            Forbidden. Initiator does not have enough rights.
+          description: Validation error (e.g. password too short, invalid email).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '409':
           description: |
-            Conflict. Email or username is already taken. Check the `detail` field in the response for more information.
+            Conflict: An account with this email or username already exists.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
-          description: Internal Server Error
+          description: Internal server error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/login:
+  /uevent/v1/accounts/login:
     post:
       tags:
-        - login
-      summary: Login by email
+        - auth
+      summary: Login with email and password
       description: |
-        Endpoint to login a user using their email and password.
+        Authenticates a user using their email and password. On success, sets `access` and `refresh` cookies and returns the account object.
       requestBody:
         required: true
         content:
@@ -103,92 +57,113 @@ paths:
               $ref: '#/components/schemas/LoginByEmail'
       responses:
         '200':
-          description: Successful login. `access` and `refresh` cookies are set.
+          description: |
+            Successful login. `access` cookie (JWT access token) and `refresh` httpOnly cookie (JWT refresh token) are set.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Account'
-        '401':
-          description: |
-            Unauthorized: Invalid email or password.
+        '400':
+          description: Invalid email or password.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
-          description: Internal server error
+          description: Internal server error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/login/google:
+  /uevent/v1/accounts/login/google:
     post:
       tags:
-        - login
+        - auth
       summary: Start Google OAuth login
       description: |
-        Redirects the user-agent to Google OAuth consent screen. This endpoint returns a redirect and does not return a JSON:API document.
+        Redirects the user-agent to the Google OAuth consent screen. This endpoint returns a 307 redirect and does not return a JSON body.
       responses:
         '307':
-          description: Temporary Redirect to Google OAuth consent screen
+          description: Temporary redirect to Google OAuth consent screen.
           headers:
             Location:
-              description: Google OAuth authorization URL
+              description: Google OAuth authorization URL.
               schema:
                 type: string
                 format: uri
         '500':
-          description: Internal Server Error
+          description: Internal server error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/login/google/callback:
+  /uevent/v1/accounts/login/google/callback:
     get:
       tags:
-        - login
+        - auth
       summary: Google OAuth callback
       description: |
-        Exchanges Google OAuth `code` for user info and returns an access/refresh tokens pair.
+        Exchanges the Google OAuth `code` for user info, creates or logs in the account, sets `access` and `refresh` cookies, and returns the account object.
       parameters:
         - in: query
           name: code
           required: true
           schema:
             type: string
-          description: OAuth authorization code returned by Google
+          description: OAuth authorization code returned by Google.
       responses:
         '200':
-          description: Tokens pair issued
+          description: |
+            Successful Google login. `access` and `refresh` cookies are set. Returns the account object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
+                $ref: '#/components/schemas/Account'
         '400':
-          description: Missing or invalid query parameter `code`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
-          description: Account not found for this email
+          description: Missing or invalid `code` query parameter.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
-          description: Internal Server Error
+          description: Internal server error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/refresh:
+  /uevent/v1/accounts/logout:
     post:
       tags:
-        - login
-      summary: Refresh tokens
+        - auth
+      summary: Logout
       description: |
-        Issues a new access/refresh token pair using the refresh token stored in the `refresh` httpOnly cookie. Both cookies are replaced on success. Requires a valid refresh token cookie.
+        Clears the `access` and `refresh` cookies, effectively logging out the authenticated user. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      responses:
+        '204':
+          description: Successfully logged out. Auth cookies are cleared.
+        '401':
+          description: Unauthorized. Missing or invalid access token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/accounts/refresh:
+    post:
+      tags:
+        - auth
+      summary: Refresh access token
+      description: |
+        Issues a new access/refresh token pair using the `refresh` httpOnly cookie. Both `access` and `refresh` cookies are replaced on success. Requires a valid refresh token cookie.
+      security:
+        - refreshCookieAuth: []
       responses:
         '200':
           description: Tokens refreshed. New `access` and `refresh` cookies are set.
@@ -204,114 +179,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/logout:
-    post:
-      tags:
-        - login
-      summary: Logout
-      description: |
-        Invalidates the current session of the authenticated account.
-      responses:
-        '204':
-          description: Successfully logged out
-        '401':
-          description: |
-            Unauthorized. Invalid session
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-  /uevent/v1/account/me:
-    get:
-      tags:
-        - accounts
-      summary: Get my account
-      description: |
-        Returns the authenticated account.
-      parameters:
-        - in: query
-          name: include
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - profile
-          style: form
-          explode: false
-          description: |
-            Optional related resources to include. Supported values: `profile`.
-      responses:
-        '200':
-          description: Account successfully retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
-        '401':
-          description: |
-            Unauthorized. Invalid session.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
+  /uevent/v1/accounts:
     delete:
       tags:
-        - accounts
+        - auth
       summary: Delete my account
       description: |
-        Deletes the authenticated account.
+        Soft-deletes the authenticated account and clears `access` and `refresh` cookies. Requires a valid access token.
+      security:
+        - cookieAuth: []
       responses:
         '204':
-          description: Account successfully deleted
+          description: Account successfully deleted. Auth cookies are cleared.
         '401':
-          description: |
-            Unauthorized. Invalid session.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '403':
-          description: |
-            Account is have membership in an company,  must leave all company before deleting the account.
+          description: Unauthorized. Missing or invalid access token.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
-          description: Internal Server Error
+          description: Internal server error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/profiles/:
+  /uevent/v1/profiles:
     get:
       tags:
         - profiles
       summary: Filter profiles
       description: |
-        Returns a paginated list of public profiles filtered by optional query parameters. Supports prefix-based filtering for `username` and `pseudonym`.
+        Returns a paginated list of public profiles. Supports text-based filtering against username (partial match). No authentication required.
       parameters:
         - in: query
           name: text
           required: false
           schema:
             type: string
-          description: |
-            Text to filter profiles by. Matches against `username` and `pseudonym` fields using prefix-based filtering.
+          description: Filter by text (partial match on username)
         - in: query
           name: page[limit]
           required: false
@@ -319,25 +224,33 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
-          description: Max number of items to return (1-100).
+            default: 20
+          description: 'Max number of items to return (1–100, default: 20)'
         - in: query
           name: page[offset]
           required: false
           schema:
             type: integer
             minimum: 0
-          description: Number of items to skip.
+            default: 0
+          description: 'Number of items to skip (default: 0)'
       responses:
         '200':
-          description: Profiles list.
+          description: Paginated list of profiles.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfilesCollection'
+        '400':
+          description: Validation error in query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
   /uevent/v1/profiles/me:
@@ -347,6 +260,8 @@ paths:
       summary: Get my profile
       description: |
         Returns the current authenticated user's profile. Requires a valid access token.
+      security:
+        - cookieAuth: []
       responses:
         '200':
           description: Profile found.
@@ -355,15 +270,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Profile'
         '401':
-          description: Unauthorized.
+          description: Unauthorized. Missing or invalid access token.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
     patch:
@@ -371,7 +286,9 @@ paths:
         - profiles
       summary: Update my profile
       description: |
-        Updates the current authenticated user's profile. The request body must contain the same `data.id` as the authenticated account id.
+        Updates the current authenticated user's profile. The `data.id` in the request body must match the authenticated account id. Requires a valid access token.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -380,33 +297,33 @@ paths:
               $ref: '#/components/schemas/UpdateProfile'
       responses:
         '200':
-          description: Profile updated.
+          description: Profile successfully updated.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Profile'
         '400':
-          description: Bad request (validation error / invalid payload).
+          description: Validation error or invalid payload.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '401':
-          description: Unauthorized (missing/invalid token or profile does not exist).
+          description: Unauthorized. Missing or invalid access token.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-        '403':
-          description: Forbidden (user too young).
+        '409':
+          description: Username already taken.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
   /uevent/v1/profiles/me/avatar:
@@ -415,7 +332,9 @@ paths:
         - profiles
       summary: Upload my avatar
       description: |
-        Uploads or replaces the current authenticated user's avatar. Requires a valid access token.
+        Uploads or replaces the current authenticated user's avatar image. Requires a valid access token.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -431,7 +350,7 @@ paths:
                   description: Avatar image file
       responses:
         '200':
-          description: Avatar uploaded.
+          description: Avatar uploaded. Returns the updated profile.
           content:
             application/json:
               schema:
@@ -439,19 +358,19 @@ paths:
         '400':
           description: Bad request (invalid file format or size).
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '401':
-          description: Unauthorized.
+          description: Unauthorized. Missing or invalid access token.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
     delete:
@@ -459,26 +378,22 @@ paths:
         - profiles
       summary: Delete my avatar
       description: |
-        Deletes the current authenticated user's avatar. Requires a valid access token.
+        Deletes the current authenticated user's avatar image. Requires a valid access token.
+      security:
+        - cookieAuth: []
       responses:
         '204':
           description: Avatar deleted.
         '401':
-          description: Unauthorized.
+          description: Unauthorized. Missing or invalid access token.
           content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
-          description: Avatar not found.
-          content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
-            application/problem+json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
   /uevent/v1/profiles/{account_id}:
@@ -555,13 +470,71 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/company:
+  /uevent/v1/companies:
+    get:
+      tags:
+        - companies
+      summary: Get companies list
+      description: |
+        Returns a paginated list of companies. Supports filtering by name (case-insensitive, partial match). Pass `me=true` (requires authentication via `access` cookie) to return only companies where the current user is a member.
+      security:
+        - {}
+        - cookieAuth: []
+      parameters:
+        - name: name
+          in: query
+          description: Filter by company name (case-insensitive, partial match)
+          schema:
+            type: string
+        - name: me
+          in: query
+          description: |
+            When true, return only companies where the authenticated user is a member. Requires a valid access token.
+          schema:
+            type: boolean
+            default: false
+        - name: page[limit]
+          in: query
+          description: 'Number of companies per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of companies to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of companies.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesCollection'
+        '400':
+          description: Validation error in query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
     post:
       tags:
         - companies
       summary: Create a company
       description: |
         Creates a new company. The authenticated account becomes the owner. Requires a valid access token.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -571,8 +544,12 @@ paths:
       responses:
         '201':
           description: Company successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
         '400':
-          description: Bad request (validation error).
+          description: Validation error.
           content:
             application/json:
               schema:
@@ -584,7 +561,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Errors'
         '409':
-          description: A company with this email already exists.
+          description: Company with this email already exists.
           content:
             application/json:
               schema:
@@ -595,16 +572,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/company/my:
+  /uevent/v1/companies/subscriptions:
     get:
       tags:
         - companies
-      summary: Get my companies
+      summary: Get my company subscriptions
       description: |
-        Returns all companies where the authenticated account is the owner. Requires a valid access token.
+        Returns a paginated list of companies the authenticated user is subscribed to. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page[limit]
+          in: query
+          description: 'Number of companies per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of companies to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
-          description: List of owned companies.
+          description: Paginated list of subscribed companies.
           content:
             application/json:
               schema:
@@ -621,21 +616,156 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/company/{id}/avatar:
+  /uevent/v1/companies/{id}:
+    get:
+      tags:
+        - companies
+      summary: Get a company by ID
+      description: |
+        Returns a single company by its UUID. Returns 404 if the company does not exist or has been deleted.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Company found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - companies
+      summary: Update a company
+      description: |
+        Updates company fields. All attributes are optional. The `data.id` in the body must match the `:id` in the URL. Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyUpdate'
+      responses:
+        '200':
+          description: Company successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Validation error or body id mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. You are not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - companies
+      summary: Delete a company
+      description: |
+        Soft-deletes a company (sets `deleted_at`). Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Company successfully deleted.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. You are not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/companies/{id}/avatar:
     post:
       tags:
         - companies
       summary: Upload company avatar
       description: |
         Uploads or replaces a company's avatar image. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
       parameters:
         - in: path
           name: id
           required: true
+          description: Company UUID
           schema:
             type: string
             format: uuid
-          description: Company ID
       requestBody:
         required: true
         content:
@@ -657,13 +787,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Company'
         '400':
-          description: Bad request (invalid file or not the owner).
+          description: Bad request (invalid file).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
           content:
             application/json:
               schema:
@@ -680,21 +816,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/company/{id}/banner:
+  /uevent/v1/companies/{id}/banner:
     post:
       tags:
         - companies
       summary: Upload company banner
       description: |
         Uploads or replaces a company's banner image. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
       parameters:
         - in: path
           name: id
           required: true
+          description: Company UUID
           schema:
             type: string
             format: uuid
-          description: Company ID
       requestBody:
         required: true
         content:
@@ -716,7 +854,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/Company'
         '400':
-          description: Bad request (invalid file or not the owner).
+          description: Bad request (invalid file).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/companies/{id}/subscriptions:
+    post:
+      tags:
+        - companies
+      summary: Subscribe to a company
+      description: |
+        Subscribes the authenticated user to a company. Returns 400 if already subscribed.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Company UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Successfully subscribed.
+        '400':
+          description: Already subscribed or validation error.
           content:
             application/json:
               schema:
@@ -739,13 +927,354 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-  /uevent/v1/event:
+    delete:
+      tags:
+        - companies
+      summary: Unsubscribe from a company
+      description: |
+        Removes the authenticated user's subscription from a company.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Company UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Successfully unsubscribed.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found or not subscribed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    get:
+      tags:
+        - companies
+      summary: Get company subscribers
+      description: |
+        Returns a paginated list of profiles subscribed to a company. No authentication required.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Company UUID
+          schema:
+            type: string
+            format: uuid
+        - name: page[limit]
+          in: query
+          description: 'Number of subscribers per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of subscribers to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of subscriber profiles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanySubscribersCollection'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/companies/{id}/billing:
+    post:
+      tags:
+        - companies
+      summary: Create company billing
+      description: |
+        Creates a Stripe Connect billing record for the company. Returns 409 if billing already exists. Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillingCreate'
+      responses:
+        '201':
+          description: Billing record created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Billing'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Billing record already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    get:
+      tags:
+        - companies
+      summary: Get company billing
+      description: |
+        Returns the Stripe billing record for the company. Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Billing record found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Billing'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company or billing not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events:
+    get:
+      tags:
+        - events
+      summary: Get events list
+      description: |
+        Returns a paginated list of events. Supports filtering by various parameters and sorting by date fields. No authentication required (optional authentication to access subscribed_by_user filtering).
+      parameters:
+        - name: page[limit]
+          in: query
+          description: 'Number of events per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of events to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: sort
+          in: query
+          description: Sort field. Prefix with `-` for descending order.
+          schema:
+            type: string
+            enum:
+              - start_at
+              - '-start_at'
+              - end_at
+              - '-end_at'
+              - publish_at
+              - '-publish_at'
+        - name: format
+          in: query
+          description: Filter by one or more event formats (comma-separated)
+          schema:
+            type: string
+            example: Lection,Workshop
+        - name: tag
+          in: query
+          description: Filter by one or more tag names
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+          style: form
+          explode: true
+        - name: tag_id
+          in: query
+          description: Filter by one or more tag UUIDs
+          schema:
+            oneOf:
+              - type: string
+                format: uuid
+              - type: array
+                items:
+                  type: string
+                  format: uuid
+          style: form
+          explode: true
+        - name: company_id
+          in: query
+          description: Filter events by company UUID
+          schema:
+            type: string
+            format: uuid
+        - name: published
+          in: query
+          description: Filter by published status (comma-separated booleans, e.g. true,false)
+          schema:
+            type: string
+        - name: subscribed_by_user
+          in: query
+          description: Filter events subscribed by the given account UUID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: |
+            Filter by event status. Accepts a comma-separated list: `active`, `canceled`, or `active,canceled`. Defaults to `active` when omitted — canceled events are hidden from public listings by default.
+          schema:
+            type: string
+            example: active
+            default: active
+        - name: text
+          in: query
+          description: Filter by text content (partial match on title and body text)
+          schema:
+            type: string
+        - name: start_after
+          in: query
+          description: Filter events starting after this datetime (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: start_before
+          in: query
+          description: Filter events starting before this datetime (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_after
+          in: query
+          description: Filter events ending after this datetime (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: end_before
+          in: query
+          description: Filter events ending before this datetime (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+        - name: include
+          in: query
+          description: 'Comma-separated list of related resources to include. Supported: `tags`, `companies`'
+          schema:
+            type: string
+            example: tags,companies
+      responses:
+        '200':
+          description: Paginated list of events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsCollection'
+        '400':
+          description: Validation error in query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
     post:
       tags:
         - events
       summary: Create an event
       description: |
-        Creates a new event for a company. Only the company owner can create events. Tags can be attached by passing them in `data.included`. Requires a valid access token.
+        Creates a new event for a company. Only the company owner can create events. Company ID is passed in `data.relationships.company.data.id`. Optional tags can be passed in `data.relationships.tags.data`. Requires a valid access token.
+      security:
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -753,19 +1282,1714 @@ paths:
             schema:
               $ref: '#/components/schemas/EventCreate'
       responses:
-        '200':
+        '201':
           description: Event successfully created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Event'
         '400':
-          description: |
-            Bad request. Possible reasons: validation error, company not found, or the authenticated account is not the company owner.
+          description: Validation error.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized. Access token is missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. The authenticated account is not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}:
+    get:
+      tags:
+        - events
+      summary: Get event by ID
+      description: |
+        Returns a single event by its UUID. No authentication required. Optional `?include` query parameter to include related resources.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: 'Comma-separated list of related resources to include. Supported: `tags`, `companies`'
+          schema:
+            type: string
+            example: tags,companies
+      responses:
+        '200':
+          description: Event found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - events
+      summary: Update an event
+      description: |
+        Updates event fields. All attributes are optional. The `data.id` in the body must match the `:id` in the URL. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdate'
+      responses:
+        '200':
+          description: Event successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Validation error or body id mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - events
+      summary: Cancel an event
+      description: |
+        Permanently cancels an event (sets `status` to `canceled`). This action is **irreversible** — a canceled event cannot be reactivated.
+        **Cascade effects:** - All ticket types for this event are set to `canceled`. - All purchased user tickets for those ticket types are set to `canceled`.
+        Returns the updated event object (status: canceled). Only the company owner can cancel an event.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event successfully canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Event is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}/avatar:
+    post:
+      tags:
+        - events
+      summary: Upload event avatar
+      description: |
+        Uploads or replaces an event's avatar image. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Avatar image file
+      responses:
+        '200':
+          description: Avatar uploaded. Returns the updated event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad request (invalid file).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}/banner:
+    post:
+      tags:
+        - events
+      summary: Upload event banner
+      description: |
+        Uploads or replaces an event's banner image. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - banner
+              properties:
+                banner:
+                  type: string
+                  format: binary
+                  description: Banner image file
+      responses:
+        '200':
+          description: Banner uploaded. Returns the updated event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Bad request (invalid file).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}/tags:
+    put:
+      tags:
+        - events
+      summary: Replace all tags on an event
+      description: |
+        Replaces the complete set of tags on an event with the provided list. Pass an empty `data` array to remove all tags. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: Tag UUID
+                      type:
+                        type: string
+                        enum:
+                          - tag
+      responses:
+        '200':
+          description: Tags successfully replaced. Returns the updated event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}/tags/{tagId}:
+    post:
+      tags:
+        - events
+      summary: Add a tag to an event
+      description: |
+        Adds a single tag to an event by tag UUID. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tag successfully added. Returns the updated event.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event or tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - events
+      summary: Remove a tag from an event
+      description: |
+        Removes a single tag from an event by tag UUID. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+        - name: tagId
+          in: path
+          required: true
+          description: Tag UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Tag successfully removed.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event or tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{id}/subscriptions:
+    post:
+      tags:
+        - events
+      summary: Subscribe to an event
+      description: |
+        Subscribes the authenticated user to an event. Returns the subscriber's profile on success. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Successfully subscribed. Returns the subscriber profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: Already subscribed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - events
+      summary: Unsubscribe from an event
+      description: |
+        Removes the authenticated user's subscription from an event. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Successfully unsubscribed.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found or not subscribed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    get:
+      tags:
+        - events
+      summary: Get event subscribers
+      description: |
+        Returns a paginated list of profiles subscribed to an event. No authentication required.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event UUID
+          schema:
+            type: string
+            format: uuid
+        - name: page[limit]
+          in: query
+          description: 'Number of subscribers per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of subscribers to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of subscriber profiles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSubscribersCollection'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/tags:
+    get:
+      tags:
+        - tags
+      summary: Get tags list
+      description: |
+        Returns a paginated list of tags. Supports filtering by name (case-insensitive, partial match). No authentication required. Pass `?include=events` to include related events for each tag.
+      parameters:
+        - name: name
+          in: query
+          description: Filter by name (case-insensitive, partial match)
+          schema:
+            type: string
+        - name: page[limit]
+          in: query
+          description: 'Number of tags per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of tags to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: include
+          in: query
+          description: Pass `events` to include related events in each tag's `relationships`
+          schema:
+            type: string
+            enum:
+              - events
+      responses:
+        '200':
+          description: Paginated list of tags.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsCollection'
+        '400':
+          description: Validation error in query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    post:
+      tags:
+        - tags
+      summary: Create a tag
+      description: |
+        Creates a new global tag. Tag name must be unique and contain only letters (1–50 chars). Requires a valid access token.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreate'
+      responses:
+        '201':
+          description: Tag successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Tag with this name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/tags/{id}:
+    get:
+      tags:
+        - tags
+      summary: Get tag by ID
+      description: |
+        Returns a single tag by its UUID. No authentication required. Pass `?include=events` to include related events in the tag's `relationships`.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Tag UUID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: Pass `events` to include related events in the tag's `relationships`
+          schema:
+            type: string
+            enum:
+              - events
+      responses:
+        '200':
+          description: Tag found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - tags
+      summary: Update a tag
+      description: |
+        Updates tag name and/or description. The `data.id` in the body must match the `:id` in the URL. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Tag UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagUpdate'
+      responses:
+        '200':
+          description: Tag successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Validation error or body id mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Tag name already taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - tags
+      summary: Delete a tag
+      description: |
+        Permanently deletes a tag. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Tag UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Tag successfully deleted.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/news:
+    get:
+      tags:
+        - news
+      summary: Get news list
+      description: |
+        Returns a paginated list of news items. Supports filtering by company_id and text (partial match). No authentication required. Pass `?include=companies` to include full company objects.
+      parameters:
+        - name: company_id
+          in: query
+          description: Filter by company UUID
+          schema:
+            type: string
+            format: uuid
+        - name: text
+          in: query
+          description: Filter by text content (partial match)
+          schema:
+            type: string
+        - name: page[limit]
+          in: query
+          description: 'Number of news items per page (1–100, default: 20)'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: page[offset]
+          in: query
+          description: 'Number of news items to skip (default: 0)'
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: include
+          in: query
+          description: Pass `companies` to include full company objects in the top-level `included` array
+          schema:
+            type: string
+            enum:
+              - companies
+      responses:
+        '200':
+          description: Paginated list of news items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsCollection'
+        '400':
+          description: Validation error in query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    post:
+      tags:
+        - news
+      summary: Create a news item
+      description: |
+        Creates a new news item associated with a company. Company ID is passed in `data.relationships.company.data.id`. Requires a valid access token. Only the company owner can create news.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsCreate'
+      responses:
+        '201':
+          description: News item successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Company not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/news/{id}:
+    get:
+      tags:
+        - news
+      summary: Get a news item by ID
+      description: |
+        Returns a single news item by its UUID. No authentication required. Pass `?include=companies` to include the full company object.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: News UUID
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          description: Pass `companies` to include the full company object in `included`
+          schema:
+            type: string
+            enum:
+              - companies
+      responses:
+        '200':
+          description: News item found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+        '404':
+          description: News item not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - news
+      summary: Update a news item
+      description: |
+        Updates news item fields. All attributes are optional. The `data.id` in the body must match the `:id` in the URL. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: News UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsUpdate'
+      responses:
+        '200':
+          description: News item successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/News'
+        '400':
+          description: Validation error or body id mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: News item not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - news
+      summary: Delete a news item
+      description: |
+        Permanently deletes a news item. Only the company owner can perform this action. Requires a valid access token.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: News UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: News item successfully deleted.
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: News item not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{eventId}/tickets:
+    get:
+      tags:
+        - tickets
+      summary: List tickets for an event
+      description: |
+        Returns a paginated list of active tickets for the given event. Public — no authentication required.
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page[limit]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page[offset]
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of tickets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketsCollection'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    post:
+      tags:
+        - tickets
+      summary: Create a ticket for an event
+      description: |
+        Creates a new ticket type for the given event. Also creates the tickets_stats record with the given `total`. Only the company owner can perform this action. Company must have completed Stripe onboarding before ticket sales can begin.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCreate'
+      responses:
+        '201':
+          description: Ticket created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the event owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{eventId}/tickets/{ticketId}:
+    get:
+      tags:
+        - tickets
+      summary: Get a ticket by ID
+      description: Returns a single ticket. Public — no authentication required.
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          description: Ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - tickets
+      summary: Update a ticket
+      description: |
+        Updates ticket name, description, or total. All attributes are optional. Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketUpdate'
+      responses:
+        '200':
+          description: Ticket updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the event owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/tickets/{ticketId}/promo-codes:
+    get:
+      tags:
+        - tickets
+      summary: List promo codes for a ticket
+      description: |
+        Returns a paginated list of promo codes for the given ticket. Only the company owner can view promo codes.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page[limit]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page[offset]
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of promo codes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoCodesCollection'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the event owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    post:
+      tags:
+        - tickets
+      summary: Create a promo code for a ticket
+      description: |
+        Creates a new promo code for the given ticket. The `code` must be globally unique. Also creates the promo_code_stats record with the given `total`. Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoCodeCreate'
+      responses:
+        '201':
+          description: Promo code created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoCode'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the event owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Promo code already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/tickets/{ticketId}/promo-codes/{codeId}:
+    patch:
+      tags:
+        - tickets
+      summary: Update a promo code
+      description: |
+        Updates a promo code's total (maximum number of uses). Only the company owner can perform this action.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: codeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoCodeUpdate'
+      responses:
+        '200':
+          description: Promo code updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoCode'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the event owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Promo code not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/tickets/{ticketId}/purchase:
+    post:
+      tags:
+        - payments
+      summary: Purchase a ticket
+      description: |
+        Initiates a ticket purchase. Creates a transaction (pending) with pessimistic locking to prevent overselling. Returns a Stripe `client_secret` for the frontend to complete payment with Stripe.js. A 5% platform commission is collected automatically via Stripe Connect application fees. If a promo code is provided, the discount is applied to the price. Free tickets (price = 0 or 100% discount) are fulfilled immediately — no Stripe step required. The company must have completed Stripe Connect onboarding (`stripe_onboarded = true`). After the payment succeeds, the Stripe webhook creates the `user_ticket` automatically.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - type
+                    - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - purchase
+                    attributes:
+                      type: object
+                      properties:
+                        promo_code:
+                          type: string
+                          description: Optional promo code to apply a discount
+                          example: SUMMER20
+                        quantity:
+                          type: integer
+                          minimum: 1
+                          default: 1
+                          description: Number of tickets to purchase (defaults to 1)
+      responses:
+        '201':
+          description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment. Null for free tickets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - purchase
+                      attributes:
+                        type: object
+                        properties:
+                          client_secret:
+                            type: string
+                            description: Stripe PaymentIntent client secret. Null for free tickets.
+                            nullable: true
+                            example: pi_xxx_secret_yyy
+                          transaction_id:
+                            type: string
+                            format: uuid
+                          final_price:
+                            type: integer
+                            description: Amount in smallest currency unit (e.g. cents)
+                            example: 3999
+                          currency:
+                            type: string
+                            example: eur
+        '400':
+          description: Company billing not set up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Ticket, event, or promo code not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Ticket canceled, promo code canceled/exhausted, or not enough tickets available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/stripe/webhook:
+    post:
+      tags:
+        - payments
+      summary: Stripe webhook endpoint
+      description: |
+        Receives and processes Stripe webhook events. The request body must be the raw payload and the `Stripe-Signature` header must be present for signature verification.
+        Handled events:
+        - `payment_intent.succeeded` — marks the transaction as `paid`, creates `user_ticket` records,
+          and increments the ticket `sold` count and promo code `used` count.
+
+        **Do not call this endpoint manually.** Register the URL in the Stripe dashboard and configure `STRIPE_WEBHOOK_SECRET` in your environment.
+      parameters:
+        - name: Stripe-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC signature provided by Stripe for webhook verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe event payload
+      responses:
+        '200':
+          description: Webhook received and processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '400':
+          description: Missing or invalid Stripe signature.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/user-tickets:
+    get:
+      tags:
+        - payments
+      summary: List my purchased tickets
+      description: |
+        Returns a paginated list of all tickets purchased by the authenticated user, ordered by most recent first. Includes ticket details in `relationships.ticket`.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page[limit]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page[offset]
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of user tickets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicketsCollection'
         '401':
           description: Unauthorized.
           content:
@@ -778,8 +3002,421 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
+  /uevent/v1/user-tickets/{id}:
+    get:
+      tags:
+        - payments
+      summary: Get a purchased ticket by ID
+      description: |
+        Returns a single purchased ticket belonging to the authenticated user. Returns 404 if the ticket does not exist or belongs to another user.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User ticket found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicket'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: User ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - payments
+      summary: Update user ticket status (redeem)
+      description: |
+        Allows a company member to mark a ticket as `used` or `unused`. Only members of the company that owns the event can change the status. This is the ticket redemption endpoint (e.g., scanning a ticket at the door). Cannot change the status of an already canceled ticket.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - type
+                    - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - user_ticket
+                    attributes:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                            - used
+                            - unused
+      responses:
+        '200':
+          description: Status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicket'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Not a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: User ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: User ticket is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - payments
+      summary: Cancel a user ticket
+      description: |
+        Cancels a user ticket (sets `status = canceled`). Only members of the company that owns the event can cancel a ticket. Returns the updated user ticket with status `canceled`. Cannot cancel an already canceled ticket.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User ticket canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicket'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Not a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: User ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: User ticket is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/events/{eventId}/cancel:
+    post:
+      tags:
+        - payments
+      summary: Cancel an event and refund all tickets
+      description: |
+        Cancels the event (sets `status = canceled`) and triggers Stripe refunds for all active user tickets with paid transactions.
+        Refund flow per ticket:
+        - Transaction `paid` + has `payment_intent_id` → Stripe refund initiated, transaction set to `refund_pending`
+        - Transaction `pending` (payment never completed) → user_ticket set to `returned` immediately
+        The `transaction.status` transitions to `returned` and `user_ticket.status` to `returned` when Stripe fires the `refund.updated` webhook.
+        Only the company owner can cancel an event.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event canceled and refunds initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Event is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the company owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/transactions:
+    get:
+      tags:
+        - payments
+      summary: List transactions
+      description: |
+        Returns a paginated list of transactions filtered by one or more criteria. At least one filter is required.
+        Access rules:
+        - `account_id` only → must equal the authenticated user's own ID
+        - `company_id`, `event_id`, `ticket_id`, or `promo_code_id` → requester must be a member
+          of the company that owns the relevant event. `account_id` can be combined with these filters.
+
+        Results are ordered by most recent first.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: account_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by account. If used alone, must equal the authenticated user's ID.
+        - name: company_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by company (requires company membership).
+        - name: event_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by event (requires company membership).
+        - name: ticket_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by ticket (requires company membership).
+        - name: promo_code_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by promo code (requires company membership).
+        - name: page[limit]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page[offset]
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of transactions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsCollection'
+        '400':
+          description: No filter provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Tried to view another user's transactions without a privileged filter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Referenced event, ticket, or promo code not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/transactions/{id}:
+    get:
+      tags:
+        - payments
+      summary: Get a transaction by ID
+      description: |
+        Returns a single transaction. Access is granted to the owner of the associated user ticket OR any member of the company that owns the event the ticket belongs to.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaction found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the ticket owner or a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Transaction not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
 components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access
+    refreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: refresh
   schemas:
+    Errors:
+      description: Standard JSON:API error
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          description: Non empty array of errors occurred during request processing
+          items:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: integer
+                description: HTTP status code applicable to this problem
+                example: 400
+                enum:
+                  - 400
+                  - 401
+                  - 403
+                  - 404
+                  - 409
+                  - 500
+              detail:
+                description: Human-readable explanation specific to this occurrence of the problem. May be a string or an object (e.g. validation error details).
+                example: Request body was expected
+    PaginationLinks:
+      $ref: '#/components/schemas/PaginationData'
     LoginByEmail:
       type: object
       required:
@@ -847,50 +3484,6 @@ components:
                   format: password
                   description: The account's password.
                   example: StrongP@ssw0rd!
-    RegistrationAdmin:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: object
-          required:
-            - type
-            - attributes
-          properties:
-            type:
-              type: string
-              enum:
-                - account
-            attributes:
-              type: object
-              required:
-                - email
-                - username
-                - password
-                - role
-              properties:
-                email:
-                  type: string
-                  format: email
-                  description: The account's email address.
-                  example: example1312@gmail.com
-                username:
-                  type: string
-                  description: The account's username.
-                  example: adminUser
-                password:
-                  type: string
-                  format: password
-                  description: The account's password.
-                  example: StrongP@ssw0rd!
-                role:
-                  type: string
-                  description: The role assigned to the registering account.
-                  enum:
-                    - admin
-                    - moderator
-                  example: admin
     Account:
       type: object
       required:
@@ -923,6 +3516,7 @@ components:
                 role:
                   type: string
                   description: The role assigned to the account
+                  example: user
                 email:
                   type: string
                   format: email
@@ -937,6 +3531,8 @@ components:
                   description: The date and time when the account was last updated
             relationships:
               type: object
+              required:
+                - profile
               properties:
                 profile:
                   type: object
@@ -952,16 +3548,11 @@ components:
                         id:
                           type: string
                           format: uuid
-                          description: Profile id
+                          description: Profile id (same as account id)
                         type:
                           type: string
                           enum:
                             - profile
-        included:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/Profile'
     UpdateProfile:
       type: object
       required:
@@ -972,28 +3563,25 @@ components:
           required:
             - id
             - type
-            - attributes
           properties:
             id:
               type: string
               format: uuid
-              description: account id
+              description: must match the authenticated account id
             type:
               type: string
               enum:
                 - profile
             attributes:
               type: object
+              description: All fields are optional
               properties:
-                pseudonym:
-                  type: string
-                  description: pseudonym
                 username:
                   type: string
-                  description: user username
-                description:
-                  type: string
-                  description: description
+                  minLength: 3
+                  maxLength: 32
+                  description: New username (letters, numbers, -._! only)
+                  example: new_username
     Profile:
       type: object
       required:
@@ -1011,7 +3599,7 @@ components:
         id:
           type: string
           format: uuid
-          description: account id
+          description: account ID
         type:
           type: string
           enum:
@@ -1020,27 +3608,26 @@ components:
           type: object
           required:
             - username
-            - pseudonym
             - updated_at
             - created_at
           properties:
             username:
               type: string
-              description: username for this account and profile
-            pseudonym:
-              type: string
-              description: profile pseudonym
+              description: username (3–32 chars, letters/numbers/-._!)
+              example: john_doe
             avatar_url:
               type: string
-              description: avatar key
+              nullable: true
+              description: public URL of the avatar image, or null if not set
+              example: https://s3.example.com/avatars/abc123.png
             updated_at:
               type: string
               format: date-time
-              description: updated at
+              description: last update timestamp
             created_at:
               type: string
               format: date-time
-              description: created at
+              description: creation timestamp
     ProfilesCollection:
       type: object
       required:
@@ -1081,8 +3668,6 @@ components:
             - name
             - email
             - address
-            - avatar
-            - banner
           properties:
             name:
               type: string
@@ -1097,23 +3682,28 @@ components:
               type: string
               description: company physical address
               example: 123 Main St, Kyiv
-            avatar:
+            avatar_url:
               type: string
-              description: avatar file key or URL
-              example: default.png
-            banner:
+              nullable: true
+              description: public URL of the company avatar image, or null if not set
+              example: https://s3.example.com/company/avatar.png
+            banner_url:
               type: string
-              description: banner file key or URL
-              example: default.png
+              nullable: true
+              description: public URL of the company banner image, or null if not set
+              example: https://s3.example.com/company/banner.png
     CompaniesCollection:
       type: object
       required:
         - data
+        - links
       properties:
         data:
           type: array
           items:
             $ref: '#/components/schemas/CompanyData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
     CompanyCreate:
       type: object
       required:
@@ -1149,6 +3739,74 @@ components:
                   type: string
                   description: company physical address
                   example: 123 Main St, Kyiv
+    CompanyUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: must match the :id in the URL
+            type:
+              type: string
+              enum:
+                - company
+            attributes:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Acme Corp
+                address:
+                  type: string
+                  example: 123 Main St, Kyiv
+    CompanySubscribersCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - type
+              - attributes
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: account ID of the subscriber
+              type:
+                type: string
+                enum:
+                  - profile
+              attributes:
+                type: object
+                required:
+                  - username
+                properties:
+                  username:
+                    type: string
+                    description: subscriber username
+                    example: john_doe
+                  avatar_url:
+                    type: string
+                    nullable: true
+                    description: public URL of the subscriber's avatar
+                    example: https://s3.example.com/avatars/abc.png
+        links:
+          $ref: '#/components/schemas/PaginationData'
     Event:
       type: object
       required:
@@ -1156,12 +3814,21 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/EventData'
+        included:
+          type: array
+          description: |
+            Present when `?include=tags` and/or `?include=companies` is used. Contains full tag and/or company objects.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TagData'
+              - $ref: '#/components/schemas/CompanyData'
     EventData:
       type: object
       required:
         - id
         - type
         - attributes
+        - relationships
       properties:
         id:
           type: string
@@ -1174,43 +3841,368 @@ components:
         attributes:
           type: object
           required:
+            - status
             - title
-            - description
-            - avatar
-            - banner
-            - publishAt
-            - startAt
-            - endAt
+            - text
+            - format
+            - publish_at
+            - start_at
+            - end_at
           properties:
+            status:
+              type: string
+              enum:
+                - active
+                - canceled
+              description: event status
             title:
               type: string
               description: event title
               example: NestJS Workshop
-            description:
+            text:
               type: string
-              description: event description
-              example: A hands-on workshop about NestJS
-            avatar:
+              maxLength: 10000
+              description: detailed event information (HTML allowed)
+              example: <p>Join us for an in-depth NestJS workshop!</p>
+            format:
               type: string
-              description: avatar file key or URL
-              example: default.png
-            banner:
-              type: string
-              description: banner file key or URL
-              example: default.png
-            publishAt:
+              description: event format/category
+              enum:
+                - Lection
+                - Workshop
+                - Concert
+                - Meeting
+            publish_at:
               type: string
               format: date-time
               description: when the event becomes publicly visible
-            startAt:
+            start_at:
               type: string
               format: date-time
               description: when the event starts
-            endAt:
+            end_at:
               type: string
               format: date-time
               description: when the event ends
+            avatar_url:
+              type: string
+              nullable: true
+              description: public URL of the event avatar image, or null if not set
+              example: https://s3.example.com/events/avatar.png
+            banner_url:
+              type: string
+              nullable: true
+              description: public URL of the event banner image, or null if not set
+              example: https://s3.example.com/events/banner.png
+        relationships:
+          type: object
+          required:
+            - company
+          properties:
+            company:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the company hosting the event
+                    type:
+                      type: string
+                      enum:
+                        - company
+            tags:
+              type: object
+              description: Present only when the event has tags
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - id
+                      - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      type:
+                        type: string
+                        enum:
+                          - tag
+    EventsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventData'
+        included:
+          type: array
+          description: |
+            Present when `?include=tags` and/or `?include=companies` is used. Contains deduplicated full tag and/or company objects.
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TagData'
+              - $ref: '#/components/schemas/CompanyData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
     EventCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+            - relationships
+          properties:
+            type:
+              type: string
+              enum:
+                - event
+            attributes:
+              type: object
+              required:
+                - format
+                - title
+                - text
+                - publish_at
+                - start_at
+                - end_at
+              properties:
+                format:
+                  type: string
+                  description: event format/category
+                  enum:
+                    - Lection
+                    - Workshop
+                    - Concert
+                    - Meeting
+                title:
+                  type: string
+                  description: event title
+                  example: NestJS Workshop
+                text:
+                  type: string
+                  maxLength: 10000
+                  description: detailed event information (HTML allowed)
+                  example: <p>Join us for an in-depth NestJS workshop covering controllers, services, and more!</p>
+                publish_at:
+                  type: string
+                  format: date-time
+                  description: when the event becomes publicly visible
+                start_at:
+                  type: string
+                  format: date-time
+                  description: when the event starts
+                end_at:
+                  type: string
+                  format: date-time
+                  description: when the event ends
+            relationships:
+              type: object
+              required:
+                - company
+              properties:
+                company:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the company hosting the event
+                        type:
+                          type: string
+                          enum:
+                            - company
+                tags:
+                  type: object
+                  description: Optional list of tags to attach to the event
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - id
+                          - type
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          type:
+                            type: string
+                            enum:
+                              - tag
+    EventUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: must match the :id in the URL
+            type:
+              type: string
+              enum:
+                - event
+            attributes:
+              type: object
+              description: All fields are optional
+              properties:
+                format:
+                  type: string
+                  enum:
+                    - Lection
+                    - Workshop
+                    - Concert
+                    - Meeting
+                  description: event format/category
+                title:
+                  type: string
+                  description: event title
+                  example: Updated Workshop Title
+                text:
+                  type: string
+                  maxLength: 10000
+                  description: detailed event information
+                publish_at:
+                  type: string
+                  format: date-time
+                start_at:
+                  type: string
+                  format: date-time
+                end_at:
+                  type: string
+                  format: date-time
+    EventSubscribersCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - type
+              - attributes
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: account ID of the subscriber
+              type:
+                type: string
+                enum:
+                  - profile
+              attributes:
+                type: object
+                required:
+                  - username
+                properties:
+                  username:
+                    type: string
+                    description: subscriber username
+                    example: john_doe
+                  avatar_url:
+                    type: string
+                    nullable: true
+                    description: public URL of the subscriber's avatar
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    Tag:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TagData'
+    TagData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: tag ID
+        type:
+          type: string
+          enum:
+            - tag
+        attributes:
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              description: tag name (letters only, 1–50 characters)
+              example: Technology
+            description:
+              type: string
+              nullable: true
+              description: optional tag description
+              example: Tech-related events
+        relationships:
+          type: object
+          description: Present only when ?include=events is used
+          properties:
+            events:
+              type: object
+              properties:
+                data:
+                  type: array
+                  description: Full event data objects for events tagged with this tag
+                  items:
+                    $ref: '#/components/schemas/EventData'
+    TagsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    TagCreate:
       type: object
       required:
         - data
@@ -1224,117 +4216,945 @@ components:
             type:
               type: string
               enum:
-                - event
+                - tag
             attributes:
               type: object
               required:
-                - title
-                - description
-                - notificationNewTicket
-                - publishAt
-                - startAt
-                - endAt
-                - format
-                - companyId
+                - name
               properties:
-                title:
+                name:
                   type: string
-                  description: event title
-                  example: NestJS Workshop
+                  description: tag name (letters only, max 50 characters)
+                  example: Technology
                 description:
                   type: string
-                  description: event description
-                  example: A hands-on workshop about NestJS
-                notificationNewTicket:
-                  type: boolean
-                  description: whether to notify attendees when a new ticket type is added
-                  example: false
-                publishAt:
-                  type: string
-                  format: date-time
-                  description: when the event becomes publicly visible
-                startAt:
-                  type: string
-                  format: date-time
-                  description: when the event starts
-                endAt:
-                  type: string
-                  format: date-time
-                  description: when the event ends
-                format:
-                  type: string
-                  description: event format/category
-                  enum:
-                    - Lection
-                    - Travel
-                    - Sport
-                    - Party
-                    - Art
-                    - Gaming
-                companyId:
-                  type: string
-                  format: uuid
-                  description: ID of the company hosting the event
-            included:
-              type: array
-              description: tags to attach to the event
-              items:
-                type: object
-                required:
-                  - type
-                  - attributes
-                properties:
-                  type:
-                    type: string
-                    enum:
-                      - tag
-                  attributes:
-                    type: object
-                    required:
-                      - name
-                    properties:
-                      name:
-                        type: string
-                        description: tag name (letters only, max 50 characters)
-                        example: Technology
-                      description:
-                        type: string
-                        description: optional tag description
-                        example: Tech-related events
-    Errors:
-      description: Standard JSON:API error
+                  description: optional tag description
+                  example: Tech-related events
+    TagUpdate:
       type: object
       required:
-        - errors
+        - data
       properties:
-        errors:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: must match the :id in the URL
+            type:
+              type: string
+              enum:
+                - tag
+            attributes:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: tag name (letters only, max 50 characters)
+                  example: Technology
+                description:
+                  type: string
+                  description: optional tag description
+                  example: Tech-related events
+    News:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/NewsData'
+        included:
           type: array
-          description: Non empty array of errors occurred during request processing
+          description: Present when ?include=companies is used. Contains full company objects.
           items:
-            type: object
-            required:
-              - title
-              - status
-            properties:
-              title:
-                type: string
-                description: Title is a short, human-readable summary of the problem
-                example: Bad Request
-              detail:
-                type: string
-                description: Detail is a human-readable explanation specific to this occurrence of the problem
-                example: Request body was expected
-              status:
-                type: integer
-                description: Status is the HTTP status code applicable to this problem
-                example: 400
-                enum:
-                  - 400
-                  - 401
-                  - 403
-                  - 404
-                  - 409
-                  - 500
+            $ref: '#/components/schemas/CompanyData'
+    NewsData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+        - relationships
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: news ID
+        type:
+          type: string
+          enum:
+            - news
+        attributes:
+          type: object
+          required:
+            - name
+            - text
+            - created_at
+            - updated_at
+          properties:
+            name:
+              type: string
+              maxLength: 255
+              description: news title
+              example: Company Announces New Event
+            text:
+              type: string
+              maxLength: 255
+              description: news body text
+              example: We are excited to announce our upcoming event...
+            created_at:
+              type: string
+              format: date-time
+              description: creation timestamp
+            updated_at:
+              type: string
+              format: date-time
+              description: last update timestamp
+        relationships:
+          type: object
+          required:
+            - company
+          properties:
+            company:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the company this news belongs to
+                    type:
+                      type: string
+                      enum:
+                        - company
+    NewsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewsData'
+        included:
+          type: array
+          description: Present when ?include=companies is used. Contains deduplicated full company objects.
+          items:
+            $ref: '#/components/schemas/CompanyData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    NewsCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+            - relationships
+          properties:
+            type:
+              type: string
+              enum:
+                - news
+            attributes:
+              type: object
+              required:
+                - name
+                - text
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: news title
+                  example: Company Announces New Event
+                text:
+                  type: string
+                  maxLength: 255
+                  description: news body text
+                  example: We are excited to announce our upcoming event...
+            relationships:
+              type: object
+              required:
+                - company
+              properties:
+                company:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the company this news belongs to
+                        type:
+                          type: string
+                          enum:
+                            - company
+    NewsUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+            - attributes
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: must match the :id in the URL
+            type:
+              type: string
+              enum:
+                - news
+            attributes:
+              type: object
+              description: All fields are optional
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: news title
+                  example: Updated Title
+                text:
+                  type: string
+                  maxLength: 255
+                  description: news body text
+                  example: Updated content...
+    Billing:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/BillingData'
+    BillingData:
+      type: object
+      required:
+        - type
+        - attributes
+      properties:
+        type:
+          type: string
+          enum:
+            - billing
+        attributes:
+          type: object
+          required:
+            - stripe_account_id
+            - created_at
+          properties:
+            stripe_account_id:
+              type: string
+              description: Stripe connected account ID (acct_xxx)
+              example: acct_1234567890
+            created_at:
+              type: string
+              format: date-time
+    BillingCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - billing
+            attributes:
+              type: object
+              required:
+                - stripe_account_id
+              properties:
+                stripe_account_id:
+                  type: string
+                  description: Stripe connected account ID
+                  example: acct_1234567890
+    BillingUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - billing
+            attributes:
+              type: object
+              properties:
+                stripe_account_id:
+                  type: string
+                  example: acct_1234567890
+    Ticket:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TicketData'
+    TicketData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+        - relationships
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - ticket
+        attributes:
+          type: object
+          required:
+            - name
+            - price
+            - status
+            - total
+            - sold
+            - available
+            - created_at
+            - updated_at
+          properties:
+            name:
+              type: string
+              example: VIP
+            description:
+              type: string
+              example: Front row access
+              nullable: true
+            price:
+              type: number
+              format: double
+              minimum: 0
+              example: 49.99
+            status:
+              type: string
+              enum:
+                - active
+                - canceled
+            total:
+              type: integer
+              description: Total number of tickets available
+              example: 100
+            sold:
+              type: integer
+              description: Number of tickets sold
+              example: 42
+            available:
+              type: integer
+              description: Remaining tickets (total - sold)
+              example: 58
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+        relationships:
+          type: object
+          required:
+            - event
+          properties:
+            event:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the event hosting the ticket
+                    type:
+                      type: string
+                      enum:
+                        - event
+    TicketsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    TicketCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+            - relationships
+          properties:
+            type:
+              type: string
+              enum:
+                - ticket
+            attributes:
+              type: object
+              required:
+                - name
+                - price
+                - total
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  example: VIP
+                description:
+                  type: string
+                  maxLength: 255
+                  example: Front row access
+                price:
+                  type: number
+                  format: double
+                  minimum: 0
+                  example: 49.99
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Total number of tickets available
+                  example: 100
+            relationships:
+              type: object
+              required:
+                - event
+              properties:
+                event:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the event hosting the ticket
+                        type:
+                          type: string
+                          enum:
+                            - event
+    TicketUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - ticket
+            attributes:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                  maxLength: 255
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Total number of tickets available
+                  example: 50
+    PromoCode:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/PromoCodeData'
+    PromoCodeData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+        - relationships
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - promo_code
+        attributes:
+          type: object
+          required:
+            - code
+            - discount_percent
+            - status
+            - total
+            - used
+            - remaining
+            - created_at
+            - updated_at
+          properties:
+            code:
+              type: string
+              maxLength: 50
+              example: SUMMER20
+            discount_percent:
+              type: integer
+              minimum: 1
+              maximum: 100
+              example: 20
+            status:
+              type: string
+              enum:
+                - active
+                - canceled
+            total:
+              type: integer
+              description: Total number of uses allowed
+              example: 50
+            used:
+              type: integer
+              description: Number of times used
+              example: 12
+            remaining:
+              type: integer
+              description: Remaining uses (total - used)
+              example: 38
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+        relationships:
+          type: object
+          required:
+            - ticket
+          properties:
+            ticket:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the ticket this promo code belongs to
+                    type:
+                      type: string
+                      enum:
+                        - ticket
+    PromoCodesCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromoCodeData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    PromoCodeCreate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+            - relationships
+          properties:
+            type:
+              type: string
+              enum:
+                - promo_code
+            attributes:
+              type: object
+              required:
+                - code
+                - discount_percent
+                - total
+              properties:
+                code:
+                  type: string
+                  maxLength: 50
+                  example: SUMMER20
+                discount_percent:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  example: 20
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of uses
+                  example: 50
+            relationships:
+              type: object
+              required:
+                - ticket
+              properties:
+                ticket:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the ticket this promo code belongs to
+                        type:
+                          type: string
+                          enum:
+                            - ticket
+    PromoCodeUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - promo_code
+            attributes:
+              type: object
+              required:
+                - total
+              properties:
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of uses
+                  example: 50
+    UserTicket:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/UserTicketData'
+    UserTicketData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+        - relationships
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - user_ticket
+        attributes:
+          type: object
+          required:
+            - status
+            - created_at
+            - updated_at
+          properties:
+            status:
+              type: string
+              enum:
+                - unused
+                - used
+                - canceled
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+        relationships:
+          type: object
+          required:
+            - ticket
+            - account
+          properties:
+            ticket:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the ticket that was purchased
+                    type:
+                      type: string
+                      enum:
+                        - ticket
+            account:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the account that purchased the ticket
+                    type:
+                      type: string
+                      enum:
+                        - account
+            promo_code:
+              type: object
+              description: Present only when a promo code was applied
+              properties:
+                data:
+                  type: object
+                  nullable: true
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the promo code applied
+                    type:
+                      type: string
+                      enum:
+                        - promo_code
+            transaction:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the transaction this user ticket belongs to
+                    type:
+                      type: string
+                      enum:
+                        - transaction
+    UserTicketsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserTicketData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    Transaction:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TransactionData'
+    TransactionData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - transaction
+        attributes:
+          type: object
+          required:
+            - status
+            - description
+            - final_price
+            - check
+            - created_at
+            - updated_at
+          properties:
+            status:
+              type: string
+              enum:
+                - pending
+                - paid
+                - returned
+              description: Payment status of the transaction
+            description:
+              type: string
+              example: Purchase of 2x VIP
+            final_price:
+              type: integer
+              description: Total amount charged in smallest currency unit (e.g. cents)
+              example: 3999
+            check:
+              type: object
+              description: Snapshot of the purchase details at transaction time
+              required:
+                - ticket_id
+                - ticket_name
+                - quantity
+                - account_id
+                - unit_price
+                - final_price
+                - currency
+              properties:
+                ticket_id:
+                  type: string
+                  format: uuid
+                ticket_name:
+                  type: string
+                  example: VIP
+                quantity:
+                  type: integer
+                  example: 2
+                account_id:
+                  type: string
+                  format: uuid
+                promo_code_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                promo_code:
+                  type: string
+                  nullable: true
+                  example: SUMMER20
+                discount_percent:
+                  type: number
+                  nullable: true
+                  example: 20
+                unit_price:
+                  type: number
+                  format: double
+                  description: Original ticket price (before discount)
+                  example: 24.99
+                final_price:
+                  type: integer
+                  description: Total amount in smallest currency unit (cents)
+                  example: 3999
+                currency:
+                  type: string
+                  example: eur
+                payment_intent_id:
+                  type: string
+                  nullable: true
+                  example: pi_3OxyzABC123
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+    TransactionsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
     PaginationData:
       type: object
       required:

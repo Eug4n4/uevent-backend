@@ -2,15 +2,24 @@ get:
   tags:
     - tags
   summary: Get tag by ID
-  description: Returns a single tag by its UUID. No authentication required.
+  description: >
+    Returns a single tag by its UUID. No authentication required.
+    Pass `?include=events` to include related events in the tag's `relationships`.
 
   parameters:
     - name: id
       in: path
       required: true
+      description: "Tag UUID"
       schema:
         type: string
         format: uuid
+    - name: include
+      in: query
+      description: "Pass `events` to include related events in the tag's `relationships`"
+      schema:
+        type: string
+        enum: [ events ]
 
   responses:
     '200':
@@ -39,7 +48,6 @@ patch:
   description: >
     Updates tag name and/or description. The `data.id` in the body must match the `:id` in the URL.
     Requires a valid access token.
-
   security:
     - cookieAuth: []
 
@@ -47,6 +55,7 @@ patch:
     - name: id
       in: path
       required: true
+      description: "Tag UUID"
       schema:
         type: string
         format: uuid
@@ -66,7 +75,7 @@ patch:
           schema:
             $ref: '../schemas/Tag.yaml'
     '400':
-      description: Validation error, body id mismatch, or name already taken.
+      description: Validation error or body id mismatch.
       content:
         application/json:
           schema:
@@ -79,6 +88,12 @@ patch:
             $ref: '../../shared/Errors.yaml'
     '404':
       description: Tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: Tag name already taken.
       content:
         application/json:
           schema:
@@ -96,7 +111,6 @@ delete:
   summary: Delete a tag
   description: >
     Permanently deletes a tag. Requires a valid access token.
-
   security:
     - cookieAuth: []
 
@@ -104,6 +118,7 @@ delete:
     - name: id
       in: path
       required: true
+      description: "Tag UUID"
       schema:
         type: string
         format: uuid

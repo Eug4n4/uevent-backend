@@ -1,0 +1,43 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - id
+      - type
+      - attributes
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: "must match the :id in the URL"
+      type:
+        type: string
+        enum: [ event ]
+      attributes:
+        type: object
+        description: "All fields are optional"
+        properties:
+          format:
+            type: string
+            enum: [ Lection, Workshop, Concert, Meeting ]
+            description: "event format/category"
+          title:
+            type: string
+            description: "event title"
+            example: "Updated Workshop Title"
+          text:
+            type: string
+            maxLength: 10000
+            description: "detailed event information"
+          publish_at:
+            type: string
+            format: date-time
+          start_at:
+            type: string
+            format: date-time
+          end_at:
+            type: string
+            format: date-time

@@ -1,0 +1,64 @@
+post:
+  tags:
+    - payments
+  summary: Cancel an event and refund all tickets
+  description: >
+    Cancels the event (sets `status = canceled`) and triggers Stripe refunds for all active
+    user tickets with paid transactions.
+
+    Refund flow per ticket:
+
+    - Transaction `paid` + has `payment_intent_id` → Stripe refund initiated, transaction set to `refund_pending`
+
+    - Transaction `pending` (payment never completed) → user_ticket set to `returned` immediately
+
+    The `transaction.status` transitions to `returned` and `user_ticket.status` to `returned`
+    when Stripe fires the `refund.updated` webhook.
+
+    Only the company owner can cancel an event.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: Event canceled and refunds initiated.
+      content:
+        application/json:
+          schema:
+            $ref: '../../event/schemas/Event.yaml'
+    '400':
+      description: Event is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

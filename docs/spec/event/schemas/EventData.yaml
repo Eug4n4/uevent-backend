@@ -3,6 +3,7 @@ required:
   - id
   - type
   - attributes
+  - relationships
 properties:
   id:
     type: string
@@ -14,31 +15,27 @@ properties:
   attributes:
     type: object
     required:
+      - status
       - title
-      - description
-      - avatar
-      - banner
+      - text
       - format
       - publish_at
       - start_at
       - end_at
     properties:
+      status:
+        type: string
+        enum: [ active, canceled ]
+        description: "event status"
       title:
         type: string
         description: "event title"
         example: "NestJS Workshop"
-      description:
+      text:
         type: string
-        description: "event description"
-        example: "A hands-on workshop about NestJS"
-      avatar:
-        type: string
-        description: "avatar file key or URL"
-        example: "default.png"
-      banner:
-        type: string
-        description: "banner file key or URL"
-        example: "default.png"
+        maxLength: 10000
+        description: "detailed event information (HTML allowed)"
+        example: "<p>Join us for an in-depth NestJS workshop!</p>"
       format:
         type: string
         description: "event format/category"
@@ -55,3 +52,54 @@ properties:
         type: string
         format: date-time
         description: "when the event ends"
+      avatar_url:
+        type: string
+        nullable: true
+        description: "public URL of the event avatar image, or null if not set"
+        example: "https://s3.example.com/events/avatar.png"
+      banner_url:
+        type: string
+        nullable: true
+        description: "public URL of the event banner image, or null if not set"
+        example: "https://s3.example.com/events/banner.png"
+  relationships:
+    type: object
+    required:
+      - company
+    properties:
+      company:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the company hosting the event"
+              type:
+                type: string
+                enum: [ company ]
+      tags:
+        type: object
+        description: "Present only when the event has tags"
+        properties:
+          data:
+            type: array
+            items:
+              type: object
+              required:
+                - id
+                - type
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                type:
+                  type: string
+                  enum: [ tag ]

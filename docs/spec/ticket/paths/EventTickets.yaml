@@ -1,0 +1,105 @@
+get:
+  tags:
+    - tickets
+  summary: List tickets for an event
+  description: >
+    Returns a paginated list of active tickets for the given event. Public — no authentication required.
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    - name: page[offset]
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    '200':
+      description: Paginated list of tickets.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/TicketsCollection.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+post:
+  tags:
+    - tickets
+  summary: Create a ticket for an event
+  description: >
+    Creates a new ticket type for the given event. Also creates the tickets_stats record
+    with the given `total`. Only the company owner can perform this action.
+    Company must have completed Stripe onboarding before ticket sales can begin.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/TicketCreate.yaml'
+  responses:
+    '201':
+      description: Ticket created.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Ticket.yaml'
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the event owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

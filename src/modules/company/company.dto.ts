@@ -1,7 +1,9 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
+import { NullIfEmpty } from "../shared/decorators";
 import {
     Equals,
     IsDefined,
+    IsBoolean,
     IsEmail,
     IsInt,
     IsOptional,
@@ -25,14 +27,12 @@ export class CompanyAttributes {
 
 export class CompanyUpdateAttributes {
     @IsOptional()
+    @NullIfEmpty()
     @IsString()
     name?: string;
 
     @IsOptional()
-    @IsEmail()
-    email?: string;
-
-    @IsOptional()
+    @NullIfEmpty()
     @IsString()
     address?: string;
 }
@@ -82,6 +82,11 @@ export class CompanyQuery {
     name?: string;
 
     @IsOptional()
+    @Transform(({ value }) => value === "true" || value === true)
+    @IsBoolean()
+    me?: boolean;
+
+    @IsOptional()
     @Type(() => Number)
     @IsInt()
     @Min(1)
@@ -93,6 +98,29 @@ export class CompanyQuery {
     @IsInt()
     @Min(0)
     "page[offset]"?: number;
+}
+
+export class BillingAttributes {
+    @IsString()
+    stripe_account_id: string;
+}
+
+class BillingData {
+    @IsString()
+    @Equals("billing")
+    type: string;
+
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => BillingAttributes)
+    attributes: BillingAttributes;
+}
+
+export class BillingCreateDto {
+    @IsDefined()
+    @ValidateNested()
+    @Type(() => BillingData)
+    data: BillingData;
 }
 
 export class PageQuery {

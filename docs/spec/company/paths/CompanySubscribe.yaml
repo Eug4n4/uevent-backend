@@ -5,7 +5,6 @@ post:
   description: >
     Subscribes the authenticated user to a company.
     Returns 400 if already subscribed.
-
   security:
     - cookieAuth: []
 
@@ -13,6 +12,7 @@ post:
     - name: id
       in: path
       required: true
+      description: "Company UUID"
       schema:
         type: string
         format: uuid
@@ -20,10 +20,6 @@ post:
   responses:
     '201':
       description: Successfully subscribed.
-      content:
-        application/json:
-          schema:
-            $ref: '../schemas/CompanySub.yaml'
     '400':
       description: Already subscribed or validation error.
       content:
@@ -55,8 +51,6 @@ delete:
   summary: Unsubscribe from a company
   description: >
     Removes the authenticated user's subscription from a company.
-    Returns 404 if not subscribed.
-
   security:
     - cookieAuth: []
 
@@ -64,6 +58,7 @@ delete:
     - name: id
       in: path
       required: true
+      description: "Company UUID"
       schema:
         type: string
         format: uuid
@@ -79,6 +74,58 @@ delete:
             $ref: '../../shared/Errors.yaml'
     '404':
       description: Company not found or not subscribed.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+get:
+  tags:
+    - companies
+  summary: Get company subscribers
+  description: >
+    Returns a paginated list of profiles subscribed to a company.
+    No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Company UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      description: "Number of subscribers per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of subscribers to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    '200':
+      description: Paginated list of subscriber profiles.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/CompanySubscribersCollection.yaml'
+    '404':
+      description: Company not found.
       content:
         application/json:
           schema:

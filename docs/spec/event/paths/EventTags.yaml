@@ -1,0 +1,83 @@
+put:
+  tags:
+    - events
+  summary: Replace all tags on an event
+  description: >
+    Replaces the complete set of tags on an event with the provided list.
+    Pass an empty `data` array to remove all tags.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "Tag UUID"
+                  type:
+                    type: string
+                    enum: [ tag ]
+
+  responses:
+    '200':
+      description: Tags successfully replaced. Returns the updated event.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

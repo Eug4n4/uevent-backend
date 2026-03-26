@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    UnauthorizedException
+} from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { database } from "src/db/data-source";
 import {
@@ -8,6 +14,7 @@ import {
 } from "./auth.dto";
 import { GoogleIdTokenPayload, type TokenPair } from "./auth.types";
 import { Account } from "src/db/entity/account.entity";
+import { CompanyMember } from "src/db/entity/company.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
 import { GoogleOAuth } from "./google.oauth";
@@ -19,7 +26,45 @@ export class AuthService {
         private oauth: GoogleOAuth
     ) {}
 
+    public async deleteAccount(accountId: string) {
+        const members = await database.dataSource.manager
+            .createQueryBuilder(CompanyMember, "cm")
+            .innerJoin("cm.company", "company")
+            .where("cm.account_id = :accountId", { accountId })
+            .andWhere("company.deleted_at IS NULL")
+            .getMany();
+
+        if (members.length > 0) {
+            throw new ForbiddenException(
+                "You must leave all active companies before deleting your account"
+            );
+        }
+
+        const account = await Account.findOneBy({ id: accountId });
+        if (!account) {
+            throw new ForbiddenException("Account not found");
+        }
+
+        await account.softRemove();
+    }
+
     public async register(dto: RegisterAttributes) {
+        const existingEmail = await Account.findOneBy({
+            email: dto.email
+        });
+        if (existingEmail) {
+            throw new ConflictException(
+                "Account with this email already exists"
+            );
+        }
+        const existingUsername = await Profile.findOneBy({
+            username: dto.username
+        });
+        if (existingUsername) {
+            throw new ConflictException(
+                "Account with this username already exists"
+            );
+        }
         const hashResult = await Hasher.hash(dto.password);
         dto.password = `${hashResult.salt}$${hashResult.hash}$${hashResult.keylen}`;
         await this.createAccount(dto);
@@ -32,11 +77,11 @@ export class AuthService {
                 account: account,
                 access: await this.generateJwt(
                     { sub: account.id, role: account.role },
-                    Date.now() + 5 * 60 * 1000
+                    Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
                 ),
                 refresh: await this.generateJwt(
                     { sub: account.id },
-                    Date.now() + 15 * 60 * 1000
+                    Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
                 )
             };
         }
@@ -69,11 +114,11 @@ export class AuthService {
             account: account,
             access: await this.generateJwt(
                 { sub: account.id, role: account.role },
-                Date.now() + 5 * 60 * 1000
+                Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
             ),
             refresh: await this.generateJwt(
                 { sub: account.id },
-                Date.now() + 15 * 60 * 1000
+                Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
             )
         };
     }
@@ -90,11 +135,11 @@ export class AuthService {
         return {
             access: await this.generateJwt(
                 { sub: account.id, role: account.role },
-                Date.now() + 5 * 60 * 1000
+                Date.now() + Number(process.env.JWT_ACCESS_TTL_SEC ?? 300) * 1000
             ),
             refresh: await this.generateJwt(
                 { sub: account.id },
-                Date.now() + 15 * 60 * 1000
+                Date.now() + Number(process.env.JWT_REFRESH_TTL_SEC ?? 900) * 1000
             )
         };
     }
@@ -113,6 +158,14 @@ export class AuthService {
         if (!account) {
             throw new UnauthorizedException("Account not found");
         }
+
+        const memberCount = await CompanyMember.countBy({ accountId });
+        if (memberCount > 0) {
+            throw new BadRequestException(
+                "You must leave all companies before deleting your account"
+            );
+        }
+
         await account.softRemove();
     }
 
@@ -123,10 +176,12 @@ export class AuthService {
         if (!account || !account.password) {
             return null;
         }
+
         const isCorrect = await Hasher.compare(
             dto.data.attributes.password,
             account.password
         );
+
         return isCorrect ? account : null;
     }
 
@@ -134,6 +189,7 @@ export class AuthService {
         const queryRunner = database.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
+
         try {
             const account = queryRunner.manager.create(Account, {
                 ...dto

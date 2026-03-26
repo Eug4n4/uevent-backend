@@ -1,0 +1,62 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+      - relationships
+    properties:
+      type:
+        type: string
+        enum: [ticket]
+      attributes:
+        type: object
+        required:
+          - name
+          - price
+          - total
+        properties:
+          name:
+            type: string
+            maxLength: 255
+            example: VIP
+          description:
+            type: string
+            maxLength: 255
+            example: Front row access
+          price:
+            type: number
+            format: double
+            minimum: 0
+            example: 49.99
+          total:
+            type: integer
+            minimum: 1
+            description: Total number of tickets available
+            example: 100
+      relationships:
+        type: object
+        required:
+          - event
+        properties:
+          event:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: object
+                required:
+                  - id
+                  - type
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: "ID of the event hosting the ticket"
+                  type:
+                    type: string
+                    enum: [event]

@@ -22,9 +22,12 @@ import { UpdateProfileDto, FilterProfilesDto } from "./profile.dto";
 import { JwtGuard } from "../shared/jwt.guard";
 import { profileResponse, profilesResponse } from "./profile.response";
 import { CurrentUser } from "../shared/decorators";
+import { AppLogger } from "../shared/logger";
 
 @Controller("profiles")
 export class ProfileController {
+    private readonly log = new AppLogger(ProfileController.name);
+
     constructor(private profileService: ProfileService) {}
 
     @UseGuards(JwtGuard)
@@ -34,6 +37,8 @@ export class ProfileController {
         @Res() res: Response
     ) {
         const profile = await this.profileService.getMyProfile(user.id);
+        this.log.debug("GET", "/profiles/me", 200);
+
         return res.json(profileResponse(profile));
     }
 
@@ -45,6 +50,8 @@ export class ProfileController {
         @Body() dto: UpdateProfileDto
     ) {
         const profile = await this.profileService.updateMyProfile(user.id, dto);
+        this.log.info("PATCH", "/profiles/me", 200);
+
         return res.json(profileResponse(profile));
     }
 
@@ -57,6 +64,8 @@ export class ProfileController {
         @UploadedFile() file: Express.Multer.File
     ) {
         const profile = await this.profileService.uploadAvatar(user.id, file);
+        this.log.info("POST", "/profiles/me/avatar", 200);
+
         return res.json(profileResponse(profile));
     }
 
@@ -68,6 +77,8 @@ export class ProfileController {
         @Res() res: Response
     ) {
         await this.profileService.deleteAvatar(user.id);
+        this.log.info("DELETE", "/profiles/me/avatar", 204);
+
         return res.status(HttpStatus.NO_CONTENT).send();
     }
 
@@ -79,6 +90,8 @@ export class ProfileController {
     ) {
         const [profiles, total] = await this.profileService.filterProfiles(dto);
         const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/profiles`;
+        this.log.debug("GET", "/profiles", 200, `total=${total}`);
+
         return res.json(
             profilesResponse(
                 profiles,
@@ -97,6 +110,8 @@ export class ProfileController {
     ) {
         const profile =
             await this.profileService.getProfileByUsername(username);
+        this.log.debug("GET", `/profiles/@${username}`, 200);
+
         return res.json(profileResponse(profile));
     }
 
@@ -106,6 +121,8 @@ export class ProfileController {
         @Res() res: Response
     ) {
         const profile = await this.profileService.getProfileById(accountId);
+        this.log.debug("GET", `/profiles/${accountId}`, 200);
+
         return res.json(profileResponse(profile));
     }
 }
