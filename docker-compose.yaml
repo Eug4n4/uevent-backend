@@ -14,7 +14,17 @@ services:
       db:
         condition: service_started
     command: > 
-      sh -c "npm run migration:run && npm run start:dev"
+      sh -c "npm run migrate:up && npm run start:dev"
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          initial_sync: true
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
   db:
     container_name: uevent_postgres
     image: postgres:18-alpine
