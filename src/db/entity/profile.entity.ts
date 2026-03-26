@@ -18,8 +18,13 @@ export class Profile extends BaseEntity {
     @Column({ length: 30 })
     username: string;
 
-    @Column({ length: 255, default: "default.png" })
-    avatar: string;
+    @Column({
+        name: "avatar_key",
+        length: 255,
+        nullable: true,
+        type: "varchar"
+    })
+    avatarKey: string | null;
 
     @CreateDateColumn({
         name: "created_at",

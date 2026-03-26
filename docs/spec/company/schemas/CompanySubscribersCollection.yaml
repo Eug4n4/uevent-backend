@@ -7,20 +7,31 @@ properties:
     type: array
     items:
       type: object
+      required:
+        - id
+        - type
+        - attributes
       properties:
         id:
           type: string
           format: uuid
-          description: Account ID of the subscriber
+          description: "account ID of the subscriber"
         type:
           type: string
-          enum: [profile]
+          enum: [ profile ]
         attributes:
           type: object
+          required:
+            - username
           properties:
             username:
               type: string
-            avatar:
+              description: "subscriber username"
+              example: "john_doe"
+            avatar_url:
               type: string
+              nullable: true
+              description: "public URL of the subscriber's avatar"
+              example: "https://s3.example.com/avatars/abc.png"
   links:
     $ref: '../../shared/PaginationData.yaml'

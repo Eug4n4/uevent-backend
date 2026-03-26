@@ -1,0 +1,113 @@
+post:
+  tags:
+    - events
+  summary: Add a tag to an event
+  description: >
+    Adds a single tag to an event by tag UUID.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: tagId
+      in: path
+      required: true
+      description: "Tag UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '200':
+      description: Tag successfully added. Returns the updated event.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event or tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - events
+  summary: Remove a tag from an event
+  description: >
+    Removes a single tag from an event by tag UUID.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: tagId
+      in: path
+      required: true
+      description: "Tag UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '204':
+      description: Tag successfully removed.
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event or tag not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

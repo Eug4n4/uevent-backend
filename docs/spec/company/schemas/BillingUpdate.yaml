@@ -1,0 +1,19 @@
+type: object
+required:
+  - data
+properties:
+  data:
+    type: object
+    required:
+      - type
+      - attributes
+    properties:
+      type:
+        type: string
+        enum: [billing]
+      attributes:
+        type: object
+        properties:
+          stripe_account_id:
+            type: string
+            example: acct_1234567890

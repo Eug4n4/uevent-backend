@@ -4,12 +4,12 @@ get:
   summary: Get news list
   description: >
     Returns a paginated list of news items. Supports filtering by company_id and text (partial match).
-    No authentication required.
+    No authentication required. Pass `?include=companies` to include full company objects.
 
   parameters:
     - name: company_id
       in: query
-      description: "Filter by company ID"
+      description: "Filter by company UUID"
       schema:
         type: string
         format: uuid
@@ -33,6 +33,12 @@ get:
         type: integer
         minimum: 0
         default: 0
+    - name: include
+      in: query
+      description: "Pass `companies` to include full company objects in the top-level `included` array"
+      schema:
+        type: string
+        enum: [ companies ]
 
   responses:
     '200':
@@ -60,8 +66,8 @@ post:
   summary: Create a news item
   description: >
     Creates a new news item associated with a company.
-    Requires a valid access token.
-
+    Company ID is passed in `data.relationships.company.data.id`.
+    Requires a valid access token. Only the company owner can create news.
   security:
     - cookieAuth: []
 
@@ -73,7 +79,7 @@ post:
           $ref: '../schemas/NewsCreate.yaml'
 
   responses:
-    '200':
+    '201':
       description: News item successfully created.
       content:
         application/json:
@@ -87,6 +93,18 @@ post:
             $ref: '../../shared/Errors.yaml'
     '401':
       description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Company not found.
       content:
         application/json:
           schema:

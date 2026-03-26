@@ -4,7 +4,7 @@ get:
   summary: Get my company subscriptions
   description: >
     Returns a paginated list of companies the authenticated user is subscribed to.
-
+    Requires a valid access token.
   security:
     - cookieAuth: []
 

@@ -1,0 +1,144 @@
+post:
+  tags:
+    - events
+  summary: Subscribe to an event
+  description: >
+    Subscribes the authenticated user to an event.
+    Returns the subscriber's profile on success.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '201':
+      description: Successfully subscribed. Returns the subscriber profile.
+      content:
+        application/json:
+          schema:
+            $ref: '../../profile/schemas/Profile.yaml'
+    '400':
+      description: Already subscribed.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - events
+  summary: Unsubscribe from an event
+  description: >
+    Removes the authenticated user's subscription from an event.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '204':
+      description: Successfully unsubscribed.
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found or not subscribed.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+get:
+  tags:
+    - events
+  summary: Get event subscribers
+  description: >
+    Returns a paginated list of profiles subscribed to an event.
+    No authentication required.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      description: "Number of subscribers per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of subscribers to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    '200':
+      description: Paginated list of subscriber profiles.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/EventSubscribersCollection.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

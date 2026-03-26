@@ -1,0 +1,104 @@
+get:
+  tags:
+    - tickets
+  summary: Get a ticket by ID
+  description: Returns a single ticket. Public — no authentication required.
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: Ticket found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Ticket.yaml'
+    '404':
+      description: Ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+patch:
+  tags:
+    - tickets
+  summary: Update a ticket
+  description: >
+    Updates ticket name, description, or total. All attributes are optional.
+    Only the company owner can perform this action.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    - name: ticketId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/TicketUpdate.yaml'
+  responses:
+    '200':
+      description: Ticket updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Ticket.yaml'
+    '400':
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the event owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+

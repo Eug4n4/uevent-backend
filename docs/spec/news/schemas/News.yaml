@@ -4,3 +4,8 @@ required:
 properties:
   data:
     $ref: './NewsData.yaml'
+  included:
+    type: array
+    description: "Present when ?include=companies is used. Contains full company objects."
+    items:
+      $ref: '../../company/schemas/CompanyData.yaml'

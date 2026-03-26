@@ -1,0 +1,171 @@
+get:
+  tags:
+    - events
+  summary: Get event by ID
+  description: >
+    Returns a single event by its UUID. No authentication required.
+    Optional `?include` query parameter to include related resources.
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: include
+      in: query
+      description: "Comma-separated list of related resources to include. Supported: `tags`, `companies`"
+      schema:
+        type: string
+        example: "tags,companies"
+
+  responses:
+    '200':
+      description: Event found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+patch:
+  tags:
+    - events
+  summary: Update an event
+  description: >
+    Updates event fields. All attributes are optional.
+    The `data.id` in the body must match the `:id` in the URL.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/EventUpdate.yaml'
+
+  responses:
+    '200':
+      description: Event successfully updated.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '400':
+      description: Validation error or body id mismatch.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - events
+  summary: Cancel an event
+  description: >
+    Permanently cancels an event (sets `status` to `canceled`). This action is **irreversible** —
+    a canceled event cannot be reactivated.
+
+    **Cascade effects:**
+    - All ticket types for this event are set to `canceled`.
+    - All purchased user tickets for those ticket types are set to `canceled`.
+
+    Returns the updated event object (status: canceled). Only the company owner can cancel an event.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    '200':
+      description: Event successfully canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '400':
+      description: Event is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

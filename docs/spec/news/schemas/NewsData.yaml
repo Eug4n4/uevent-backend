@@ -3,6 +3,7 @@ required:
   - id
   - type
   - attributes
+  - relationships
 properties:
   id:
     type: string
@@ -16,7 +17,6 @@ properties:
     required:
       - name
       - text
-      - company_id
       - created_at
       - updated_at
     properties:
@@ -27,12 +27,9 @@ properties:
         example: "Company Announces New Event"
       text:
         type: string
+        maxLength: 255
         description: "news body text"
         example: "We are excited to announce our upcoming event..."
-      company_id:
-        type: string
-        format: uuid
-        description: "ID of the company this news belongs to"
       created_at:
         type: string
         format: date-time
@@ -41,3 +38,26 @@ properties:
         type: string
         format: date-time
         description: "last update timestamp"
+  relationships:
+    type: object
+    required:
+      - company
+    properties:
+      company:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the company this news belongs to"
+              type:
+                type: string
+                enum: [ company ]

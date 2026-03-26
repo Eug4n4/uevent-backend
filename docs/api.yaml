@@ -1,103 +1,51 @@
-openapi: 3.1.1
+openapi: 3.1.0
 info:
-  title: uevent user-svc API
-  description: API documentation for uevent
+  title: uevent API
+  description: API documentation for uevent backend
   version: 0.1.0
 
 servers:
   - url: http://localhost:6767
 
-paths:
-  /uevent/v1/account/registration/:
-    $ref: './spec/user/paths/Registration.yaml'
-  /uevent/v1/account/registration/admin:
-    $ref: './spec/user/paths/RegistrationByAdmin.yaml'
-
-  /uevent/v1/account/login:
-    $ref: './spec/user/paths/LoginByEmail.yaml'
-  /uevent/v1/account/login/google:
-    $ref: './spec/user/paths/LoginByGoogle.yaml'
-  /uevent/v1/account/login/google/callback:
-    $ref: './spec/user/paths/LoginByGoogleCallback.yaml'
-
-  /uevent/v1/account/refresh:
-    $ref: './spec/user/paths/Refresh.yaml'
-  /uevent/v1/account/logout:
-    $ref: './spec/user/paths/Logout.yaml'
-  /uevent/v1/account/me:
-    $ref: './spec/user/paths/MyAccount.yaml'
-
-  /uevent/v1/profiles/:
-    $ref: './spec/user/paths/FilterProfiles.yaml'
-  /uevent/v1/profiles/me:
-    $ref: './spec/user/paths/MyProfile.yaml'
-  /uevent/v1/profiles/me/avatar:
-    $ref: './spec/user/paths/MyProfileAvatar.yaml'
-  /uevent/v1/profiles/{account_id}:
-    $ref: './spec/user/paths/ProfileById.yaml'
-  /uevent/v1/profiles/@{username}:
-    $ref: './spec/user/paths/ProfileByUsername.yaml'
-
-  /uevent/v1/company:
-    $ref: './spec/company/paths/Companies.yaml'
-  /uevent/v1/company/my:
-    $ref: './spec/company/paths/MyCompanies.yaml'
-  /uevent/v1/company/{id}:
-    $ref: './spec/company/paths/CompanyById.yaml'
-  /uevent/v1/company/{id}/avatar:
-    $ref: './spec/company/paths/CompanyAvatar.yaml'
-  /uevent/v1/company/{id}/banner:
-    $ref: './spec/company/paths/CompanyBanner.yaml'
-  /uevent/v1/company/subscriptions:
-    $ref: './spec/company/paths/MySubscriptions.yaml'
-  /uevent/v1/company/{id}/subscribers:
-    $ref: './spec/company/paths/CompanySubscribers.yaml'
-  /uevent/v1/company/{id}/subscribe:
-    $ref: './spec/company/paths/CompanySubscribe.yaml'
-
-
-
-  /uevent/v1/event:
-    $ref: './spec/event/paths/Events.yaml'
-  /uevent/v1/event/{id}:
-    $ref: './spec/event/paths/GetEventById.yaml'
-
-  /uevent/v1/tag:
-    $ref: './spec/tag/paths/Tags.yaml'
-  /uevent/v1/tag/{id}:
-    $ref: './spec/tag/paths/TagById.yaml'
-
-  /uevent/v1/news:
-    $ref: './spec/news/paths/News.yaml'
-  /uevent/v1/news/{id}:
-    $ref: './spec/news/paths/NewsById.yaml'
-
+security: []
 
 components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access
+    refreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: refresh
+
   schemas:
-    #auth
+    # shared
+    Errors:
+      $ref: './spec/shared/Errors.yaml'
+    PaginationLinks:
+      $ref: './spec/shared/PaginationData.yaml'
+
+    # auth
     LoginByEmail:
-      $ref: './spec/user/schemas/LoginByEmail.yaml'
+      $ref: './spec/auth/schemas/LoginByEmail.yaml'
     Registration:
-      $ref: './spec/user/schemas/Registration.yaml'
-    RegistrationAdmin:
-      $ref: './spec/user/schemas/RegistrationAdmin.yaml'
-
+      $ref: './spec/auth/schemas/Registration.yaml'
     Account:
-      $ref: './spec/user/schemas/Account.yaml'
+      $ref: './spec/auth/schemas/Account.yaml'
 
-    #profile
+    # profile
     UpdateProfile:
-      $ref: './spec/user/schemas/UpdateProfile.yaml'
-
+      $ref: './spec/profile/schemas/UpdateProfile.yaml'
     Profile:
-      $ref: './spec/user/schemas/Profile.yaml'
+      $ref: './spec/profile/schemas/Profile.yaml'
     ProfileData:
-      $ref: './spec/user/schemas/ProfileData.yaml'
+      $ref: './spec/profile/schemas/ProfileData.yaml'
     ProfilesCollection:
-      $ref: './spec/user/schemas/ProfilesCollection.yaml'
+      $ref: './spec/profile/schemas/ProfilesCollection.yaml'
 
-    #company
+    # company
     Company:
       $ref: './spec/company/schemas/Company.yaml'
     CompanyData:
@@ -108,12 +56,10 @@ components:
       $ref: './spec/company/schemas/CompanyCreate.yaml'
     CompanyUpdate:
       $ref: './spec/company/schemas/CompanyUpdate.yaml'
-    CompanySub:
-      $ref: './spec/company/schemas/CompanySub.yaml'
     CompanySubscribersCollection:
       $ref: './spec/company/schemas/CompanySubscribersCollection.yaml'
 
-    #event
+    # event
     Event:
       $ref: './spec/event/schemas/Event.yaml'
     EventData:
@@ -122,8 +68,12 @@ components:
       $ref: './spec/event/schemas/EventsCollection.yaml'
     EventCreate:
       $ref: './spec/event/schemas/EventCreate.yaml'
+    EventUpdate:
+      $ref: './spec/event/schemas/EventUpdate.yaml'
+    EventSubscribersCollection:
+      $ref: './spec/event/schemas/EventSubscribersCollection.yaml'
 
-    #tag
+    # tag
     Tag:
       $ref: './spec/tag/schemas/Tag.yaml'
     TagData:
@@ -135,7 +85,7 @@ components:
     TagUpdate:
       $ref: './spec/tag/schemas/TagUpdate.yaml'
 
-    #news
+    # news
     News:
       $ref: './spec/news/schemas/News.yaml'
     NewsData:
@@ -146,3 +96,148 @@ components:
       $ref: './spec/news/schemas/NewsCreate.yaml'
     NewsUpdate:
       $ref: './spec/news/schemas/NewsUpdate.yaml'
+
+    # company billing
+    Billing:
+      $ref: './spec/company/schemas/Billing.yaml'
+    BillingData:
+      $ref: './spec/company/schemas/BillingData.yaml'
+    BillingCreate:
+      $ref: './spec/company/schemas/BillingCreate.yaml'
+    BillingUpdate:
+      $ref: './spec/company/schemas/BillingUpdate.yaml'
+
+    # tickets
+    Ticket:
+      $ref: './spec/ticket/schemas/Ticket.yaml'
+    TicketData:
+      $ref: './spec/ticket/schemas/TicketData.yaml'
+    TicketsCollection:
+      $ref: './spec/ticket/schemas/TicketsCollection.yaml'
+    TicketCreate:
+      $ref: './spec/ticket/schemas/TicketCreate.yaml'
+    TicketUpdate:
+      $ref: './spec/ticket/schemas/TicketUpdate.yaml'
+    PromoCode:
+      $ref: './spec/ticket/schemas/PromoCode.yaml'
+    PromoCodeData:
+      $ref: './spec/ticket/schemas/PromoCodeData.yaml'
+    PromoCodesCollection:
+      $ref: './spec/ticket/schemas/PromoCodesCollection.yaml'
+    PromoCodeCreate:
+      $ref: './spec/ticket/schemas/PromoCodeCreate.yaml'
+    PromoCodeUpdate:
+      $ref: './spec/ticket/schemas/PromoCodeUpdate.yaml'
+
+    # payments
+    UserTicket:
+      $ref: './spec/payment/schemas/UserTicket.yaml'
+    UserTicketData:
+      $ref: './spec/payment/schemas/UserTicketData.yaml'
+    UserTicketsCollection:
+      $ref: './spec/payment/schemas/UserTicketsCollection.yaml'
+    Transaction:
+      $ref: './spec/payment/schemas/Transaction.yaml'
+    TransactionData:
+      $ref: './spec/payment/schemas/TransactionData.yaml'
+    TransactionsCollection:
+      $ref: './spec/payment/schemas/TransactionsCollection.yaml'
+
+paths:
+  # auth
+  /uevent/v1/accounts/registration:
+    $ref: './spec/auth/paths/Registration.yaml'
+  /uevent/v1/accounts/login:
+    $ref: './spec/auth/paths/LoginByEmail.yaml'
+  /uevent/v1/accounts/login/google:
+    $ref: './spec/auth/paths/LoginByGoogle.yaml'
+  /uevent/v1/accounts/login/google/callback:
+    $ref: './spec/auth/paths/LoginByGoogleCallback.yaml'
+  /uevent/v1/accounts/logout:
+    $ref: './spec/auth/paths/Logout.yaml'
+  /uevent/v1/accounts/refresh:
+    $ref: './spec/auth/paths/Refresh.yaml'
+  /uevent/v1/accounts:
+    $ref: './spec/auth/paths/MyAccount.yaml'
+
+  # profiles
+  /uevent/v1/profiles:
+    $ref: './spec/profile/paths/FilterProfiles.yaml'
+  /uevent/v1/profiles/me:
+    $ref: './spec/profile/paths/MyProfile.yaml'
+  /uevent/v1/profiles/me/avatar:
+    $ref: './spec/profile/paths/MyProfileAvatar.yaml'
+  /uevent/v1/profiles/{account_id}:
+    $ref: './spec/profile/paths/ProfileById.yaml'
+  /uevent/v1/profiles/@{username}:
+    $ref: './spec/profile/paths/ProfileByUsername.yaml'
+
+  # companies
+  /uevent/v1/companies:
+    $ref: './spec/company/paths/Companies.yaml'
+  /uevent/v1/companies/subscriptions:
+    $ref: './spec/company/paths/MySubscriptions.yaml'
+  /uevent/v1/companies/{id}:
+    $ref: './spec/company/paths/CompanyById.yaml'
+  /uevent/v1/companies/{id}/avatar:
+    $ref: './spec/company/paths/CompanyAvatar.yaml'
+  /uevent/v1/companies/{id}/banner:
+    $ref: './spec/company/paths/CompanyBanner.yaml'
+  /uevent/v1/companies/{id}/subscriptions:
+    $ref: './spec/company/paths/CompanySubscribe.yaml'
+  /uevent/v1/companies/{id}/billing:
+    $ref: './spec/company/paths/CompanyBilling.yaml'
+
+  # events
+  /uevent/v1/events:
+    $ref: './spec/event/paths/Events.yaml'
+  /uevent/v1/events/{id}:
+    $ref: './spec/event/paths/EventById.yaml'
+  /uevent/v1/events/{id}/avatar:
+    $ref: './spec/event/paths/EventAvatar.yaml'
+  /uevent/v1/events/{id}/banner:
+    $ref: './spec/event/paths/EventBanner.yaml'
+  /uevent/v1/events/{id}/tags:
+    $ref: './spec/event/paths/EventTags.yaml'
+  /uevent/v1/events/{id}/tags/{tagId}:
+    $ref: './spec/event/paths/EventTagById.yaml'
+  /uevent/v1/events/{id}/subscriptions:
+    $ref: './spec/event/paths/EventSubscriptions.yaml'
+
+  # tags
+  /uevent/v1/events/tags:
+    $ref: './spec/tag/paths/Tags.yaml'
+  /uevent/v1/events/tags/{id}:
+    $ref: './spec/tag/paths/TagById.yaml'
+
+  # news
+  /uevent/v1/news:
+    $ref: './spec/news/paths/News.yaml'
+  /uevent/v1/news/{id}:
+    $ref: './spec/news/paths/NewsById.yaml'
+
+  # tickets
+  /uevent/v1/events/{eventId}/tickets:
+    $ref: './spec/ticket/paths/EventTickets.yaml'
+  /uevent/v1/events/{eventId}/tickets/{ticketId}:
+    $ref: './spec/ticket/paths/TicketById.yaml'
+  /uevent/v1/tickets/{ticketId}/promo-codes:
+    $ref: './spec/ticket/paths/TicketPromoCodes.yaml'
+  /uevent/v1/tickets/{ticketId}/promo-codes/{codeId}:
+    $ref: './spec/ticket/paths/PromoCodeById.yaml'
+
+  # payments
+  /uevent/v1/tickets/{ticketId}/purchase:
+    $ref: './spec/payment/paths/Purchase.yaml'
+  /uevent/v1/stripe/webhook:
+    $ref: './spec/payment/paths/StripeWebhook.yaml'
+  /uevent/v1/user-tickets:
+    $ref: './spec/payment/paths/UserTickets.yaml'
+  /uevent/v1/user-tickets/{id}:
+    $ref: './spec/payment/paths/UserTicketById.yaml'
+  /uevent/v1/events/{eventId}/cancel:
+    $ref: './spec/payment/paths/EventCancel.yaml'
+  /uevent/v1/transactions:
+    $ref: './spec/payment/paths/Transactions.yaml'
+  /uevent/v1/transactions/{id}:
+    $ref: './spec/payment/paths/TransactionById.yaml'

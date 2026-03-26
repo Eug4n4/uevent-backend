@@ -4,17 +4,23 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     BaseEntity,
-    DeleteDateColumn,
     ManyToOne,
     JoinColumn,
     ManyToMany,
     JoinTable,
-    PrimaryGeneratedColumn
+    PrimaryGeneratedColumn,
+    PrimaryColumn
 } from "typeorm";
 import { Company } from "./company.entity";
 import { Tag } from "./tag.entity";
+import { Account } from "./account.entity";
 
 export const eventFormats = ["Lection", "Workshop", "Concert", "Meeting"];
+
+export enum EventStatus {
+    ACTIVE = "active",
+    CANCELED = "canceled"
+}
 
 @Entity({ name: "events" })
 export class EventEntity extends BaseEntity {
@@ -24,26 +30,42 @@ export class EventEntity extends BaseEntity {
     @Column({ name: "company_id", type: "uuid" })
     companyId: string;
 
+    @Column({
+        type: "enum",
+        enum: EventStatus,
+        enumName: "event_status",
+        default: EventStatus.ACTIVE
+    })
+    status: EventStatus;
+
     @Column({ length: 255 })
     title: string;
 
-    @Column({ length: 255 })
-    description: string;
+    @Column({ type: "text", nullable: true })
+    text: string | null;
 
-    @Column({ length: 255, default: "default.png" })
-    avatar: string;
+    @Column({
+        name: "avatar_key",
+        type: "varchar",
+        length: 255,
+        nullable: true
+    })
+    avatarKey: string | null;
 
-    @Column({ length: 255, default: "default.png" })
-    banner: string;
+    @Column({
+        name: "banner_key",
+        type: "varchar",
+        length: 255,
+        nullable: true
+    })
+    bannerKey: string | null;
 
     @Column({
         type: "enum",
-        enum: eventFormats
+        enum: eventFormats,
+        enumName: "event_format_enum"
     })
     format: string;
-
-    @Column({ default: false, name: "notification_new_ticket" })
-    notificationNewTicket: boolean;
 
     @Column({
         name: "publish_at",
@@ -75,15 +97,7 @@ export class EventEntity extends BaseEntity {
     })
     updatedAt: Date;
 
-    @DeleteDateColumn({
-        name: "deleted_at",
-        nullable: true,
-        type: "timestamp with time zone"
-    })
-    deletedAt: Date;
-
     // relations
-
     @ManyToOne(() => Company, (company) => company.events)
     @JoinColumn({ name: "company_id" })
     company: Company;
@@ -95,4 +109,27 @@ export class EventEntity extends BaseEntity {
         inverseJoinColumn: { name: "tag_id" }
     })
     tags: Tag[];
+}
+
+@Entity({ name: "event_subs" })
+export class EventSub extends BaseEntity {
+    @PrimaryColumn({ name: "account_id", type: "uuid" })
+    accountId: string;
+
+    @PrimaryColumn({ name: "event_id", type: "uuid" })
+    eventId: string;
+
+    @CreateDateColumn({
+        name: "created_at",
+        type: "timestamp with time zone"
+    })
+    createdAt: Date;
+
+    @ManyToOne(() => Account)
+    @JoinColumn({ name: "account_id" })
+    account: Account;
+
+    @ManyToOne(() => EventEntity)
+    @JoinColumn({ name: "event_id" })
+    event: EventEntity;
 }

@@ -1,0 +1,21 @@
+type: object
+required:
+  - type
+  - attributes
+properties:
+  type:
+    type: string
+    enum: [billing]
+  attributes:
+    type: object
+    required:
+      - stripe_account_id
+      - created_at
+    properties:
+      stripe_account_id:
+        type: string
+        description: Stripe connected account ID (acct_xxx)
+        example: acct_1234567890
+      created_at:
+        type: string
+        format: date-time

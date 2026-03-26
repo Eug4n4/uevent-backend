@@ -1,4 +1,18 @@
 import { Injectable, Logger } from "@nestjs/common";
+
+export function stripNulls<T extends object>(obj: T): Partial<T> {
+    return Object.fromEntries(
+        Object.entries(obj).filter(([, v]) => v !== null && v !== undefined)
+    ) as Partial<T>;
+}
+
+export function buildFileUrl(key: string | null): string | null {
+    if (!key) return null;
+    const base =
+        process.env.PUBLIC_BASE_URL ??
+        `https://${process.env.BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+    return `${base}/${key}`;
+}
 import {
     S3Client,
     PutObjectCommand,
@@ -8,24 +22,29 @@ import {
 @Injectable()
 export class S3Service {
     private readonly logger = new Logger(S3Service.name);
-    private readonly s3: S3Client;
+    private _s3: S3Client | null = null;
     private readonly bucket: string;
     private readonly publicBase: string;
 
     constructor() {
-        const region = process.env.AWS_REGION!;
-        this.bucket = process.env.BUCKET_NAME!;
+        this.bucket = process.env.BUCKET_NAME ?? "";
+        const region = process.env.AWS_REGION ?? "";
         this.publicBase =
             process.env.PUBLIC_BASE_URL ??
             `https://${this.bucket}.s3.${region}.amazonaws.com`;
+    }
 
-        this.s3 = new S3Client({
-            region,
-            credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-            }
-        });
+    private get s3(): S3Client {
+        if (!this._s3) {
+            this._s3 = new S3Client({
+                region: process.env.AWS_REGION!,
+                credentials: {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+                }
+            });
+        }
+        return this._s3;
     }
 
     async putProfileAvatar(

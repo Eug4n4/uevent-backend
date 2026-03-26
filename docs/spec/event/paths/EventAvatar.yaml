@@ -1,0 +1,71 @@
+post:
+  tags:
+    - events
+  summary: Upload event avatar
+  description: >
+    Uploads or replaces an event's avatar image.
+    Only the company owner can perform this action.
+    Requires a valid access token.
+  security:
+    - cookieAuth: []
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          required:
+            - avatar
+          properties:
+            avatar:
+              type: string
+              format: binary
+              description: "Avatar image file"
+
+  responses:
+    '200':
+      description: Avatar uploaded. Returns the updated event.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Event.yaml'
+    '400':
+      description: Bad request (invalid file).
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the company owner.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

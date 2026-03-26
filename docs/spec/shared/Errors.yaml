@@ -9,22 +9,11 @@ properties:
     items:
       type: object
       required:
-        - title
         - status
       properties:
-        title:
-          type: string
-          description: 'Title is a short, human-readable summary of the problem'
-          example: Bad Request
-        detail:
-          type: string
-          description: >-
-            Detail is a human-readable explanation specific to this occurrence
-            of the problem
-          example: "Request body was expected"
         status:
           type: integer
-          description: Status is the HTTP status code applicable to this problem
+          description: HTTP status code applicable to this problem
           example: 400
           enum:
             - 400
@@ -33,3 +22,8 @@ properties:
             - 404
             - 409
             - 500
+        detail:
+          description: >-
+            Human-readable explanation specific to this occurrence of the problem.
+            May be a string or an object (e.g. validation error details).
+          example: "Request body was expected"

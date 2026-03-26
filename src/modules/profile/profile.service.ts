@@ -41,28 +41,26 @@ export class ProfileService {
         file: Express.Multer.File
     ): Promise<Profile> {
         const profile = await this.getMyProfile(accountId);
-        if (profile.avatar !== "default.png") {
-            const key = this.s3Service.getKeyFromUrl(profile.avatar);
-            if (key) await this.s3Service.deleteObject(key);
+        if (profile.avatarKey) {
+            await this.s3Service.deleteObject(profile.avatarKey);
         }
-        const { url } = await this.s3Service.putProfileAvatar(
+        const { key } = await this.s3Service.putProfileAvatar(
             accountId,
             file.buffer,
             file.mimetype
         );
-        profile.avatar = url;
+        profile.avatarKey = key;
         await profile.save();
         return profile;
     }
 
     async deleteAvatar(accountId: string): Promise<void> {
         const profile = await this.getMyProfile(accountId);
-        if (profile.avatar === "default.png") {
+        if (!profile.avatarKey) {
             throw new NotFoundException("Avatar not found");
         }
-        const key = this.s3Service.getKeyFromUrl(profile.avatar);
-        if (key) await this.s3Service.deleteObject(key);
-        profile.avatar = "default.png";
+        await this.s3Service.deleteObject(profile.avatarKey);
+        profile.avatarKey = null;
         await profile.save();
     }
 
@@ -99,8 +97,10 @@ export class ProfileService {
                 text: `${dto.text}%`
             });
         }
+
         qb.limit(dto["page[limit]"] ?? 20);
         qb.offset(dto["page[offset]"] ?? 0);
+
         return qb.getManyAndCount();
     }
 }

@@ -1,15 +1,16 @@
 import { Profile } from "src/db/entity/profile.entity";
+import { buildFileUrl, stripNulls } from "../shared/s3.uploader";
 
 function profileData(profile: Profile) {
     return {
         id: profile.accountId,
         type: "profile",
-        attributes: {
+        attributes: stripNulls({
             username: profile.username,
-            avatar_url: profile.avatar,
+            avatar_url: buildFileUrl(profile.avatarKey),
             updated_at: profile.updatedAt,
             created_at: profile.createdAt
-        }
+        })
     };
 }
 
@@ -31,7 +32,7 @@ export function profilesResponse(
 
     return {
         data: profiles.map(profileData),
-        links: {
+        links: stripNulls({
             self: `${baseUrl}?page[limit]=${limit}&page[offset]=${offset}`,
             first: `${baseUrl}?page[limit]=${limit}&page[offset]=0`,
             last: `${baseUrl}?page[limit]=${limit}&page[offset]=${lastPage * limit}`,
@@ -43,6 +44,6 @@ export function profilesResponse(
                 currentPage < lastPage
                     ? `${baseUrl}?page[limit]=${limit}&page[offset]=${(currentPage + 1) * limit}`
                     : null
-        }
+        })
     };
 }

@@ -1,0 +1,91 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum: [transaction]
+  attributes:
+    type: object
+    required:
+      - status
+      - description
+      - final_price
+      - check
+      - created_at
+      - updated_at
+    properties:
+      status:
+        type: string
+        enum: [pending, paid, returned]
+        description: Payment status of the transaction
+      description:
+        type: string
+        example: "Purchase of 2x VIP"
+      final_price:
+        type: integer
+        description: Total amount charged in smallest currency unit (e.g. cents)
+        example: 3999
+      check:
+        type: object
+        description: Snapshot of the purchase details at transaction time
+        required:
+          - ticket_id
+          - ticket_name
+          - quantity
+          - account_id
+          - unit_price
+          - final_price
+          - currency
+        properties:
+          ticket_id:
+            type: string
+            format: uuid
+          ticket_name:
+            type: string
+            example: VIP
+          quantity:
+            type: integer
+            example: 2
+          account_id:
+            type: string
+            format: uuid
+          promo_code_id:
+            type: string
+            format: uuid
+            nullable: true
+          promo_code:
+            type: string
+            nullable: true
+            example: SUMMER20
+          discount_percent:
+            type: number
+            nullable: true
+            example: 20
+          unit_price:
+            type: number
+            format: double
+            description: Original ticket price (before discount)
+            example: 24.99
+          final_price:
+            type: integer
+            description: Total amount in smallest currency unit (cents)
+            example: 3999
+          currency:
+            type: string
+            example: eur
+          payment_intent_id:
+            type: string
+            nullable: true
+            example: pi_3OxyzABC123
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time

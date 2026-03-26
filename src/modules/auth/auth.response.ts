@@ -1,6 +1,6 @@
 import { Account } from "src/db/entity/account.entity";
 
-export const authResponse = (account: Account) => {
+export const accountResponse = (account: Account) => {
     return {
         data: {
             id: account.id,

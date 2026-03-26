@@ -1,0 +1,104 @@
+type: object
+required:
+  - id
+  - type
+  - attributes
+  - relationships
+properties:
+  id:
+    type: string
+    format: uuid
+  type:
+    type: string
+    enum: [user_ticket]
+  attributes:
+    type: object
+    required:
+      - status
+      - created_at
+      - updated_at
+    properties:
+      status:
+        type: string
+        enum: [unused, used, canceled]
+      created_at:
+        type: string
+        format: date-time
+      updated_at:
+        type: string
+        format: date-time
+  relationships:
+    type: object
+    required:
+      - ticket
+      - account
+    properties:
+      ticket:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the ticket that was purchased"
+              type:
+                type: string
+                enum: [ticket]
+      account:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the account that purchased the ticket"
+              type:
+                type: string
+                enum: [account]
+      promo_code:
+        type: object
+        description: "Present only when a promo code was applied"
+        properties:
+          data:
+            type: object
+            nullable: true
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the promo code applied"
+              type:
+                type: string
+                enum: [promo_code]
+      transaction:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the transaction this user ticket belongs to"
+              type:
+                type: string
+                enum: [transaction]
