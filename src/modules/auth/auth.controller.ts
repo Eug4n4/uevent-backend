@@ -32,7 +32,7 @@ export class AuthController {
     @Get("me")
     async getMe(@CurrentUser() user: Express.User, @Res() res: Response) {
         const account = await this.authService.getMe(user.id);
-        res.json(authResponse(account));
+        res.json(accountResponse(account));
     }
 
     @Post("registration")
@@ -71,22 +71,20 @@ export class AuthController {
         });
     }
 
-    @Post("login/google")
+    @Get("login/google")
     loginConsent(@Res() res: Response) {
-        this.log.info("POST", "/account/login/google", 307);
-
-        res.status(HttpStatus.TEMPORARY_REDIRECT).redirect(
-            this.authService.generateGoogleAuthUrl()
-        );
+        this.log.info("GET", "/accounts/login/google", 307);
+        const link = this.authService.generateGoogleAuthUrl();
+        res.status(HttpStatus.TEMPORARY_REDIRECT).redirect(link)
     }
 
     @Get("login/google/callback")
     async loginWithGoogle(@Query("code") code: string, @Res() res: Response) {
         const result = await this.authService.loginWithGoogle(code);
         this.setTokenPair(res, result);
-        this.log.info("GET", "/account/login/google/callback", 200);
+        this.log.info("GET", "/accounts/login/google/callback", 200);
 
-        res.json(accountResponse(result.account));
+        res.redirect(process.env.FRONTEND_URL!)
     }
 
     @UseGuards(JwtGuard)

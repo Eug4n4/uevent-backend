@@ -7,7 +7,7 @@ function profileData(profile: Profile) {
         type: "profile",
         attributes: stripNulls({
             username: profile.username,
-            avatar_url: buildFileUrl(profile.avatarKey),
+            avatar_url: profile.avatarKey,
             updated_at: profile.updatedAt,
             created_at: profile.createdAt
         })

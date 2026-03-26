@@ -72,7 +72,7 @@ export class RegisterDto {
 }
 
 export type GoogleAuthDto = Omit<RegisterAttributes, "password"> & {
-    avatar: string;
+    avatarKey: string;
 };
 
 export type CreateAccountAttributes =

@@ -95,7 +95,6 @@ export class AuthService {
             const payload = this.jwtService.decode<GoogleIdTokenPayload>(
                 creds.id_token
             );
-
             account = await database.dataSource.manager.findOneBy(Account, {
                 email: payload.email
             });
@@ -103,8 +102,10 @@ export class AuthService {
                 account = await this.createAccount({
                     email: payload.email,
                     username: `${payload.given_name}${payload.family_name}`,
-                    avatar: payload.picture
+                    avatarKey: payload.picture
                 });
+            } else {
+                await Profile.update({ accountId: account.id }, { avatarKey: payload.picture })
             }
         } else {
             throw new UnauthorizedException("Google authentication failed");
