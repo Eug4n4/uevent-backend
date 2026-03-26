@@ -48,6 +48,7 @@ patch:
     Allows a company member to mark a ticket as `used` or `unused`.
     Only members of the company that owns the event can change the status.
     This is the ticket redemption endpoint (e.g., scanning a ticket at the door).
+    Cannot change the status of an already canceled ticket.
   security:
     - cookieAuth: []
   parameters:
@@ -104,6 +105,68 @@ patch:
             $ref: '../../shared/Errors.yaml'
     '404':
       description: User ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: User ticket is already canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+
+delete:
+  tags:
+    - payments
+  summary: Cancel a user ticket
+  description: >
+    Cancels a user ticket (sets `status = canceled`).
+    Only members of the company that owns the event can cancel a ticket.
+    Returns the updated user ticket with status `canceled`.
+    Cannot cancel an already canceled ticket.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: User ticket canceled.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/UserTicket.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Not a company member.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: User ticket not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: User ticket is already canceled.
       content:
         application/json:
           schema:

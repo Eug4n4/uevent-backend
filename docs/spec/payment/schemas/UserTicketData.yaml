@@ -84,3 +84,21 @@ properties:
               type:
                 type: string
                 enum: [promo_code]
+      transaction:
+        type: object
+        required:
+          - data
+        properties:
+          data:
+            type: object
+            required:
+              - id
+              - type
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the transaction this user ticket belongs to"
+              type:
+                type: string
+                enum: [transaction]

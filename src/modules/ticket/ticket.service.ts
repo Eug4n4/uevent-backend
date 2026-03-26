@@ -127,7 +127,7 @@ export class TicketService {
         await this.requireEventOwner(event, accountId);
 
         if (ticket.status === TicketStatus.CANCELED) {
-            throw new BadRequestException("Ticket is already canceled");
+            throw new ConflictException("Ticket is already canceled");
         }
 
         const queryRunner = database.dataSource.createQueryRunner();
@@ -275,7 +275,7 @@ export class TicketService {
         await this.requireEventOwner(event, accountId);
 
         if (promo.status === PromoCodeStatus.CANCELED) {
-            throw new BadRequestException("Promo code is already canceled");
+            throw new ConflictException("Promo code is already canceled");
         }
 
         promo.status = PromoCodeStatus.CANCELED;

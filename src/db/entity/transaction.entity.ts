@@ -18,12 +18,6 @@ export class Transaction extends BaseEntity {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
-    @Column({ name: "account_id", type: "uuid" })
-    accountId: string;
-
-    @Column({ name: "ticket_id", type: "uuid" })
-    ticketId: string;
-
     @Column({ name: "payment_intent_id", type: "varchar", nullable: true })
     paymentIntentId: string | null;
 
@@ -40,6 +34,9 @@ export class Transaction extends BaseEntity {
 
     @Column({ name: "final_price", type: "integer" })
     finalPrice: number;
+
+    @Column({ type: "jsonb" })
+    check: Record<string, unknown>;
 
     @CreateDateColumn({
         name: "created_at",

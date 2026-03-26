@@ -44,6 +44,11 @@ post:
                       type: string
                       description: Optional promo code to apply a discount
                       example: SUMMER20
+                    quantity:
+                      type: integer
+                      minimum: 1
+                      default: 1
+                      description: Number of tickets to purchase (defaults to 1)
   responses:
     '201':
       description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment. Null for free tickets.
@@ -77,9 +82,9 @@ post:
                         example: 3999
                       currency:
                         type: string
-                        example: USD
+                        example: eur
     '400':
-      description: Ticket canceled, sold out, invalid promo code, or company not onboarded.
+      description: Company billing not set up.
       content:
         application/json:
           schema:
@@ -91,7 +96,13 @@ post:
           schema:
             $ref: '../../shared/Errors.yaml'
     '404':
-      description: Ticket or promo code not found.
+      description: Ticket, event, or promo code not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '409':
+      description: Ticket canceled, promo code canceled/exhausted, or not enough tickets available.
       content:
         application/json:
           schema:

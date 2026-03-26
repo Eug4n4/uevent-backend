@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ConflictException,
     ForbiddenException,
     Injectable,
     NotFoundException
@@ -62,7 +63,7 @@ export class TagService {
         await this.requireCompanyMember(userId);
         const existing = await Tag.findOneBy({ name: dto.name });
         if (existing) {
-            throw new BadRequestException("Tag with this name already exists");
+            throw new ConflictException("Tag with this name already exists");
         }
         const tag = Tag.create({ ...dto });
         await tag.save();

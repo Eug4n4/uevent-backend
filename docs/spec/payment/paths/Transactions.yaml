@@ -1,0 +1,98 @@
+get:
+  tags:
+    - payments
+  summary: List transactions
+  description: >
+    Returns a paginated list of transactions filtered by one or more criteria.
+    At least one filter is required.
+
+    Access rules:
+
+    - `account_id` only → must equal the authenticated user's own ID
+
+    - `company_id`, `event_id`, `ticket_id`, or `promo_code_id` → requester must be a member
+      of the company that owns the relevant event. `account_id` can be combined with these filters.
+
+    Results are ordered by most recent first.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: account_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Filter by account. If used alone, must equal the authenticated user's ID.
+    - name: company_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Filter by company (requires company membership).
+    - name: event_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Filter by event (requires company membership).
+    - name: ticket_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Filter by ticket (requires company membership).
+    - name: promo_code_id
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Filter by promo code (requires company membership).
+    - name: page[limit]
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+    - name: page[offset]
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    '200':
+      description: Paginated list of transactions.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/TransactionsCollection.yaml'
+    '400':
+      description: No filter provided.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Tried to view another user's transactions without a privileged filter.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Referenced event, ticket, or promo code not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

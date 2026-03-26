@@ -136,6 +136,12 @@ components:
       $ref: './spec/payment/schemas/UserTicketData.yaml'
     UserTicketsCollection:
       $ref: './spec/payment/schemas/UserTicketsCollection.yaml'
+    Transaction:
+      $ref: './spec/payment/schemas/Transaction.yaml'
+    TransactionData:
+      $ref: './spec/payment/schemas/TransactionData.yaml'
+    TransactionsCollection:
+      $ref: './spec/payment/schemas/TransactionsCollection.yaml'
 
 paths:
   # auth
@@ -231,3 +237,7 @@ paths:
     $ref: './spec/payment/paths/UserTicketById.yaml'
   /uevent/v1/events/{eventId}/cancel:
     $ref: './spec/payment/paths/EventCancel.yaml'
+  /uevent/v1/transactions:
+    $ref: './spec/payment/paths/Transactions.yaml'
+  /uevent/v1/transactions/{id}:
+    $ref: './spec/payment/paths/TransactionById.yaml'

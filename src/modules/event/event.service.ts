@@ -4,8 +4,8 @@ import {
     Injectable,
     NotFoundException
 } from "@nestjs/common";
-import { Ticket, TicketStatus } from "src/db/entity/ticket.entity";
-import { UserTicket, UserTicketStatus } from "src/db/entity/ticket.entity";
+import { Ticket, TicketStatus, UserTicket, UserTicketStatus } from "src/db/entity/ticket.entity";
+import { PromoCode, PromoCodeStatus } from "src/db/entity/promo_code.entity";
 import {
     EventDetails,
     EventQuery,
@@ -233,7 +233,7 @@ export class EventService {
         if (!event) throw new NotFoundException(`Event with id ${eventId} doesn't exist`);
 
         if (event.status === EventStatus.CANCELED)
-            throw new BadRequestException("Event is already canceled");
+            throw new ConflictException("Event is already canceled");
 
         await this.companyService.requireCompanyRole(
             event.companyId,
@@ -258,14 +258,22 @@ export class EventService {
 
             // 3. Cancel all ticket types for this event
             if (tickets.length > 0) {
+                const ticketIds = tickets.map((t) => t.id);
+
                 await queryRunner.manager.update(
                     Ticket,
                     { eventId },
                     { status: TicketStatus.CANCELED }
                 );
 
-                // 4. Cancel all purchased user tickets linked to those ticket types
-                const ticketIds = tickets.map((t) => t.id);
+                // 4. Cancel all promo codes for those tickets
+                await queryRunner.manager.update(
+                    PromoCode,
+                    { ticketId: In(ticketIds) },
+                    { status: PromoCodeStatus.CANCELED }
+                );
+
+                // 5. Cancel all purchased user tickets linked to those ticket types
                 await queryRunner.manager.update(
                     UserTicket,
                     { ticketId: In(ticketIds) },

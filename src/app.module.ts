@@ -9,6 +9,7 @@ import { EventModule } from "./modules/event/event.module";
 import { TagModule } from "./modules/tag/tag.module";
 import { NewsModule } from "./modules/news/news.module";
 import { TicketModule } from "./modules/ticket/ticket.module";
+import { PaymentModule } from "./modules/payment/payment.module";
 import { database } from "src/db/data-source";
 
 @Module({
@@ -21,6 +22,7 @@ import { database } from "src/db/data-source";
         EventModule,
         NewsModule,
         TicketModule,
+        PaymentModule,
     ],
     controllers: [AppController],
     providers: [AppService]

@@ -218,7 +218,7 @@ export class CompanyService {
         await this.getById(companyId); // ensure company exists
         const existing = await CompanySub.findOneBy({ companyId, accountId });
         if (existing) {
-            throw new BadRequestException("Already subscribed to this company");
+            throw new ConflictException("Already subscribed to this company");
         }
         const sub = CompanySub.create({ companyId, accountId });
         await sub.save();

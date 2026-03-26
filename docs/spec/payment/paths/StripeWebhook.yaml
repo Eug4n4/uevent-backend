@@ -8,9 +8,8 @@ post:
 
     Handled events:
 
-    - `payment_intent.succeeded` — marks the corresponding transaction as `paid`
-
-    - `refund.updated` (status=succeeded) — marks transaction as `returned` and user_ticket as `returned`
+    - `payment_intent.succeeded` — marks the transaction as `paid`, creates `user_ticket` records,
+      and increments the ticket `sold` count and promo code `used` count.
 
     **Do not call this endpoint manually.** Register the URL in the Stripe dashboard
     and configure `STRIPE_WEBHOOK_SECRET` in your environment.

@@ -1,0 +1,48 @@
+get:
+  tags:
+    - payments
+  summary: Get a transaction by ID
+  description: >
+    Returns a single transaction.
+    Access is granted to the owner of the associated user ticket OR any member
+    of the company that owns the event the ticket belongs to.
+  security:
+    - cookieAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: Transaction found.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/Transaction.yaml'
+    '401':
+      description: Unauthorized.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Not the ticket owner or a company member.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Transaction not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

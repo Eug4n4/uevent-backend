@@ -190,9 +190,11 @@ export class Init1774200000000 implements MigrationInterface {
         await queryRunner.query(
             `CREATE TABLE "transactions" (
                 "id"                uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "payment_intent_id" character varying,
                 "status"            "public"."transaction_status" NOT NULL DEFAULT 'pending',
                 "description"       character varying(1024) NOT NULL,
                 "final_price"       integer NOT NULL,
+                "check"             jsonb NOT NULL,
                 "created_at"        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 "updated_at"        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "PK_transactions" PRIMARY KEY ("id")
