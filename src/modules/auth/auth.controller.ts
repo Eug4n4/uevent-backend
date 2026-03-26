@@ -22,6 +22,13 @@ import { CurrentUser } from "../shared/decorators";
 export class AuthController {
     constructor(private authService: AuthService) {}
 
+    @UseGuards(JwtGuard)
+    @Get("me")
+    async getMe(@CurrentUser() user: Express.User, @Res() res: Response) {
+        const account = await this.authService.getMe(user.id);
+        res.json(authResponse(account));
+    }
+
     @Post("registration")
     async register(@Body() dto: RegisterDto) {
         await this.authService.register({ ...dto.data.attributes });
