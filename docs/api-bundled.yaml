@@ -1123,100 +1123,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
-    patch:
-      tags:
-        - companies
-      summary: Update company billing
-      description: |
-        Updates the Stripe billing record. All attributes are optional. Only the company owner can perform this action.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BillingUpdate'
-      responses:
-        '200':
-          description: Billing record updated.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Billing'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '403':
-          description: Forbidden. Not the company owner.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
-          description: Company or billing not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-    delete:
-      tags:
-        - companies
-      summary: Delete company billing
-      description: |
-        Removes the billing record for the company. Only the company owner can perform this action.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Billing record deleted.
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '403':
-          description: Forbidden. Not the company owner.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
-          description: Company or billing not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
   /uevent/v1/events:
     get:
       tags:
@@ -2936,6 +2842,11 @@ paths:
                           type: string
                           description: Optional promo code to apply a discount
                           example: SUMMER20
+                        quantity:
+                          type: integer
+                          minimum: 1
+                          default: 1
+                          description: Number of tickets to purchase (defaults to 1)
       responses:
         '201':
           description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment. Null for free tickets.
@@ -2970,9 +2881,9 @@ paths:
                             example: 3999
                           currency:
                             type: string
-                            example: USD
+                            example: eur
         '400':
-          description: Ticket canceled, sold out, invalid promo code, or company not onboarded.
+          description: Company billing not set up.
           content:
             application/json:
               schema:
@@ -2984,7 +2895,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Errors'
         '404':
-          description: Ticket or promo code not found.
+          description: Ticket, event, or promo code not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: Ticket canceled, promo code canceled/exhausted, or not enough tickets available.
           content:
             application/json:
               schema:
@@ -3003,8 +2920,9 @@ paths:
       description: |
         Receives and processes Stripe webhook events. The request body must be the raw payload and the `Stripe-Signature` header must be present for signature verification.
         Handled events:
-        - `payment_intent.succeeded` — marks the corresponding transaction as `paid`
-        - `refund.updated` (status=succeeded) — marks transaction as `returned` and user_ticket as `returned`
+        - `payment_intent.succeeded` — marks the transaction as `paid`, creates `user_ticket` records,
+          and increments the ticket `sold` count and promo code `used` count.
+
         **Do not call this endpoint manually.** Register the URL in the Stripe dashboard and configure `STRIPE_WEBHOOK_SECRET` in your environment.
       parameters:
         - name: Stripe-Signature
@@ -3130,7 +3048,7 @@ paths:
         - payments
       summary: Update user ticket status (redeem)
       description: |
-        Allows a company member to mark a ticket as `used` or `unused`. Only members of the company that owns the event can change the status. This is the ticket redemption endpoint (e.g., scanning a ticket at the door).
+        Allows a company member to mark a ticket as `used` or `unused`. Only members of the company that owns the event can change the status. This is the ticket redemption endpoint (e.g., scanning a ticket at the door). Cannot change the status of an already canceled ticket.
       security:
         - cookieAuth: []
       parameters:
@@ -3194,6 +3112,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
+        '409':
+          description: User ticket is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+    delete:
+      tags:
+        - payments
+      summary: Cancel a user ticket
+      description: |
+        Cancels a user ticket (sets `status = canceled`). Only members of the company that owns the event can cancel a ticket. Returns the updated user ticket with status `canceled`. Cannot cancel an already canceled ticket.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User ticket canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicket'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Not a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: User ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '409':
+          description: User ticket is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '500':
           description: Internal server error.
           content:
@@ -3248,6 +3224,148 @@ paths:
                 $ref: '#/components/schemas/Errors'
         '404':
           description: Event not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/transactions:
+    get:
+      tags:
+        - payments
+      summary: List transactions
+      description: |
+        Returns a paginated list of transactions filtered by one or more criteria. At least one filter is required.
+        Access rules:
+        - `account_id` only → must equal the authenticated user's own ID
+        - `company_id`, `event_id`, `ticket_id`, or `promo_code_id` → requester must be a member
+          of the company that owns the relevant event. `account_id` can be combined with these filters.
+
+        Results are ordered by most recent first.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: account_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by account. If used alone, must equal the authenticated user's ID.
+        - name: company_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by company (requires company membership).
+        - name: event_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by event (requires company membership).
+        - name: ticket_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by ticket (requires company membership).
+        - name: promo_code_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by promo code (requires company membership).
+        - name: page[limit]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page[offset]
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Paginated list of transactions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsCollection'
+        '400':
+          description: No filter provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Tried to view another user's transactions without a privileged filter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Referenced event, ticket, or promo code not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+  /uevent/v1/transactions/{id}:
+    get:
+      tags:
+        - payments
+      summary: Get a transaction by ID
+      description: |
+        Returns a single transaction. Access is granted to the owner of the associated user ticket OR any member of the company that owns the event the ticket belongs to.
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transaction found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Forbidden. Not the ticket owner or a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Transaction not found.
           content:
             application/json:
               schema:
@@ -4891,6 +5009,25 @@ components:
                       type: string
                       enum:
                         - promo_code
+            transaction:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the transaction this user ticket belongs to
+                    type:
+                      type: string
+                      enum:
+                        - transaction
     UserTicketsCollection:
       type: object
       required:
@@ -4901,6 +5038,121 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserTicketData'
+        links:
+          $ref: '#/components/schemas/PaginationData'
+    Transaction:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/TransactionData'
+    TransactionData:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - transaction
+        attributes:
+          type: object
+          required:
+            - status
+            - description
+            - final_price
+            - check
+            - created_at
+            - updated_at
+          properties:
+            status:
+              type: string
+              enum:
+                - pending
+                - paid
+                - returned
+              description: Payment status of the transaction
+            description:
+              type: string
+              example: Purchase of 2x VIP
+            final_price:
+              type: integer
+              description: Total amount charged in smallest currency unit (e.g. cents)
+              example: 3999
+            check:
+              type: object
+              description: Snapshot of the purchase details at transaction time
+              required:
+                - ticket_id
+                - ticket_name
+                - quantity
+                - account_id
+                - unit_price
+                - final_price
+                - currency
+              properties:
+                ticket_id:
+                  type: string
+                  format: uuid
+                ticket_name:
+                  type: string
+                  example: VIP
+                quantity:
+                  type: integer
+                  example: 2
+                account_id:
+                  type: string
+                  format: uuid
+                promo_code_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                promo_code:
+                  type: string
+                  nullable: true
+                  example: SUMMER20
+                discount_percent:
+                  type: number
+                  nullable: true
+                  example: 20
+                unit_price:
+                  type: number
+                  format: double
+                  description: Original ticket price (before discount)
+                  example: 24.99
+                final_price:
+                  type: integer
+                  description: Total amount in smallest currency unit (cents)
+                  example: 3999
+                currency:
+                  type: string
+                  example: eur
+                payment_intent_id:
+                  type: string
+                  nullable: true
+                  example: pi_3OxyzABC123
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+    TransactionsCollection:
+      type: object
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionData'
         links:
           $ref: '#/components/schemas/PaginationData'
     PaginationData:
