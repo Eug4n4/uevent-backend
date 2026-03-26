@@ -41,7 +41,7 @@ patch:
     - tickets
   summary: Update a ticket
   description: >
-    Updates ticket name, description, price or currency. All attributes are optional.
+    Updates ticket name, description, or total. All attributes are optional.
     Only the company owner can perform this action.
   security:
     - cookieAuth: []

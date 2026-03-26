@@ -3,8 +3,8 @@ patch:
     - tickets
   summary: Update a promo code
   description: >
-    Updates a promo code's attributes. Can change the code string, discount percentage,
-    or set status to `canceled` to deactivate it. Only the company owner can perform this action.
+    Updates a promo code's total (maximum number of uses).
+    Only the company owner can perform this action.
   security:
     - cookieAuth: []
   parameters:

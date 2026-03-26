@@ -31,20 +31,7 @@ post:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data:
-                type: object
-                properties:
-                  type:
-                    type: string
-                    enum: [event]
-                  attributes:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                        enum: [canceled]
+            $ref: '../../event/schemas/Event.yaml'
     '400':
       description: Event is already canceled.
       content:

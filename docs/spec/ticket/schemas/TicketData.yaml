@@ -16,8 +16,10 @@ properties:
     required:
       - name
       - price
-      - currency
       - status
+      - total
+      - sold
+      - available
       - created_at
       - updated_at
     properties:
@@ -33,11 +35,6 @@ properties:
         format: double
         minimum: 0
         example: 49.99
-      currency:
-        type: string
-        minLength: 3
-        maxLength: 3
-        example: USD
       status:
         type: string
         enum: [active, canceled]
@@ -64,7 +61,7 @@ properties:
     required:
       - event
     properties:
-      company:
+      event:
         type: object
         required:
           - data
@@ -78,7 +75,7 @@ properties:
               id:
                 type: string
                 format: uuid
-                description: "ID of the event hosting the event"
+                description: "ID of the event hosting the ticket"
               type:
                 type: string
-                enum: [ event ]
+                enum: [event]

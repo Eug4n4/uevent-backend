@@ -5,23 +5,17 @@ properties:
   data:
     type: object
     required:
-      - id
       - type
       - attributes
     properties:
-      id:
-        type: string
-        format: uuid
-        description: "ID of the promo code to update"
       type:
         type: string
         enum: [promo_code]
       attributes:
         type: object
+        required:
+          - total
         properties:
-          status:
-            type: string
-            enum: [active, canceled]
           total:
             type: integer
             minimum: 1

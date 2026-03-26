@@ -17,6 +17,9 @@ properties:
       - code
       - discount_percent
       - status
+      - total
+      - used
+      - remaining
       - created_at
       - updated_at
     properties:
@@ -55,7 +58,7 @@ properties:
     required:
       - ticket
     properties:
-      company:
+      ticket:
         type: object
         required:
           - data
@@ -69,7 +72,7 @@ properties:
               id:
                 type: string
                 format: uuid
-                description: "ID of the event hosting the ticket"
+                description: "ID of the ticket this promo code belongs to"
               type:
                 type: string
-                enum: [ ticket ]
+                enum: [ticket]

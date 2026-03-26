@@ -1299,9 +1299,17 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: status
+          in: query
+          description: |
+            Filter by event status. Accepts a comma-separated list: `active`, `canceled`, or `active,canceled`. Defaults to `active` when omitted — canceled events are hidden from public listings by default.
+          schema:
+            type: string
+            example: active
+            default: active
         - name: text
           in: query
-          description: Filter by text content (partial match on title/description)
+          description: Filter by text content (partial match on title and body text)
           schema:
             type: string
         - name: start_after
@@ -1506,9 +1514,11 @@ paths:
     delete:
       tags:
         - events
-      summary: Delete an event
+      summary: Cancel an event
       description: |
-        Soft-deletes an event. Only the company owner can perform this action. Requires a valid access token.
+        Permanently cancels an event (sets `status` to `canceled`). This action is **irreversible** — a canceled event cannot be reactivated.
+        **Cascade effects:** - All ticket types for this event are set to `canceled`. - All purchased user tickets for those ticket types are set to `canceled`.
+        Returns the updated event object (status: canceled). Only the company owner can cancel an event.
       security:
         - cookieAuth: []
       parameters:
@@ -1520,8 +1530,18 @@ paths:
             type: string
             format: uuid
       responses:
-        '204':
-          description: Event successfully deleted.
+        '200':
+          description: Event successfully canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Event is already canceled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized.
           content:
@@ -2633,7 +2653,7 @@ paths:
         - tickets
       summary: Update a ticket
       description: |
-        Updates ticket name, description, price or currency. All attributes are optional. Only the company owner can perform this action.
+        Updates ticket name, description, or total. All attributes are optional. Only the company owner can perform this action.
       security:
         - cookieAuth: []
       parameters:
@@ -2664,60 +2684,6 @@ paths:
                 $ref: '#/components/schemas/Ticket'
         '400':
           description: Validation error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '401':
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '403':
-          description: Forbidden. Not the event owner.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
-          description: Ticket not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-        '500':
-          description: Internal server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Errors'
-    delete:
-      tags:
-        - tickets
-      summary: Cancel a ticket
-      description: |
-        Sets the ticket status to `canceled`. Does not delete the record. Only the company owner can perform this action.
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: eventId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: ticketId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Ticket canceled.
-        '400':
-          description: Ticket is already canceled.
           content:
             application/json:
               schema:
@@ -2870,12 +2836,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Errors'
   /uevent/v1/tickets/{ticketId}/promo-codes/{codeId}:
-    delete:
+    patch:
       tags:
         - tickets
-      summary: Cancel a promo code
+      summary: Update a promo code
       description: |
-        Sets the promo code status to `canceled`. Does not delete the record. Only the company owner can perform this action.
+        Updates a promo code's total (maximum number of uses). Only the company owner can perform this action.
       security:
         - cookieAuth: []
       parameters:
@@ -2891,15 +2857,19 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoCodeUpdate'
       responses:
-        '204':
-          description: Promo code canceled.
-        '400':
-          description: Promo code is already canceled.
+        '200':
+          description: Promo code updated.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/PromoCode'
         '401':
           description: Unauthorized.
           content:
@@ -2930,7 +2900,7 @@ paths:
         - payments
       summary: Purchase a ticket
       description: |
-        Initiates a ticket purchase. Creates a `transaction` (pending) and a `user_ticket` atomically, with pessimistic locking to prevent overselling. Returns a Stripe `client_secret` for the frontend to complete payment with Stripe.js. If a promo code is provided, the discount is applied and the code's usage count is incremented. Free tickets (price = 0 or 100% discount) are marked `paid` immediately without Stripe. The company must have completed Stripe Connect onboarding (`stripe_onboarded = true`).
+        Initiates a ticket purchase. Creates a transaction (pending) with pessimistic locking to prevent overselling. Returns a Stripe `client_secret` for the frontend to complete payment with Stripe.js. A 5% platform commission is collected automatically via Stripe Connect application fees. If a promo code is provided, the discount is applied to the price. Free tickets (price = 0 or 100% discount) are fulfilled immediately — no Stripe step required. The company must have completed Stripe Connect onboarding (`stripe_onboarded = true`). After the payment succeeds, the Stripe webhook creates the `user_ticket` automatically.
       security:
         - cookieAuth: []
       parameters:
@@ -2968,7 +2938,7 @@ paths:
                           example: SUMMER20
       responses:
         '201':
-          description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment.
+          description: Purchase initiated. Use `client_secret` with Stripe.js to complete payment. Null for free tickets.
           content:
             application/json:
               schema:
@@ -3002,7 +2972,7 @@ paths:
                             type: string
                             example: USD
         '400':
-          description: Ticket canceled, event canceled, sold out, invalid promo code, or company not onboarded.
+          description: Ticket canceled, sold out, invalid promo code, or company not onboarded.
           content:
             application/json:
               schema:
@@ -3155,6 +3125,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Errors'
+    patch:
+      tags:
+        - payments
+      summary: Update user ticket status (redeem)
+      description: |
+        Allows a company member to mark a ticket as `used` or `unused`. Only members of the company that owns the event can change the status. This is the ticket redemption endpoint (e.g., scanning a ticket at the door).
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - type
+                    - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - user_ticket
+                    attributes:
+                      type: object
+                      required:
+                        - status
+                      properties:
+                        status:
+                          type: string
+                          enum:
+                            - used
+                            - unused
+      responses:
+        '200':
+          description: Status updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTicket'
+        '401':
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '403':
+          description: Not a company member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: User ticket not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
   /uevent/v1/events/{eventId}/cancel:
     post:
       tags:
@@ -3182,22 +3227,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      type:
-                        type: string
-                        enum:
-                          - event
-                      attributes:
-                        type: object
-                        properties:
-                          status:
-                            type: string
-                            enum:
-                              - canceled
+                $ref: '#/components/schemas/Event'
         '400':
           description: Event is already canceled.
           content:
@@ -3251,20 +3281,11 @@ components:
           items:
             type: object
             required:
-              - title
               - status
             properties:
-              title:
-                type: string
-                description: Title is a short, human-readable summary of the problem
-                example: Bad Request
-              detail:
-                type: string
-                description: Detail is a human-readable explanation specific to this occurrence of the problem
-                example: Request body was expected
               status:
                 type: integer
-                description: Status is the HTTP status code applicable to this problem
+                description: HTTP status code applicable to this problem
                 example: 400
                 enum:
                   - 400
@@ -3273,6 +3294,9 @@ components:
                   - 404
                   - 409
                   - 500
+              detail:
+                description: Human-readable explanation specific to this occurrence of the problem. May be a string or an object (e.g. validation error details).
+                example: Request body was expected
     PaginationLinks:
       $ref: '#/components/schemas/PaginationData'
     LoginByEmail:
@@ -3699,6 +3723,7 @@ components:
         attributes:
           type: object
           required:
+            - status
             - title
             - text
             - format
@@ -3706,6 +3731,12 @@ components:
             - start_at
             - end_at
           properties:
+            status:
+              type: string
+              enum:
+                - active
+                - canceled
+              description: event status
             title:
               type: string
               description: event title
@@ -3955,10 +3986,6 @@ components:
                 end_at:
                   type: string
                   format: date-time
-                company_id:
-                  type: string
-                  format: uuid
-                  description: UUID of the company hosting the event (to transfer event ownership)
     EventSubscribersCollection:
       type: object
       required:
@@ -4322,17 +4349,12 @@ components:
           type: object
           required:
             - stripe_account_id
-            - stripe_onboarded
             - created_at
           properties:
             stripe_account_id:
               type: string
               description: Stripe connected account ID (acct_xxx)
               example: acct_1234567890
-            stripe_onboarded:
-              type: boolean
-              description: Whether the company has completed Stripe Connect onboarding
-              example: true
             created_at:
               type: string
               format: date-time
@@ -4381,9 +4403,6 @@ components:
                 stripe_account_id:
                   type: string
                   example: acct_1234567890
-                stripe_onboarded:
-                  type: boolean
-                  example: true
     Ticket:
       type: object
       required:
@@ -4397,6 +4416,7 @@ components:
         - id
         - type
         - attributes
+        - relationships
       properties:
         id:
           type: string
@@ -4408,17 +4428,15 @@ components:
         attributes:
           type: object
           required:
-            - event_id
             - name
             - price
-            - currency
             - status
+            - total
+            - sold
+            - available
             - created_at
             - updated_at
           properties:
-            event_id:
-              type: string
-              format: uuid
             name:
               type: string
               example: VIP
@@ -4431,11 +4449,6 @@ components:
               format: double
               minimum: 0
               example: 49.99
-            currency:
-              type: string
-              minLength: 3
-              maxLength: 3
-              example: USD
             status:
               type: string
               enum:
@@ -4459,6 +4472,30 @@ components:
             updated_at:
               type: string
               format: date-time
+        relationships:
+          type: object
+          required:
+            - event
+          properties:
+            event:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the event hosting the ticket
+                    type:
+                      type: string
+                      enum:
+                        - event
     TicketsCollection:
       type: object
       required:
@@ -4481,6 +4518,7 @@ components:
           required:
             - type
             - attributes
+            - relationships
           properties:
             type:
               type: string
@@ -4491,7 +4529,6 @@ components:
               required:
                 - name
                 - price
-                - currency
                 - total
               properties:
                 name:
@@ -4507,16 +4544,35 @@ components:
                   format: double
                   minimum: 0
                   example: 49.99
-                currency:
-                  type: string
-                  minLength: 3
-                  maxLength: 3
-                  example: USD
                 total:
                   type: integer
                   minimum: 1
                   description: Total number of tickets available
                   example: 100
+            relationships:
+              type: object
+              required:
+                - event
+              properties:
+                event:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the event hosting the ticket
+                        type:
+                          type: string
+                          enum:
+                            - event
     TicketUpdate:
       type: object
       required:
@@ -4541,6 +4597,11 @@ components:
                 description:
                   type: string
                   maxLength: 255
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Total number of tickets available
+                  example: 50
     PromoCode:
       type: object
       required:
@@ -4554,6 +4615,7 @@ components:
         - id
         - type
         - attributes
+        - relationships
       properties:
         id:
           type: string
@@ -4565,16 +4627,15 @@ components:
         attributes:
           type: object
           required:
-            - ticket_id
             - code
             - discount_percent
             - status
+            - total
+            - used
+            - remaining
             - created_at
             - updated_at
           properties:
-            ticket_id:
-              type: string
-              format: uuid
             code:
               type: string
               maxLength: 50
@@ -4607,6 +4668,30 @@ components:
             updated_at:
               type: string
               format: date-time
+        relationships:
+          type: object
+          required:
+            - ticket
+          properties:
+            ticket:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - id
+                    - type
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the ticket this promo code belongs to
+                    type:
+                      type: string
+                      enum:
+                        - ticket
     PromoCodesCollection:
       type: object
       required:
@@ -4629,6 +4714,7 @@ components:
           required:
             - type
             - attributes
+            - relationships
           properties:
             type:
               type: string
@@ -4655,6 +4741,55 @@ components:
                   minimum: 1
                   description: Maximum number of uses
                   example: 50
+            relationships:
+              type: object
+              required:
+                - ticket
+              properties:
+                ticket:
+                  type: object
+                  required:
+                    - data
+                  properties:
+                    data:
+                      type: object
+                      required:
+                        - id
+                        - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: ID of the ticket this promo code belongs to
+                        type:
+                          type: string
+                          enum:
+                            - ticket
+    PromoCodeUpdate:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+            - attributes
+          properties:
+            type:
+              type: string
+              enum:
+                - promo_code
+            attributes:
+              type: object
+              required:
+                - total
+              properties:
+                total:
+                  type: integer
+                  minimum: 1
+                  description: Maximum number of uses
+                  example: 50
     UserTicket:
       type: object
       required:
@@ -4668,6 +4803,7 @@ components:
         - id
         - type
         - attributes
+        - relationships
       properties:
         id:
           type: string
@@ -4679,31 +4815,16 @@ components:
         attributes:
           type: object
           required:
-            - account_id
-            - ticket_id
-            - transaction_id
             - status
             - created_at
             - updated_at
           properties:
-            account_id:
-              type: string
-              format: uuid
-            ticket_id:
-              type: string
-              format: uuid
-            promo_code_id:
-              type: string
-              format: uuid
-              nullable: true
-            transaction_id:
-              type: string
-              format: uuid
             status:
               type: string
               enum:
-                - active
-                - returned
+                - unused
+                - used
+                - canceled
             created_at:
               type: string
               format: date-time
@@ -4712,32 +4833,64 @@ components:
               format: date-time
         relationships:
           type: object
+          required:
+            - ticket
+            - account
           properties:
             ticket:
               type: object
+              required:
+                - data
               properties:
                 data:
                   type: object
+                  required:
+                    - id
+                    - type
                   properties:
                     id:
                       type: string
                       format: uuid
+                      description: ID of the ticket that was purchased
                     type:
                       type: string
                       enum:
                         - ticket
-                attributes:
+            account:
+              type: object
+              required:
+                - data
+              properties:
+                data:
                   type: object
+                  required:
+                    - id
+                    - type
                   properties:
-                    name:
-                      type: string
-                    price:
-                      type: number
-                    currency:
-                      type: string
-                    event_id:
+                    id:
                       type: string
                       format: uuid
+                      description: ID of the account that purchased the ticket
+                    type:
+                      type: string
+                      enum:
+                        - account
+            promo_code:
+              type: object
+              description: Present only when a promo code was applied
+              properties:
+                data:
+                  type: object
+                  nullable: true
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      description: ID of the promo code applied
+                    type:
+                      type: string
+                      enum:
+                        - promo_code
     UserTicketsCollection:
       type: object
       required:

@@ -17,7 +17,6 @@ properties:
         required:
           - name
           - price
-          - currency
           - total
         properties:
           name:
@@ -33,11 +32,6 @@ properties:
             format: double
             minimum: 0
             example: 49.99
-          currency:
-            type: string
-            minLength: 3
-            maxLength: 3
-            example: USD
           total:
             type: integer
             minimum: 1
@@ -48,7 +42,7 @@ properties:
         required:
           - event
         properties:
-          company:
+          event:
             type: object
             required:
               - data
@@ -62,7 +56,7 @@ properties:
                   id:
                     type: string
                     format: uuid
-                    description: "ID of the event hosting the event"
+                    description: "ID of the event hosting the ticket"
                   type:
                     type: string
-                    enum: [ event ]
+                    enum: [event]

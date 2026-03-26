@@ -23,5 +23,5 @@ properties:
           total:
             type: integer
             minimum: 1
-            description: Maximum number of uses
+            description: Total number of tickets available
             example: 50

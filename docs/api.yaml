@@ -229,3 +229,5 @@ paths:
     $ref: './spec/payment/paths/UserTickets.yaml'
   /uevent/v1/user-tickets/{id}:
     $ref: './spec/payment/paths/UserTicketById.yaml'
+  /uevent/v1/events/{eventId}/cancel:
+    $ref: './spec/payment/paths/EventCancel.yaml'

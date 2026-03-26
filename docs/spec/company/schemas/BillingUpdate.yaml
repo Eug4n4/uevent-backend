@@ -17,6 +17,3 @@ properties:
           stripe_account_id:
             type: string
             example: acct_1234567890
-          stripe_onboarded:
-            type: boolean
-            example: true

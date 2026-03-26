@@ -3,6 +3,7 @@ required:
   - id
   - type
   - attributes
+  - relationships
 properties:
   id:
     type: string
@@ -13,29 +14,13 @@ properties:
   attributes:
     type: object
     required:
-      - account_id
-      - ticket_id
-      - transaction_id
       - status
       - created_at
       - updated_at
     properties:
-      account_id:
-        type: string
-        format: uuid
-      ticket_id:
-        type: string
-        format: uuid
-      promo_code_id:
-        type: string
-        format: uuid
-        nullable: true
-      transaction_id:
-        type: string
-        format: uuid
       status:
         type: string
-        enum: [unused, used]
+        enum: [unused, used, canceled]
       created_at:
         type: string
         format: date-time
@@ -44,28 +29,58 @@ properties:
         format: date-time
   relationships:
     type: object
+    required:
+      - ticket
+      - account
     properties:
       ticket:
         type: object
+        required:
+          - data
         properties:
           data:
             type: object
+            required:
+              - id
+              - type
             properties:
               id:
                 type: string
                 format: uuid
+                description: "ID of the ticket that was purchased"
               type:
                 type: string
                 enum: [ticket]
-          attributes:
+      account:
+        type: object
+        required:
+          - data
+        properties:
+          data:
             type: object
+            required:
+              - id
+              - type
             properties:
-              name:
-                type: string
-              price:
-                type: number
-              currency:
-                type: string
-              event_id:
+              id:
                 type: string
                 format: uuid
+                description: "ID of the account that purchased the ticket"
+              type:
+                type: string
+                enum: [account]
+      promo_code:
+        type: object
+        description: "Present only when a promo code was applied"
+        properties:
+          data:
+            type: object
+            nullable: true
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: "ID of the promo code applied"
+              type:
+                type: string
+                enum: [promo_code]
