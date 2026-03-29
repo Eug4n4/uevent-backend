@@ -1,7 +1,7 @@
 import { Profile } from "src/db/entity/profile.entity";
 import { buildFileUrl, stripNulls } from "../shared/s3.uploader";
 
-function profileData(profile: Profile) {
+export function profileData(profile: Profile) {
     return {
         id: profile.accountId,
         type: "profile",

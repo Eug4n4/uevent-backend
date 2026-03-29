@@ -9,11 +9,17 @@ import {
     ManyToMany,
     JoinTable,
     PrimaryGeneratedColumn,
-    PrimaryColumn
+    PrimaryColumn,
+    DeleteDateColumn,
+    OneToMany,
+    Tree,
+    TreeParent,
+    TreeChildren
 } from "typeorm";
 import { Company } from "./company.entity";
 import { Tag } from "./tag.entity";
 import { Account } from "./account.entity";
+import { Profile } from "./profile.entity";
 
 export const eventFormats = ["Lection", "Workshop", "Concert", "Meeting"];
 
@@ -109,6 +115,9 @@ export class EventEntity extends BaseEntity {
         inverseJoinColumn: { name: "tag_id" }
     })
     tags: Tag[];
+
+    @OneToMany(() => EventComment, (comment) => comment.event)
+    comments: EventComment[];
 }
 
 @Entity({ name: "event_subs" })
@@ -132,4 +141,55 @@ export class EventSub extends BaseEntity {
     @ManyToOne(() => EventEntity)
     @JoinColumn({ name: "event_id" })
     event: EventEntity;
+}
+
+@Entity({ name: "event_comments" })
+@Tree("materialized-path")
+export class EventComment extends BaseEntity {
+    @PrimaryGeneratedColumn("uuid")
+    id: string;
+
+    @Column({ type: "varchar", length: 255 })
+    text: string;
+
+    @Column({ type: "uuid", name: "event_id" })
+    eventId: string;
+
+    @Column({ type: "uuid", name: "profile_id" })
+    profileId: string;
+
+    @CreateDateColumn({
+        name: "created_at",
+        type: "timestamp with time zone"
+    })
+    createdAt: Date;
+
+    @UpdateDateColumn({
+        name: "updated_at",
+        type: "timestamp with time zone"
+    })
+    updatedAt: Date;
+
+    @DeleteDateColumn({
+        name: "deleted_at",
+        type: "timestamp with time zone"
+    })
+    deletedAt: Date;
+
+    // relations
+
+    @TreeParent()
+    @JoinColumn({ name: "parent_id" })
+    parent: EventComment;
+
+    @TreeChildren()
+    children: EventComment[];
+
+    @ManyToOne(() => EventEntity, (event) => event.comments)
+    @JoinColumn({ name: "event_id" })
+    event: EventEntity;
+
+    @ManyToOne(() => Profile)
+    @JoinColumn({ name: "profile_id" })
+    profile: Profile;
 }

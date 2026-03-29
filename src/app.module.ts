@@ -11,6 +11,7 @@ import { NewsModule } from "./modules/news/news.module";
 import { TicketModule } from "./modules/ticket/ticket.module";
 import { PaymentModule } from "./modules/payment/payment.module";
 import { database } from "src/db/data-source";
+import { CommentModule } from './modules/comment/comment.module';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { database } from "src/db/data-source";
         NewsModule,
         TicketModule,
         PaymentModule,
+        CommentModule,
     ],
     controllers: [AppController],
     providers: [AppService]

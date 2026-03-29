@@ -6,9 +6,11 @@ import {
     OneToOne,
     JoinColumn,
     BaseEntity,
-    PrimaryColumn
+    PrimaryColumn,
+    OneToMany
 } from "typeorm";
 import { Account } from "./account.entity";
+import { EventComment } from "./event.entity";
 
 @Entity({ name: "profiles" })
 export class Profile extends BaseEntity {
@@ -41,4 +43,7 @@ export class Profile extends BaseEntity {
     @OneToOne(() => Account, { onDelete: "CASCADE" })
     @JoinColumn({ name: "account_id" })
     account: Account;
+
+    @OneToMany(() => EventComment, (comment) => comment.profile)
+    comments: EventComment[];
 }
