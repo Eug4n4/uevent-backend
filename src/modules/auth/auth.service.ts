@@ -18,12 +18,14 @@ import { CompanyMember } from "src/db/entity/company.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { Hasher } from "./hasher";
 import { GoogleOAuth } from "./google.oauth";
+import { S3Service } from "../shared/s3.uploader";
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
-        private oauth: GoogleOAuth
+        private oauth: GoogleOAuth,
+        private s3: S3Service
     ) {}
 
     public async deleteAccount(accountId: string) {
@@ -99,13 +101,15 @@ export class AuthService {
                 email: payload.email
             });
             if (account === null) {
+                const response = await fetch(payload.picture)
+                const buffer = Buffer.from(await response.arrayBuffer());
+                const key = `user/${payload.email}/avatar_${Date.now()}`
+                this.s3.putObject(buffer, response.headers.get("Content-Type")!, key)
                 account = await this.createAccount({
                     email: payload.email,
                     username: `${payload.given_name}${payload.family_name}`,
-                    avatarKey: payload.picture
+                    avatarKey: key
                 });
-            } else {
-                await Profile.update({ accountId: account.id }, { avatarKey: payload.picture })
             }
         } else {
             throw new UnauthorizedException("Google authentication failed");

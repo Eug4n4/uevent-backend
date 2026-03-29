@@ -6,6 +6,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtAccessStrategy, JwtRefreshStrategy } from "../shared/jwt.strategy";
 import { PassportModule } from "@nestjs/passport";
 import { GoogleOAuth } from "./google.oauth";
+import { ProfileModule } from "../profile/profile.module";
 
 @Module({
     imports: [
@@ -16,7 +17,8 @@ import { GoogleOAuth } from "./google.oauth";
                 secret: configService.get("JWT_SECRET")
             }),
             inject: [ConfigService]
-        })
+        }),
+        ProfileModule
     ],
     controllers: [AuthController],
     providers: [AuthService, GoogleOAuth, JwtAccessStrategy, JwtRefreshStrategy]
