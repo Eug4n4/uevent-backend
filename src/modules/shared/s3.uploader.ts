@@ -1,4 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
+import {
+    S3Client,
+    PutObjectCommand,
+    DeleteObjectCommand
+} from "@aws-sdk/client-s3";
 
 export function stripNulls<T extends object>(obj: T): Partial<T> {
     return Object.fromEntries(
@@ -8,16 +13,9 @@ export function stripNulls<T extends object>(obj: T): Partial<T> {
 
 export function buildFileUrl(key: string | null): string | null {
     if (!key) return null;
-    const base =
-        process.env.PUBLIC_BASE_URL ??
-        `https://${process.env.BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
+    const base = `https://${process.env.BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`;
     return `${base}/${key}`;
 }
-import {
-    S3Client,
-    PutObjectCommand,
-    DeleteObjectCommand
-} from "@aws-sdk/client-s3";
 
 @Injectable()
 export class S3Service {
