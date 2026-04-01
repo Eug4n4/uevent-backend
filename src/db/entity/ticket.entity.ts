@@ -98,6 +98,9 @@ export class UserTicket extends BaseEntity {
     })
     status: UserTicketStatus;
 
+    @Column({ type: "boolean", default: true })
+    visibility: boolean;
+
     @CreateDateColumn({
         name: "created_at",
         type: "timestamp with time zone"

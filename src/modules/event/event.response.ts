@@ -1,5 +1,5 @@
 import { EventEntity } from "src/db/entity/event.entity";
-import { EventQuery, PageQuery } from "./event.dto";
+import { EventQuery, PageQuery, VisitorsQuery } from "./event.dto";
 import { Profile } from "src/db/entity/profile.entity";
 import { buildFileUrl, stripNulls } from "../shared/s3.uploader";
 import { Tag } from "src/db/entity/tag.entity";
@@ -12,12 +12,14 @@ export const eventData = (event: EventEntity) => ({
         title: event.title,
         text: event.text,
         status: event.status,
-        avatar_url: buildFileUrl(event.avatarKey),
         banner_url: buildFileUrl(event.bannerKey),
+        location: event.location,
         format: event.format,
         publish_at: event.publishAt,
         start_at: event.startAt,
-        end_at: event.endAt
+        end_at: event.endAt,
+        notification_new_tickets: event.notificationNewTickets,
+        visitors_visibility: event.visitorsVisibility
     }),
     relationships: stripNulls({
         company: {
@@ -46,7 +48,8 @@ const formatCompany = (company: Company) => ({
         email: company.email,
         address: company.address,
         avatar_url: buildFileUrl(company.avatarKey),
-        banner_url: buildFileUrl(company.bannerKey)
+        banner_url: buildFileUrl(company.bannerKey),
+        location: company.location
     })
 });
 
@@ -121,7 +124,7 @@ export const paginatedEvents = (
     });
 };
 
-export const paginatedEventSubscribers = (
+const paginatedProfiles = (
     profiles: Profile[],
     query: PageQuery,
     total: number,
@@ -144,3 +147,17 @@ export const paginatedEventSubscribers = (
         })
     };
 };
+
+export const paginatedEventSubscribers = (
+    profiles: Profile[],
+    query: PageQuery,
+    total: number,
+    baseUrl: string
+) => paginatedProfiles(profiles, query, total, baseUrl);
+
+export const paginatedEventVisitors = (
+    profiles: Profile[],
+    query: VisitorsQuery,
+    total: number,
+    baseUrl: string
+) => paginatedProfiles(profiles, query, total, baseUrl);

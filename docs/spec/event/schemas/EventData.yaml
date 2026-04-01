@@ -52,16 +52,36 @@ properties:
         type: string
         format: date-time
         description: "when the event ends"
-      avatar_url:
+      notification_new_tickets:
+        type: boolean
+        description: "Whether notifications are sent to subscribers when new tickets become available"
+      visitors_visibility:
         type: string
-        nullable: true
-        description: "public URL of the event avatar image, or null if not set"
-        example: "https://s3.example.com/events/avatar.png"
+        enum: [ everyone, staff_only, staff_and_visitors ]
+        description: "Who can see the event visitor list"
       banner_url:
         type: string
         nullable: true
         description: "public URL of the event banner image, or null if not set"
         example: "https://s3.example.com/events/banner.png"
+      location:
+        type: object
+        nullable: true
+        description: "Geographic coordinates of the event, or null if not set"
+        required:
+          - latitude
+          - longitude
+        properties:
+          latitude:
+            type: number
+            minimum: -90
+            maximum: 90
+            example: 50.4501
+          longitude:
+            type: number
+            minimum: -180
+            maximum: 180
+            example: 30.5234
   relationships:
     type: object
     required:

@@ -12,7 +12,8 @@ const companyData = (company: Company) => {
             email: company.email,
             address: company.address,
             avatar_url: buildFileUrl(company.avatarKey),
-            banner_url: buildFileUrl(company.bannerKey)
+            banner_url: buildFileUrl(company.bannerKey),
+            location: company.location
         })
     };
 };

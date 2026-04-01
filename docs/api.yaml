@@ -193,8 +193,6 @@ paths:
     $ref: './spec/event/paths/Events.yaml'
   /uevent/v1/events/{id}:
     $ref: './spec/event/paths/EventById.yaml'
-  /uevent/v1/events/{id}/avatar:
-    $ref: './spec/event/paths/EventAvatar.yaml'
   /uevent/v1/events/{id}/banner:
     $ref: './spec/event/paths/EventBanner.yaml'
   /uevent/v1/events/{id}/tags:
@@ -203,6 +201,8 @@ paths:
     $ref: './spec/event/paths/EventTagById.yaml'
   /uevent/v1/events/{id}/subscriptions:
     $ref: './spec/event/paths/EventSubscriptions.yaml'
+  /uevent/v1/events/{id}/visitors:
+    $ref: './spec/event/paths/EventVisitors.yaml'
 
   # tags
   /uevent/v1/events/tags:

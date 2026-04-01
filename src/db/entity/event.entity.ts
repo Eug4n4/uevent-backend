@@ -20,12 +20,19 @@ import { Company } from "./company.entity";
 import { Tag } from "./tag.entity";
 import { Account } from "./account.entity";
 import { Profile } from "./profile.entity";
+import { GeoPoint, pointTransformer } from "src/modules/shared/geo";
 
 export const eventFormats = ["Lection", "Workshop", "Concert", "Meeting"];
 
 export enum EventStatus {
     ACTIVE = "active",
     CANCELED = "canceled"
+}
+
+export enum VisitorsVisibility {
+    EVERYONE = "everyone",
+    STAFF_ONLY = "staff_only",
+    STAFF_AND_VISITORS = "staff_and_visitors"
 }
 
 @Entity({ name: "events" })
@@ -51,14 +58,6 @@ export class EventEntity extends BaseEntity {
     text: string | null;
 
     @Column({
-        name: "avatar_key",
-        type: "varchar",
-        length: 255,
-        nullable: true
-    })
-    avatarKey: string | null;
-
-    @Column({
         name: "banner_key",
         type: "varchar",
         length: 255,
@@ -67,11 +66,32 @@ export class EventEntity extends BaseEntity {
     bannerKey: string | null;
 
     @Column({
+        type: "geography",
+        spatialFeatureType: "Point",
+        srid: 4326,
+        nullable: true,
+        transformer: pointTransformer
+    })
+    location: GeoPoint | null;
+
+    @Column({
         type: "enum",
         enum: eventFormats,
         enumName: "event_format_enum"
     })
     format: string;
+
+    @Column({ name: "notification_new_tickets", type: "boolean", default: false })
+    notificationNewTickets: boolean;
+
+    @Column({
+        name: "visitors_visibility",
+        type: "enum",
+        enum: VisitorsVisibility,
+        enumName: "visitors_visibility_enum",
+        default: VisitorsVisibility.EVERYONE
+    })
+    visitorsVisibility: VisitorsVisibility;
 
     @Column({
         name: "publish_at",

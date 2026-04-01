@@ -6,6 +6,7 @@ import {
     IsBoolean,
     IsEmail,
     IsInt,
+    IsNumber,
     IsOptional,
     IsString,
     IsUUID,
@@ -13,6 +14,18 @@ import {
     Min,
     ValidateNested
 } from "class-validator";
+
+class LocationDto {
+    @IsNumber()
+    @Min(-90)
+    @Max(90)
+    latitude: number;
+
+    @IsNumber()
+    @Min(-180)
+    @Max(180)
+    longitude: number;
+}
 
 export class CompanyAttributes {
     @IsString()
@@ -23,6 +36,11 @@ export class CompanyAttributes {
 
     @IsString()
     address: string;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => LocationDto)
+    location?: LocationDto;
 }
 
 export class CompanyUpdateAttributes {
@@ -35,6 +53,11 @@ export class CompanyUpdateAttributes {
     @NullIfEmpty()
     @IsString()
     address?: string;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => LocationDto)
+    location?: LocationDto;
 }
 
 class CompanyData {

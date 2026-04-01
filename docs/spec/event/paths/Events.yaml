@@ -120,6 +120,29 @@ get:
       schema:
         type: string
         format: date-time
+    - name: near_lat
+      in: query
+      description: "Latitude of the center point for proximity search. Must be used together with near_lng and near_radius_m."
+      schema:
+        type: number
+        minimum: -90
+        maximum: 90
+        example: 50.4501
+    - name: near_lng
+      in: query
+      description: "Longitude of the center point for proximity search. Must be used together with near_lat and near_radius_m."
+      schema:
+        type: number
+        minimum: -180
+        maximum: 180
+        example: 30.5234
+    - name: near_radius_m
+      in: query
+      description: "Search radius in meters. Must be used together with near_lat and near_lng. Only events with a location set are returned."
+      schema:
+        type: integer
+        minimum: 1
+        example: 5000
     - name: include
       in: query
       description: "Comma-separated list of related resources to include. Supported: `tags`, `companies`"

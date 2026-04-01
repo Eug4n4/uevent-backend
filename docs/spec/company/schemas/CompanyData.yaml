@@ -41,3 +41,21 @@ properties:
         nullable: true
         description: "public URL of the company banner image, or null if not set"
         example: "https://s3.example.com/company/banner.png"
+      location:
+        type: object
+        nullable: true
+        description: "Geographic coordinates of the company, or null if not set"
+        required:
+          - latitude
+          - longitude
+        properties:
+          latitude:
+            type: number
+            minimum: -90
+            maximum: 90
+            example: 50.4501
+          longitude:
+            type: number
+            minimum: -180
+            maximum: 180
+            example: 30.5234

@@ -1,0 +1,82 @@
+get:
+  tags:
+    - events
+  summary: Get event visitors
+  description: >
+    Returns a paginated list of profiles who hold tickets for this event.
+
+    **Access control** is determined by the event's `visitors_visibility` setting and the caller's relationship to the event:
+
+    - `everyone` — any caller (authenticated or not) may view the visitor list.
+    - `staff_and_visitors` — only company members **or** users who hold at least one ticket for the event may view the list.
+    - `staff_only` — only company members may view the list.
+
+    The `tickets_visibility` query parameter controls which ticket holders are included in the results:
+    - Default (`true`) — only visitors whose ticket has `visibility = true` are returned.
+    - `true,false` — both visible and hidden ticket holders are returned. **Requires the caller to be a company member.**
+
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: "Event UUID"
+      schema:
+        type: string
+        format: uuid
+    - name: page[limit]
+      in: query
+      description: "Number of visitors per page (1–100, default: 20)"
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    - name: page[offset]
+      in: query
+      description: "Number of visitors to skip (default: 0)"
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    - name: tickets_visibility
+      in: query
+      description: >
+        Comma-separated boolean filter on `user_tickets.visibility`.
+        Default: `true` (only show visitors with visible tickets).
+        Pass `true,false` to include all visitors — **company members only**.
+      schema:
+        type: string
+        example: "true,false"
+        default: "true"
+
+  responses:
+    '200':
+      description: Paginated list of visitor profiles.
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/EventSubscribersCollection.yaml'
+    '401':
+      description: Unauthorized. Authentication required for this visibility level.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '403':
+      description: Forbidden. Caller does not meet the visibility requirements.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '404':
+      description: Event not found.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'
+    '500':
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '../../shared/Errors.yaml'

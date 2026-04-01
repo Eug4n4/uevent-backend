@@ -24,6 +24,7 @@ import {
     EventTagsDto,
     EventUpdateDto,
     PageQuery,
+    VisitorsQuery,
     parseIncludes
 } from "./event.dto";
 import { EventService } from "./event.service";
@@ -31,7 +32,8 @@ import type { Request, Response } from "express";
 import {
     eventResponse,
     paginatedEvents,
-    paginatedEventSubscribers
+    paginatedEventSubscribers,
+    paginatedEventVisitors
 } from "./event.response";
 import { profileResponse } from "../profile/profile.response";
 import { JwtGuard, OptionalJwtGuard } from "../shared/jwt.guard";
@@ -148,21 +150,6 @@ export class EventController {
     }
 
     @UseGuards(JwtGuard)
-    @UseInterceptors(FileInterceptor("avatar"))
-    @Post(":id/avatar")
-    async uploadAvatar(
-        @Param("id") id: string,
-        @UploadedFile() avatar: Express.Multer.File,
-        @CurrentUser() user: Express.User,
-        @Res() res: Response
-    ) {
-        const event = await this.eventService.uploadAvatar(id, user.id, avatar);
-        this.log.info("POST", `/events/${id}/avatar`, 200);
-
-        res.json(eventResponse(event));
-    }
-
-    @UseGuards(JwtGuard)
     @UseInterceptors(FileInterceptor("banner"))
     @Post(":id/banner")
     async uploadBanner(
@@ -241,6 +228,31 @@ export class EventController {
     ) {
         await this.eventService.unsubscribe(id, user.id);
         this.log.info("DELETE", `/events/${id}/subscriptions`, 204);
+    }
+
+    @UseGuards(OptionalJwtGuard)
+    @Get(":id/visitors")
+    async getVisitors(
+        @Param("id") id: string,
+        @Query() query: VisitorsQuery,
+        @CurrentUser() user: Express.User | null,
+        @Req() req: Request,
+        @Res() res: Response
+    ) {
+        if (query["page[limit]"] === undefined)
+            query["page[limit]"] = DEFAULT_PAGE_LIMIT;
+        if (query["page[offset]"] === undefined)
+            query["page[offset]"] = DEFAULT_PAGE_OFFSET;
+
+        const [profiles, total] = await this.eventService.getVisitors(
+            id,
+            query,
+            user?.id
+        );
+        const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/events/${id}/visitors`;
+        this.log.debug("GET", `/events/${id}/visitors`, 200, `total=${total}`);
+
+        res.json(paginatedEventVisitors(profiles, query, total, baseUrl));
     }
 
     @UseGuards(OptionalJwtGuard)

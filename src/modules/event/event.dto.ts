@@ -7,6 +7,7 @@ import {
     IsDefined,
     IsIn,
     IsInt,
+    IsNumber,
     IsOptional,
     IsString,
     IsUUID,
@@ -15,7 +16,19 @@ import {
     Min,
     ValidateNested
 } from "class-validator";
-import { eventFormats } from "src/db/entity/event.entity";
+import { eventFormats, VisitorsVisibility } from "src/db/entity/event.entity";
+
+class LocationDto {
+    @IsNumber()
+    @Min(-90)
+    @Max(90)
+    latitude: number;
+
+    @IsNumber()
+    @Min(-180)
+    @Max(180)
+    longitude: number;
+}
 
 // tag ref
 class TagIdRef {
@@ -86,6 +99,19 @@ class EventCreateAttributes {
 
     @IsDateString()
     end_at: Date;
+
+    @IsOptional()
+    @IsBoolean()
+    notification_new_tickets?: boolean;
+
+    @IsOptional()
+    @IsIn(Object.values(VisitorsVisibility))
+    visitors_visibility?: VisitorsVisibility;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => LocationDto)
+    location?: LocationDto;
 }
 
 class EventCreateData {
@@ -142,6 +168,19 @@ export class EventUpdateAttributes {
     @IsOptional()
     @IsUUID()
     company_id?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    notification_new_tickets?: boolean;
+
+    @IsOptional()
+    @IsIn(Object.values(VisitorsVisibility))
+    visitors_visibility?: VisitorsVisibility;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => LocationDto)
+    location?: LocationDto;
 }
 
 class EventUpdateData {
@@ -270,6 +309,22 @@ export class EventQuery {
     @IsOptional()
     @IsDateString()
     "end_before"?: string;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    near_lat?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsNumber()
+    near_lng?: number;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    near_radius_m?: number;
 }
 
 export type EventDetails = EventCreateAttributes & {
@@ -299,4 +354,17 @@ export class PageQuery {
     @IsInt()
     @Min(0)
     "page[offset]"?: number;
+}
+
+export class VisitorsQuery extends PageQuery {
+    @IsOptional()
+    @Transform(({ value }) => {
+        if (value === undefined) return undefined;
+        return String(value)
+            .split(",")
+            .map((v) => v.trim() === "true");
+    })
+    @IsArray()
+    @IsBoolean({ each: true })
+    tickets_visibility?: boolean[];
 }

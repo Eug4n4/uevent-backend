@@ -69,7 +69,7 @@ export class PaymentController {
         });
     }
 
-    @Post("stripe/webhook")
+    @Post("    ")
     async webhook(@Req() req: Request & { rawBody?: Buffer }, @Res() res: Response) {
         const signature = (req.headers as Record<string, string>)["stripe-signature"];
         await this.paymentService.handleWebhook(req.rawBody!, signature);

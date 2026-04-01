@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     Injectable,
     NotFoundException
 } from "@nestjs/common";
@@ -10,9 +11,10 @@ import {
     EventDetails,
     EventQuery,
     EventUpdateDetails,
-    PageQuery
+    PageQuery,
+    VisitorsQuery
 } from "./event.dto";
-import { EventEntity, EventStatus } from "src/db/entity/event.entity";
+import { EventEntity, EventStatus, VisitorsVisibility } from "src/db/entity/event.entity";
 import { Tag } from "src/db/entity/tag.entity";
 import { CompanyMember, CompanyMemberRole } from "src/db/entity/company.entity";
 import { database } from "src/db/data-source";
@@ -52,7 +54,10 @@ export class EventService {
                 publishAt: dto.publish_at,
                 startAt: dto.start_at,
                 endAt: dto.end_at,
-                format: dto.format
+                format: dto.format,
+                location: dto.location ?? null,
+                notificationNewTickets: dto.notification_new_tickets ?? false,
+                visitorsVisibility: dto.visitors_visibility ?? VisitorsVisibility.EVERYONE
             });
 
             event.tags =
@@ -163,6 +168,20 @@ export class EventService {
             );
         }
 
+        const { near_lat, near_lng, near_radius_m } = params;
+        const nearCount = [near_lat, near_lng, near_radius_m].filter((v) => v !== undefined).length;
+        if (nearCount > 0 && nearCount < 3) {
+            throw new BadRequestException(
+                "near_lat, near_lng, and near_radius_m must all be provided together"
+            );
+        }
+        if (nearCount === 3) {
+            qb.andWhere(
+                "ST_DWithin(events.location::geography, ST_MakePoint(:near_lng, :near_lat)::geography, :near_radius_m)",
+                { near_lat, near_lng, near_radius_m }
+            );
+        }
+
         return this.getPaginatedAndCount(qb, params);
     }
 
@@ -208,7 +227,9 @@ export class EventService {
             startAt: dto.start_at,
             endAt: dto.end_at,
             format: dto.format,
-            companyId: dto.company_id
+            companyId: dto.company_id,
+            notificationNewTickets: dto.notification_new_tickets,
+            visitorsVisibility: dto.visitors_visibility
         };
         try {
             Object.assign(
@@ -218,6 +239,13 @@ export class EventService {
                 )
             );
             await queryRunner.manager.save(event);
+            if (dto.location !== undefined) {
+                await queryRunner.query(
+                    `UPDATE events SET location = ST_SetSRID(ST_MakePoint($1, $2), 4326) WHERE id = $3`,
+                    [dto.location.longitude, dto.location.latitude, eventId]
+                );
+                event.location = dto.location;
+            }
             await queryRunner.commitTransaction();
             return event;
         } catch (err) {
@@ -294,27 +322,6 @@ export class EventService {
         return event;
     }
 
-    async uploadAvatar(
-        eventId: string,
-        accountId: string,
-        file: Express.Multer.File
-    ): Promise<EventEntity> {
-        const event = await this.getById(eventId);
-        await this.companyService.requireCompanyRole(
-            event.companyId,
-            accountId,
-            [CompanyMemberRole.OWNER]
-        );
-
-        if (event.avatarKey) await this.s3Service.deleteObject(event.avatarKey);
-        const avatarKey = `event/${eventId}/avatar_${Date.now()}`;
-        await this.s3Service.putObject(file.buffer, file.mimetype, avatarKey);
-        event.avatarKey = avatarKey;
-        await event.save();
-        return event;
-    }
-
-
     async uploadBanner(
         eventId: string,
         accountId: string,
@@ -352,6 +359,76 @@ export class EventService {
             .limit(query["page[limit]"])
             .offset(query["page[offset]"])
             .getManyAndCount();
+    }
+
+    async getVisitors(
+        eventId: string,
+        query: VisitorsQuery,
+        userId?: string
+    ): Promise<[Profile[], number]> {
+        const event = await EventEntity.findOneBy({ id: eventId });
+        if (!event) throw new NotFoundException(`Can't find event with id = ${eventId}`);
+
+        const ticketsVisibility: boolean[] =
+            query.tickets_visibility ?? [true];
+
+        const wantsHidden = ticketsVisibility.includes(false);
+
+        const isMember = userId
+            ? !!(await CompanyMember.findOneBy({
+                  companyId: event.companyId,
+                  accountId: userId
+              }))
+            : false;
+
+        // Only company members can request hidden-ticket visitors
+        if (wantsHidden && !isMember) {
+            throw new ForbiddenException(
+                "Only company members can view hidden-ticket visitors"
+            );
+        }
+
+        // Non-members are subject to the event's visitors_visibility setting
+        if (!isMember) {
+            if (event.visitorsVisibility === VisitorsVisibility.STAFF_ONLY) {
+                throw new ForbiddenException(
+                    "Visitor list is restricted to company staff"
+                );
+            }
+            if (event.visitorsVisibility === VisitorsVisibility.STAFF_AND_VISITORS) {
+                const hasTicket = userId
+                    ? !!(await database.dataSource.manager
+                          .createQueryBuilder(UserTicket, "ut")
+                          .innerJoin(Ticket, "t", "t.id = ut.ticket_id")
+                          .where("t.event_id = :eventId", { eventId })
+                          .andWhere("ut.account_id = :userId", { userId })
+                          .getOne())
+                    : false;
+                if (!hasTicket) {
+                    throw new ForbiddenException(
+                        "Only ticket holders or company staff can view the visitor list"
+                    );
+                }
+            }
+        }
+
+        const qb = database.dataSource.manager
+            .createQueryBuilder(Profile, "profile")
+            .innerJoin(UserTicket, "ut", "ut.account_id = profile.account_id")
+            .innerJoin(Ticket, "t", "t.id = ut.ticket_id")
+            .where("t.event_id = :eventId", { eventId })
+            .andWhere("ut.visibility IN (:...visibilities)", {
+                visibilities: ticketsVisibility
+            })
+            .orderBy("ut.created_at", "ASC");
+
+        const total = await qb.getCount();
+        const profiles = await qb
+            .limit(query["page[limit]"])
+            .offset(query["page[offset]"])
+            .getMany();
+
+        return [profiles, total];
     }
 
     async subscribe(eventId: string, accountId: string): Promise<Profile> {

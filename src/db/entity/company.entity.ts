@@ -13,6 +13,7 @@ import {
 } from "typeorm";
 import { EventEntity } from "./event.entity";
 import { Account } from "./account.entity";
+import { GeoPoint, pointTransformer } from "src/modules/shared/geo";
 
 @Entity({ name: "companies" })
 export class Company extends BaseEntity {
@@ -43,6 +44,15 @@ export class Company extends BaseEntity {
         nullable: true
     })
     bannerKey: string | null;
+
+    @Column({
+        type: "geography",
+        spatialFeatureType: "Point",
+        srid: 4326,
+        nullable: true,
+        transformer: pointTransformer
+    })
+    location: GeoPoint | null;
 
     @CreateDateColumn({
         name: "created_at",
