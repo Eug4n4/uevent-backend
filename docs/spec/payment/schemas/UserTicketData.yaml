@@ -21,6 +21,9 @@ properties:
       status:
         type: string
         enum: [unused, used, canceled]
+      visibility:
+        type: boolean
+        description: "Whether this ticket holder is visible in the event visitor list"
       created_at:
         type: string
         format: date-time
