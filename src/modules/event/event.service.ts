@@ -327,7 +327,7 @@ export class EventService {
         accountId: string,
         file: Express.Multer.File
     ): Promise<EventEntity> {
-        const event = await this.getById(eventId);
+        const event = await this.getById(eventId, accountId);
         await this.companyService.requireCompanyRole(
             event.companyId,
             accountId,
@@ -560,6 +560,11 @@ export class EventService {
                 formats: query.format
             });
         }
+        const sortingOptions = {
+            start_at: "events.startAt",
+            end_at: "events.endAt",
+            publish_at: "events.publishAt"
+        }
 
         let order: "ASC" | "DESC" = "ASC";
         if (query.sort && query.sort.length > 0) {
@@ -567,7 +572,7 @@ export class EventService {
                 query.sort = query.sort.slice(1);
                 order = "DESC";
             }
-            queryBuilder.orderBy(query.sort, order);
+            queryBuilder.orderBy(sortingOptions[query.sort], order);
         }
 
         queryBuilder.take(query["page[limit]"]);
