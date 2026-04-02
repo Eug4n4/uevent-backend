@@ -15,6 +15,7 @@ import { CompanyBilling, CompanyMember } from "src/db/entity/company.entity";
 import { EventEntity } from "src/db/entity/event.entity";
 import { PurchaseAttributes, TransactionQuery, UserTicketPageQuery } from "./payment.dto";
 import { AppLogger } from "../shared/logger";
+import { MailService } from "../mail/mail.service";
 
 @Injectable()
 export class PaymentService {
@@ -22,7 +23,10 @@ export class PaymentService {
     private readonly platformFee: number;
     private readonly log = new AppLogger(PaymentService.name);
 
-    constructor(private config: ConfigService) {
+    constructor(
+        private config: ConfigService,
+        private mail: MailService
+    ) {
         this.stripe = new Stripe(config.get<string>("STRIPE_SECRET_KEY") ?? "");
         this.platformFee = parseFloat(
             config.get<string>("PLATFORM_FEE") ?? "0.05"
@@ -121,6 +125,8 @@ export class PaymentService {
             });
             await queryRunner.manager.save(transaction);
 
+            let firstFreeUserTicketId: string | null = null;
+
             if (finalPrice === 0) {
                 const userTickets = Array.from({ length: quantity }, () =>
                     queryRunner.manager.create(UserTicket, {
@@ -132,6 +138,7 @@ export class PaymentService {
                     })
                 );
                 await queryRunner.manager.save(userTickets);
+                firstFreeUserTicketId = (userTickets[0] as UserTicket).id;
 
                 await queryRunner.manager.increment(Ticket, { id: ticketId }, "sold", quantity);
 
@@ -141,6 +148,11 @@ export class PaymentService {
             }
 
             await queryRunner.commitTransaction();
+
+            if (firstFreeUserTicketId) {
+                void this.mail.successTicketPurchase(firstFreeUserTicketId);
+                void this.mail.notificationForNewTicket(firstFreeUserTicketId);
+            }
 
             return {
                 clientSecret,
@@ -170,6 +182,9 @@ export class PaymentService {
         if (event.type === "payment_intent.succeeded") {
             const intent = event.data.object as Stripe.PaymentIntent;
             await this.handlePaymentSuccess(intent);
+        } else if (event.type === "payment_intent.payment_failed") {
+            const intent = event.data.object as Stripe.PaymentIntent;
+            await this.handlePaymentFailure(intent);
         }
     }
 
@@ -209,12 +224,22 @@ export class PaymentService {
 
             await queryRunner.commitTransaction();
             this.log.info("POST", "/stripe/webhook", 200, `payment_intent.succeeded intent=${intent.id} quantity=${quantity}`);
+
+            void this.mail.successTicketPurchase((userTickets[0] as UserTicket).id);
+            void this.mail.notificationForNewTicket((userTickets[0] as UserTicket).id);
         } catch (err) {
             await queryRunner.rollbackTransaction();
             this.log.error("POST", "/stripe/webhook", 500, err.message, err.stack);
         } finally {
             await queryRunner.release();
         }
+    }
+
+    private async handlePaymentFailure(intent: Stripe.PaymentIntent): Promise<void> {
+        const { accountId, ticketId } = intent.metadata;
+        if (!accountId || !ticketId) return;
+        void this.mail.unsuccessTicketPurchase(accountId, ticketId);
+        this.log.info("POST", "/stripe/webhook", 200, `payment_intent.payment_failed intent=${intent.id}`);
     }
 
     async getUserTickets(
@@ -380,6 +405,7 @@ export class PaymentService {
         ut.status = UserTicketStatus.CANCELED;
         await ut.save();
         await ut.reload();
+        void this.mail.userTicketCanceled(id);
         return ut;
     }
 }

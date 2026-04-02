@@ -23,12 +23,14 @@ import { EventSub } from "src/db/entity/event.entity";
 import { Profile } from "src/db/entity/profile.entity";
 import { CompanyService } from "../company/company.service";
 import { S3Service } from "../shared/s3.uploader";
+import { MailService } from "../mail/mail.service";
 
 @Injectable()
 export class EventService {
     constructor(
         private companyService: CompanyService,
-        private s3Service: S3Service
+        private s3Service: S3Service,
+        private mail: MailService
     ) {}
 
     async create(dto: EventDetails, userId: string) {
@@ -37,8 +39,11 @@ export class EventService {
             CompanyMemberRole.OWNER
         ]);
 
+        const now = new Date();
+        const publishAt = !dto.publish_at || new Date(dto.publish_at) < now ? now : new Date(dto.publish_at);
+
         this.validateEventDates(
-            new Date(dto.publish_at),
+            publishAt,
             new Date(dto.start_at),
             new Date(dto.end_at)
         );
@@ -51,7 +56,7 @@ export class EventService {
                 companyId: dto.company_id,
                 title: dto.title,
                 text: dto.text ?? null,
-                publishAt: dto.publish_at,
+                publishAt,
                 startAt: dto.start_at,
                 endAt: dto.end_at,
                 format: dto.format,
@@ -210,8 +215,13 @@ export class EventService {
             );
         }
 
+        const now = new Date();
+        const resolvedPublishAt = dto.publish_at
+            ? new Date(dto.publish_at) < now ? now : new Date(dto.publish_at)
+            : undefined;
+
         this.validateEventDates(
-            new Date(dto.publish_at ?? event.publishAt),
+            resolvedPublishAt ?? event.publishAt,
             new Date(dto.start_at ?? event.startAt),
             new Date(dto.end_at ?? event.endAt)
         );
@@ -223,7 +233,7 @@ export class EventService {
         const camelCase = {
             title: dto.title,
             text: dto.text,
-            publishAt: dto.publish_at,
+            publishAt: resolvedPublishAt,
             startAt: dto.start_at,
             endAt: dto.end_at,
             format: dto.format,
@@ -317,8 +327,8 @@ export class EventService {
             await queryRunner.release();
         }
 
-        // Reload the event to reflect the updated status
         event.status = EventStatus.CANCELED;
+        void this.mail.eventCanceled(eventId);
         return event;
     }
 
@@ -511,10 +521,6 @@ export class EventService {
     }
 
     private validateEventDates(publishAt: Date, startAt: Date, endAt: Date) {
-        const now = new Date();
-        if (publishAt < now) {
-            throw new BadRequestException("publish_at cannot be in the past");
-        }
         if (publishAt >= startAt) {
             throw new BadRequestException("publish_at must be before start_at");
         }

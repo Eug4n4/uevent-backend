@@ -91,8 +91,9 @@ class EventCreateAttributes {
     @MaxLength(10000)
     text: string;
 
+    @IsOptional()
     @IsDateString()
-    publish_at: Date;
+    publish_at?: Date;
 
     @IsDateString()
     start_at: Date;

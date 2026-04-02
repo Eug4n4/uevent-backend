@@ -62,16 +62,21 @@ export class PaymentController {
                 attributes: {
                     client_secret: result.clientSecret,
                     transaction_id: result.transactionId,
-                    final_price: result.finalPrice,  // in cents
+                    final_price: result.finalPrice, // in cents
                     currency: result.currency
                 }
             }
         });
     }
 
-    @Post("    ")
-    async webhook(@Req() req: Request & { rawBody?: Buffer }, @Res() res: Response) {
-        const signature = (req.headers as Record<string, string>)["stripe-signature"];
+    @Post("webhooks/stripe")
+    async webhook(
+        @Req() req: Request & { rawBody?: Buffer },
+        @Res() res: Response
+    ) {
+        const signature = (req.headers as Record<string, string>)[
+            "stripe-signature"
+        ];
         await this.paymentService.handleWebhook(req.rawBody!, signature);
         // Stripe expects a 2xx response quickly; detailed processing is async
         res.json({ received: true });
@@ -124,7 +129,12 @@ export class PaymentController {
             user.id,
             dto.data.attributes.status
         );
-        this.log.info("PATCH", `/user-tickets/${id}`, 200, `status=${dto.data.attributes.status}`);
+        this.log.info(
+            "PATCH",
+            `/user-tickets/${id}`,
+            200,
+            `status=${dto.data.attributes.status}`
+        );
         res.json(userTicketResponse(ut));
     }
 
@@ -154,7 +164,10 @@ export class PaymentController {
         if (query["page[offset]"] === undefined)
             query["page[offset]"] = DEFAULT_PAGE_OFFSET;
 
-        const [transactions, total] = await this.paymentService.getTransactions(user.id, query);
+        const [transactions, total] = await this.paymentService.getTransactions(
+            user.id,
+            query
+        );
         const baseUrl = `${req.protocol}://${req.get("host")}/uevent/v1/transactions`;
         this.log.debug("GET", "/transactions", 200, `total=${total}`);
         res.json(paginatedTransactions(transactions, query, total, baseUrl));
@@ -167,7 +180,10 @@ export class PaymentController {
         @CurrentUser() user: Express.User,
         @Res() res: Response
     ) {
-        const transaction = await this.paymentService.getTransactionById(id, user.id);
+        const transaction = await this.paymentService.getTransactionById(
+            id,
+            user.id
+        );
         this.log.debug("GET", `/transactions/${id}`, 200);
         res.json(transactionResponse(transaction));
     }

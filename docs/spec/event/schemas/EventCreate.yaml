@@ -18,7 +18,6 @@ properties:
           - format
           - title
           - text
-          - publish_at
           - start_at
           - end_at
         properties:
@@ -38,7 +37,7 @@ properties:
           publish_at:
             type: string
             format: date-time
-            description: "when the event becomes publicly visible"
+            description: "when the event becomes publicly visible. If omitted or set to a past timestamp, defaults to the current server time (event is published immediately)"
           start_at:
             type: string
             format: date-time

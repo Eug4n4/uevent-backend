@@ -18,6 +18,9 @@ export class Init1774200000000 implements MigrationInterface {
             `CREATE TYPE "public"."event_status" AS ENUM('active', 'canceled')`
         );
         await queryRunner.query(
+            `CREATE TYPE "public"."visitors_visibility_enum" AS ENUM('everyone', 'staff_only', 'staff_and_visitors')`
+        );
+        await queryRunner.query(
             `CREATE TYPE "public"."transaction_status" AS ENUM('pending', 'paid', 'returned')`
         );
         await queryRunner.query(
@@ -63,6 +66,7 @@ export class Init1774200000000 implements MigrationInterface {
                 "address"    character varying(255) NOT NULL,
                 "avatar_key" character varying(255),
                 "banner_key" character varying(255),
+                "location"   geography(Point, 4326),
                 "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 "deleted_at" TIMESTAMP WITH TIME ZONE,
@@ -123,19 +127,21 @@ export class Init1774200000000 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE TABLE "events" (
-                "id"         uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "company_id" uuid NOT NULL,
-                "status"     "public"."event_status" NOT NULL DEFAULT 'active',
-                "title"      character varying(255) NOT NULL,
-                "text"       text,
-                "avatar_key" character varying(255),
-                "banner_key" character varying(255),
-                "format"     "public"."event_format_enum" NOT NULL,
-                "publish_at" TIMESTAMP WITH TIME ZONE NOT NULL,
-                "start_at"   TIMESTAMP WITH TIME ZONE NOT NULL,
-                "end_at"     TIMESTAMP WITH TIME ZONE NOT NULL,
-                "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "id"                       uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "company_id"               uuid NOT NULL,
+                "status"                   "public"."event_status" NOT NULL DEFAULT 'active',
+                "title"                    character varying(255) NOT NULL,
+                "text"                     text,
+                "banner_key"               character varying(255),
+                "location"                 geography(Point, 4326),
+                "format"                   "public"."event_format_enum" NOT NULL,
+                "notification_new_tickets" boolean NOT NULL DEFAULT false,
+                "visitors_visibility"      "public"."visitors_visibility_enum" NOT NULL DEFAULT 'everyone',
+                "publish_at"               TIMESTAMP WITH TIME ZONE NOT NULL,
+                "start_at"                 TIMESTAMP WITH TIME ZONE NOT NULL,
+                "end_at"                   TIMESTAMP WITH TIME ZONE NOT NULL,
+                "created_at"               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "updated_at"               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "PK_events" PRIMARY KEY ("id")
             )`
         );
@@ -156,18 +162,32 @@ export class Init1774200000000 implements MigrationInterface {
             )`
         );
         await queryRunner.query(
+            `CREATE TABLE "event_comments" (
+                "id"         uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "text"       character varying(255) NOT NULL,
+                "event_id"   uuid NOT NULL,
+                "profile_id" uuid NOT NULL,
+                "mpath"      character varying DEFAULT '',
+                "parent_id"  uuid,
+                "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "deleted_at" TIMESTAMP WITH TIME ZONE,
+                CONSTRAINT "PK_event_comments" PRIMARY KEY ("id")
+            )`
+        );
+        await queryRunner.query(
             `CREATE TABLE "tickets" (
-                "id"               uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "event_id"         uuid NOT NULL,
-                "name"             character varying(255) NOT NULL,
-                "description"      character varying(255),
-                "price"            double precision NOT NULL CHECK (price >= 0),
-                "status"           "public"."ticket_status" NOT NULL DEFAULT 'active',
-                "total"            integer NOT NULL CHECK (total > 0),
-                "sold"             integer NOT NULL DEFAULT 0 CHECK (sold >= 0),
+                "id"          uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "event_id"    uuid NOT NULL,
+                "name"        character varying(255) NOT NULL,
+                "description" character varying(255),
+                "price"       double precision NOT NULL CHECK (price >= 0),
+                "status"      "public"."ticket_status" NOT NULL DEFAULT 'active',
+                "total"       integer NOT NULL CHECK (total > 0),
+                "sold"        integer NOT NULL DEFAULT 0 CHECK (sold >= 0),
                 CONSTRAINT "CHK_tickets_total_gte_sold" CHECK (total >= sold),
-                "created_at"       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-                "updated_at"       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "created_at"  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "updated_at"  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "PK_tickets" PRIMARY KEY ("id")
             )`
         );
@@ -202,14 +222,15 @@ export class Init1774200000000 implements MigrationInterface {
         );
         await queryRunner.query(
             `CREATE TABLE "user_tickets" (
-                "id"              uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "account_id"      uuid NOT NULL,
-                "ticket_id"       uuid NOT NULL,
-                "promo_code_id"   uuid,
-                "transaction_id"  uuid NOT NULL,
-                "status"          "public"."user_ticket_status" NOT NULL DEFAULT 'unused',
-                "created_at"      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-                "updated_at"      TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "id"             uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "account_id"     uuid NOT NULL,
+                "ticket_id"      uuid NOT NULL,
+                "promo_code_id"  uuid,
+                "transaction_id" uuid NOT NULL,
+                "status"         "public"."user_ticket_status" NOT NULL DEFAULT 'unused',
+                "visibility"     boolean NOT NULL DEFAULT true,
+                "created_at"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                "updated_at"     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "PK_user_tickets" PRIMARY KEY ("id")
             )`
         );
@@ -252,6 +273,15 @@ export class Init1774200000000 implements MigrationInterface {
             `ALTER TABLE "event_subs" ADD CONSTRAINT "FK_event_subs_event_id" FOREIGN KEY ("event_id") REFERENCES "events"("id") DEFERRABLE INITIALLY IMMEDIATE`
         );
         await queryRunner.query(
+            `ALTER TABLE "event_comments" ADD CONSTRAINT "FK_event_comments_event_id" FOREIGN KEY ("event_id") REFERENCES "events"("id") DEFERRABLE INITIALLY IMMEDIATE`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_comments" ADD CONSTRAINT "FK_event_comments_profile_id" FOREIGN KEY ("profile_id") REFERENCES "profiles"("account_id") DEFERRABLE INITIALLY IMMEDIATE`
+        );
+        await queryRunner.query(
+            `ALTER TABLE "event_comments" ADD CONSTRAINT "FK_event_comments_parent_id" FOREIGN KEY ("parent_id") REFERENCES "event_comments"("id") DEFERRABLE INITIALLY IMMEDIATE`
+        );
+        await queryRunner.query(
             `ALTER TABLE "tickets" ADD CONSTRAINT "FK_tickets_event_id" FOREIGN KEY ("event_id") REFERENCES "events"("id") DEFERRABLE INITIALLY IMMEDIATE`
         );
         await queryRunner.query(
@@ -279,6 +309,9 @@ export class Init1774200000000 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "user_tickets" DROP CONSTRAINT "FK_user_tickets_account_id"`);
         await queryRunner.query(`ALTER TABLE "promo_codes" DROP CONSTRAINT "FK_promo_codes_ticket_id"`);
         await queryRunner.query(`ALTER TABLE "tickets" DROP CONSTRAINT "FK_tickets_event_id"`);
+        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_parent_id"`);
+        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_profile_id"`);
+        await queryRunner.query(`ALTER TABLE "event_comments" DROP CONSTRAINT "FK_event_comments_event_id"`);
         await queryRunner.query(`ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_event_id"`);
         await queryRunner.query(`ALTER TABLE "event_subs" DROP CONSTRAINT "FK_event_subs_account_id"`);
         await queryRunner.query(`ALTER TABLE "event_tags" DROP CONSTRAINT "FK_event_tags_tag_id"`);
@@ -297,6 +330,7 @@ export class Init1774200000000 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "transactions"`);
         await queryRunner.query(`DROP TABLE "promo_codes"`);
         await queryRunner.query(`DROP TABLE "tickets"`);
+        await queryRunner.query(`DROP TABLE "event_comments"`);
         await queryRunner.query(`DROP TABLE "event_subs"`);
         await queryRunner.query(`DROP TABLE "event_tags"`);
         await queryRunner.query(`DROP TABLE "events"`);
@@ -314,6 +348,7 @@ export class Init1774200000000 implements MigrationInterface {
         await queryRunner.query(`DROP TYPE "public"."promo_code_status"`);
         await queryRunner.query(`DROP TYPE "public"."ticket_status"`);
         await queryRunner.query(`DROP TYPE "public"."transaction_status"`);
+        await queryRunner.query(`DROP TYPE "public"."visitors_visibility_enum"`);
         await queryRunner.query(`DROP TYPE "public"."event_status"`);
         await queryRunner.query(`DROP TYPE "public"."event_format_enum"`);
         await queryRunner.query(`DROP TYPE "public"."company_roles"`);

@@ -5,10 +5,14 @@ import { database } from "src/db/data-source";
 import { ILike } from "typeorm";
 import { CompanyService } from "../company/company.service";
 import { CompanyMemberRole } from "src/db/entity/company.entity";
+import { MailService } from "../mail/mail.service";
 
 @Injectable()
 export class NewsService {
-    constructor(private companyService: CompanyService) {}
+    constructor(
+        private companyService: CompanyService,
+        private mail: MailService
+    ) {}
 
     async getAll(query: NewsQuery, includes: Set<string> = new Set()): Promise<[News[], number]> {
         const where: Record<string, unknown> = {};
@@ -61,6 +65,7 @@ export class NewsService {
             companyId: dto.company_id
         });
         await news.save();
+        void this.mail.companyNewPublished(news.id);
         return news;
     }
 
