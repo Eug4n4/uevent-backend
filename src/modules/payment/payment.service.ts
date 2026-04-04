@@ -48,10 +48,6 @@ export class PaymentService {
         const event = await EventEntity.findOneBy({ id: ticket.eventId });
         if (!event) throw new NotFoundException("Event not found");
 
-        const billing = await CompanyBilling.findOneBy({ companyId: event.companyId });
-        if (!billing)
-            throw new BadRequestException("Company billing is not set up");
-
         let promo: PromoCode | null = null;
         if (dto.promo_code) {
             promo = await PromoCode.findOneBy({ code: dto.promo_code, ticketId });
@@ -65,7 +61,15 @@ export class PaymentService {
 
         const discountMultiplier = promo ? 1 - promo.discountPercent / 100 : 1;
         const unitPrice = Math.round(ticket.price * discountMultiplier * 100);
-        const finalPrice = unitPrice * quantity;
+        let finalPrice = unitPrice * quantity;
+        if (finalPrice > 0 && finalPrice < 100) finalPrice = 100;
+
+        let billing: CompanyBilling | null = null;
+        if (finalPrice > 0) {
+            billing = await CompanyBilling.findOneBy({ companyId: event.companyId });
+            if (!billing)
+                throw new BadRequestException("Company billing is not set up");
+        }
 
         const queryRunner = database.dataSource.createQueryRunner();
         await queryRunner.connect();
@@ -90,7 +94,7 @@ export class PaymentService {
                         allow_redirects: "never"
                     },
                     application_fee_amount: Math.round(finalPrice * this.platformFee),
-                    transfer_data: { destination: billing.stripeAccountId },
+                    transfer_data: { destination: billing!.stripeAccountId },
                     metadata: {
                         ticketId,
                         accountId,

@@ -56,6 +56,10 @@ export class PaymentController {
             201,
             `transactionId=${result.transactionId}`
         );
+        if (result.finalPrice === 0) {
+            res.status(201).send();
+            return;
+        }
         res.status(201).json({
             data: {
                 type: "purchase",
