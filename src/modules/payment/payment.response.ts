@@ -8,6 +8,7 @@ export const userTicketData = (ut: UserTicket) =>
         id: ut.id,
         type: "user_ticket",
         attributes: stripNulls({
+            visibility: ut.visibility,
             status: ut.status,
             created_at: ut.createdAt,
             updated_at: ut.updatedAt

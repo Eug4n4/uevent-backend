@@ -1,7 +1,7 @@
 import { EventComment } from "src/db/entity/event.entity";
-import { CommentQuery } from "./comment.dto";
-import { stripNulls } from "../shared/s3.uploader";
 import { profileData } from "../profile/profile.response";
+import { stripNulls } from "../shared/s3.uploader";
+import { CommentQuery } from "./comment.dto";
 
 const commentRelationships = (comment: EventComment) => {
     const profile = {
@@ -68,6 +68,7 @@ const commentIncludes = (comments: EventComment[]) => {
         for (const child of root.children) {
             collectIncluded(child, includedMap);
         }
+        collectIncluded(root, includedMap);
     }
 
     return Array.from(includedMap.values());
