@@ -96,7 +96,6 @@ export class PaymentService {
                         accountId,
                         promoCodeId: promo?.id ?? "",
                         quantity: String(quantity),
-                        visibility: String(dto.visibility)
                     }
                 });
                 paymentIntentId = intent.id;
@@ -136,7 +135,6 @@ export class PaymentService {
                         promoCodeId: promo?.id ?? null,
                         transactionId: transaction.id,
                         status: UserTicketStatus.UNUSED,
-                        visibility: dto.visibility
                     })
                 );
                 await queryRunner.manager.save(userTickets);
@@ -194,7 +192,7 @@ export class PaymentService {
         const transaction = await Transaction.findOneBy({ paymentIntentId: intent.id });
         if (!transaction || transaction.status !== TransactionStatus.PENDING) return;
 
-        const { ticketId, accountId, promoCodeId, quantity: quantityStr, visibility } = intent.metadata;
+        const { ticketId, accountId, promoCodeId, quantity: quantityStr } = intent.metadata;
         const quantity = parseInt(quantityStr || "1", 10);
 
         const queryRunner = database.dataSource.createQueryRunner();
@@ -213,8 +211,7 @@ export class PaymentService {
                     ticketId,
                     promoCodeId: promoCodeId || null,
                     transactionId: transaction.id,
-                    status: UserTicketStatus.UNUSED,
-                    visibility: (visibility === "true")
+                    status: UserTicketStatus.UNUSED
                 })
             );
             await queryRunner.manager.save(userTickets);

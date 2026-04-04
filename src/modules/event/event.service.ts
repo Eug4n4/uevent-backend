@@ -427,7 +427,7 @@ export class EventService {
             .innerJoin(UserTicket, "ut", "ut.account_id = profile.account_id")
             .innerJoin(Ticket, "t", "t.id = ut.ticket_id")
             .where("t.event_id = :eventId", { eventId })
-            .andWhere("ut.visibility IN (:...visibilities)", {
+            .andWhere("profile.visibility IN (:...visibilities)", {
                 visibilities: ticketsVisibility
             })
             .orderBy("ut.created_at", "ASC");

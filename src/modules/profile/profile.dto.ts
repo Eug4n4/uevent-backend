@@ -10,7 +10,8 @@ import {
     Max,
     ValidateNested,
     IsDefined,
-    Equals
+    Equals,
+    IsBoolean
 } from "class-validator";
 import { Type } from "class-transformer";
 import { NullIfEmpty } from "../shared/decorators";
@@ -26,6 +27,10 @@ export class UpdateProfileAttributesDto {
         message: "Username can only contain letters, numbers, and -._!"
     })
     username?: string;
+    
+    @IsOptional()
+    @IsBoolean()
+    visibility?: boolean;
 }
 
 export class UpdateProfileDataDto {

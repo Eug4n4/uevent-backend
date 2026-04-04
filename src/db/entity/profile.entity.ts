@@ -1,13 +1,13 @@
 import {
-    Entity,
+    BaseEntity,
     Column,
     CreateDateColumn,
-    UpdateDateColumn,
-    OneToOne,
+    Entity,
     JoinColumn,
-    BaseEntity,
+    OneToMany,
+    OneToOne,
     PrimaryColumn,
-    OneToMany
+    UpdateDateColumn
 } from "typeorm";
 import { Account } from "./account.entity";
 import { EventComment } from "./event.entity";
@@ -19,6 +19,9 @@ export class Profile extends BaseEntity {
 
     @Column({ length: 30 })
     username: string;
+
+    @Column({ type: "boolean", default: true })
+    visibility: boolean;
 
     @Column({
         name: "avatar_key",

@@ -7,6 +7,7 @@ export function profileData(profile: Profile) {
         type: "profile",
         attributes: stripNulls({
             username: profile.username,
+            visibility: profile.visibility,
             avatar_url: buildFileUrl(profile.avatarKey),
             updated_at: profile.updatedAt,
             created_at: profile.createdAt

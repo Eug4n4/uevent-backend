@@ -1,7 +1,6 @@
 import { Type } from "class-transformer";
 import {
     Equals,
-    IsBoolean,
     IsDefined,
     IsIn,
     IsInt,
@@ -23,8 +22,6 @@ export class PurchaseAttributes {
     @Min(1)
     quantity?: number;
 
-    @IsBoolean()
-    visibility: boolean;
 }
 
 class PurchaseData {

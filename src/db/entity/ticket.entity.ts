@@ -98,8 +98,8 @@ export class UserTicket extends BaseEntity {
     })
     status: UserTicketStatus;
 
-    @Column({ type: "boolean", default: true })
-    visibility: boolean;
+    // @Column({ type: "boolean", default: true })
+    // visibility: boolean;
 
     @CreateDateColumn({
         name: "created_at",

@@ -32,6 +32,7 @@ export class ProfileService {
         const profile = await this.getMyProfile(accountId);
         const attrs = dto.data.attributes;
         if (attrs?.username) profile.username = attrs.username;
+        if (attrs?.visibility !== undefined) profile.visibility = attrs.visibility;
         await profile.save();
         return profile;
     }
