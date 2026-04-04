@@ -13,8 +13,21 @@ import {
     IsIn,
     ValidateNested,
     Equals,
-    IsUUID
+    IsUUID,
+    Validate,
+    ValidatorConstraint,
+    ValidatorConstraintInterface
 } from "class-validator";
+
+@ValidatorConstraint()
+class IsZeroOrAtLeastOne implements ValidatorConstraintInterface {
+    validate(value: number) {
+        return value === 0 || value >= 1;
+    }
+    defaultMessage() {
+        return "price must be 0 or at least 1";
+    }
+}
 
 //event ref
 class EventRef {
@@ -79,6 +92,7 @@ class TicketCreateAttributes {
 
     @IsNumber()
     @Min(0)
+    @Validate(IsZeroOrAtLeastOne)
     price: number;
 
     @IsInt()
@@ -120,6 +134,12 @@ export class TicketUpdateAttributes {
     @IsString()
     @Length(1, 255)
     description?: string;
+
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    @Validate(IsZeroOrAtLeastOne)
+    price?: number;
 
     @IsOptional()
     @IsInt()

@@ -20,6 +20,12 @@ properties:
           description:
             type: string
             maxLength: 255
+          price:
+            type: number
+            format: double
+            minimum: 0
+            description: Must be 0 (free) or at least 1. Values between 0 and 1 (exclusive) are not allowed.
+            example: 49.99
           total:
             type: integer
             minimum: 1
